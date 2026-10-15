@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.NestedScrollView
 import com.example.tusome.R
 import com.example.tusome.data.local.ActivityProgressManager
 import com.example.tusome.data.model.GradeLevel
@@ -26,6 +27,7 @@ class StrandDetailActivity : AppCompatActivity() {
     private lateinit var progressManager: ActivityProgressManager
     private lateinit var currentStrands: List<Strand>
     private lateinit var containerSubstrands: LinearLayout
+    private lateinit var scrollStrandDetail: NestedScrollView
     private lateinit var tvStrandPosition: TextView
     private lateinit var tvStrandProgress: TextView
     private lateinit var progressStrand: ProgressBar
@@ -39,6 +41,7 @@ class StrandDetailActivity : AppCompatActivity() {
 
         progressManager = ActivityProgressManager(this)
         containerSubstrands = findViewById(R.id.containerSubstrands)
+        scrollStrandDetail = findViewById(R.id.scrollStrandDetail)
         tvStrandPosition = findViewById(R.id.tvStrandPosition)
         tvStrandProgress = findViewById(R.id.tvStrandProgress)
         progressStrand = findViewById(R.id.progressStrand)
@@ -103,10 +106,14 @@ class StrandDetailActivity : AppCompatActivity() {
         saveDraftsForCurrentStrand()
         currentStrandIndex = targetIndex
         displayStrand(currentStrands[currentStrandIndex])
-        findViewById<androidx.core.widget.NestedScrollView>(android.R.id.content)
-        window.decorView.findViewById<View>(R.id.containerSubstrands)?.let { container ->
-            container.parent?.requestChildFocus(container, container)
+        scrollStrandDetail.scrollTo(0, 0)
+    }
+
+    override fun onPause() {
+        if (::containerSubstrands.isInitialized && ::progressManager.isInitialized) {
+            saveDraftsForCurrentStrand()
         }
+        super.onPause()
     }
 
     private fun renderSubStrandCards(strand: Strand) {

@@ -120,7 +120,7 @@ object SupabaseCurriculumRepository {
             setRequestProperty("Accept", "application/json")
         }
 
-        try {
+        return try {
             val status = connection.responseCode
             val stream = if (status in 200..299) connection.inputStream else connection.errorStream
             val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }

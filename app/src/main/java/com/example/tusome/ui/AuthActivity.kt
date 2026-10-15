@@ -40,7 +40,7 @@ class AuthActivity : AppCompatActivity() {
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(24))
+            setPadding(dp(24), dp(24), dp(24), dp(24))
             setBackgroundColor(Color.rgb(246, 249, 246))
         }
         val scroll = ScrollView(this).apply {
@@ -72,7 +72,7 @@ class AuthActivity : AppCompatActivity() {
         }
         val form = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20))
+            setPadding(dp(20), dp(20), dp(20), dp(20))
         }
         card.addView(form)
         page.addView(card, LinearLayout.LayoutParams(-1, -2))

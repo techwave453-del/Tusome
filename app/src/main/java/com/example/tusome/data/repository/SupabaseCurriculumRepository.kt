@@ -74,8 +74,8 @@ object SupabaseCurriculumRepository {
             val rows = JSONArray(body)
             if (rows.length() == 0) {
                 return "This learning area is listed in the Tusome curriculum catalogue, but strand-level content for " +
-                    grade.title + " has not yet been reviewed and published.\\n\\n" +
-                    "Use KICD curriculum designs as the authoritative source while grade-specific content is verified.\\n\\n" +
+                    grade.title + " has not yet been reviewed and published.\n\n" +
+                    "Use KICD curriculum designs as the authoritative source while grade-specific content is verified.\n\n" +
                     "KICD: https://kicd.ac.ke/cbc-materials/curriculum-designs/regular-curriculum-designs/"
             }
 
@@ -83,20 +83,20 @@ object SupabaseCurriculumRepository {
             for (i in 0 until rows.length()) {
                 val strand = rows.getJSONObject(i)
                 output.append(strand.optInt("sequence")).append(". ")
-                    .append(strand.optString("title")).append("\\n")
+                    .append(strand.optString("title")).append("\n")
                 val subs = strand.optJSONArray("curriculum_sub_strands") ?: JSONArray()
                 for (j in 0 until subs.length()) {
                     val sub = subs.getJSONObject(j)
-                    output.append("   • ").append(sub.optString("title")).append("\\n")
+                    output.append("   • ").append(sub.optString("title")).append("\n")
                     val outcomes = sub.optJSONArray("learning_outcomes") ?: JSONArray()
                     for (k in 0 until outcomes.length()) {
-                        output.append("      – ").append(outcomes.getJSONObject(k).optString("outcome_text")).append("\\n")
+                        output.append("      – ").append(outcomes.getJSONObject(k).optString("outcome_text")).append("\n")
                     }
                 }
-                output.append("\\n")
+                output.append("\n")
             }
             if (learningAreaId == "agriculture_nutrition" && gradeId == "g4") {
-                output.append("Source: KICD, Grade 4 Agriculture and Nutrition curriculum design (revised 2024).\\n")
+                output.append("Source: KICD, Grade 4 Agriculture and Nutrition curriculum design (revised 2024).\n")
                 output.append("https://kicd.ac.ke/wp-content/uploads/2024/02/GRADE.4.AGRICULTURE.NUTRITION.16.1.2024.pdf")
             }
             return output.toString().trim()

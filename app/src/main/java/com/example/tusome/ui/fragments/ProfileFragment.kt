@@ -39,7 +39,15 @@ class ProfileFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        view?.let(::loadProfileData)
+        val root = view ?: return
+        loadProfileData(root) // Show cached profile immediately, including while offline.
+        SupabaseAuthRepository.refreshCurrentUserData(requireContext()) { result ->
+            if (!isAdded) return@refreshCurrentUserData
+            result.onSuccess {
+                view?.let(::loadProfileData)
+            }
+            // Keep the cached profile visible if refresh fails; never blank the profile on network errors.
+        }
     }
 
     private fun loadProfileData(view: View) {

@@ -25,6 +25,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationDrawer: NavigationView
 
+    override fun onResume() {
+        super.onResume()
+        if (!::navigationDrawer.isInitialized) return
+        SupabaseAuthRepository.refreshCurrentUserData(this) { result ->
+            if (isFinishing || isDestroyed) return@refreshCurrentUserData
+            result.onSuccess { session ->
+                navigationDrawer.menu.findItem(R.id.drawer_admin).isVisible =
+                    session.roles.any { it == "platform_admin" || it == "school_admin" }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (SupabaseAuthRepository.currentSession(this) == null) {

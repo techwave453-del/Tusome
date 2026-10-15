@@ -146,6 +146,61 @@ object SupabaseAuthRepository {
         }
     }
 
+    /**
+     * Refreshes profile and role assignments from Supabase after admin changes.
+     * If the network is unavailable, the encrypted cached session remains intact.
+     */
+    fun refreshCurrentUserData(
+        context: Context,
+        onResult: (Result<AuthSession>) -> Unit
+    ) {
+        val appContext = context.applicationContext
+        refreshSessionIfNeeded(appContext) { refreshed ->
+            val session = refreshed.getOrNull()
+            if (session == null) {
+                onResult(Result.failure(refreshed.exceptionOrNull()
+                    ?: IllegalStateException("Sign in is required to refresh your profile.")))
+                return@refreshSessionIfNeeded
+            }
+
+            executor.execute {
+                val result = runCatching {
+                    val profileRows = request(
+                        "/rest/v1/user_profiles?user_id=eq.${session.userId}&select=display_name,grade_id,school_id",
+                        null,
+                        session.accessToken
+                    ) as? JSONArray ?: JSONArray()
+                    val profile = profileRows.optJSONObject(0) ?: JSONObject()
+
+                    val roleRows = request(
+                        "/rest/v1/user_role_assignments?user_id=eq.${session.userId}&select=role_key",
+                        null,
+                        session.accessToken
+                    ) as? JSONArray ?: JSONArray()
+                    val roles = buildList {
+                        for (index in 0 until roleRows.length()) {
+                            roleRows.optJSONObject(index)?.optString("role_key")
+                                ?.takeIf { it.isNotBlank() }?.let(::add)
+                        }
+                    }.distinct()
+
+                    val updated = session.copy(
+                        displayName = profile.optString("display_name")
+                            .ifBlank { session.displayName.ifBlank { session.email.substringBefore("@") } },
+                        roles = roles,
+                        gradeId = profile.optString("grade_id")
+                            .takeIf { it.isNotBlank() && it != "null" } ?: session.gradeId,
+                        schoolId = profile.optString("school_id")
+                            .takeIf { it.isNotBlank() && it != "null" } ?: session.schoolId
+                    )
+                    saveSession(appContext, updated)
+                    updated
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
     fun signOut(context: Context) {
         val appContext = context.applicationContext
         val session = currentSession(appContext)

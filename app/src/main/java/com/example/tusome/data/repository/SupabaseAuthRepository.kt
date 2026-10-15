@@ -189,9 +189,9 @@ object SupabaseAuthRepository {
                             .ifBlank { session.displayName.ifBlank { session.email.substringBefore("@") } },
                         roles = roles,
                         gradeId = profile.optString("grade_id")
-                            .takeIf { it.isNotBlank() && it != "null" },
+                            .takeIf { it.isNotBlank() && it != "null" } ?: session.gradeId,
                         schoolId = profile.optString("school_id")
-                            .takeIf { it.isNotBlank() && it != "null" }
+                            .takeIf { it.isNotBlank() && it != "null" } ?: session.schoolId
                     )
                     saveSession(appContext, updated)
                     updated

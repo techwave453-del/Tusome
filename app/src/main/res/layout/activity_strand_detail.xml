@@ -14,7 +14,7 @@
             android:id="@+id/toolbarDetail"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_chevron_right"
+            app:navigationIcon="@drawable/ic_arrow_back"
             app:navigationIconTint="@color/surface_white"
             app:title="Strand Details"
             app:titleTextColor="@color/surface_white" />

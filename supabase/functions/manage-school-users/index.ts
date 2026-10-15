@@ -195,6 +195,8 @@ Deno.serve(async (req: Request) => {
         .select("id,is_active").eq("id", requestedSchoolId).maybeSingle();
       if (error || !school || !school.is_active) return reply(400, { error: "Choose an active school." });
     }
+    const profileSchoolId = role.scope === "school" || roleKey === "learner" ? requestedSchoolId : null;
+
     if (gradeId) {
       const { data: grade, error } = await admin.from("curriculum_grades")
         .select("id").eq("id", gradeId).maybeSingle();
@@ -210,7 +212,7 @@ Deno.serve(async (req: Request) => {
 
     const newUserId = invite.user.id;
     const { error: updateProfileError } = await admin.from("user_profiles")
-      .update({ display_name: displayName, school_id: requestedSchoolId, grade_id: gradeId })
+      .update({ display_name: displayName, school_id: profileSchoolId, grade_id: gradeId })
       .eq("user_id", newUserId);
     if (updateProfileError) {
       await admin.auth.admin.deleteUser(newUserId);
@@ -231,7 +233,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    await writeAudit(admin, actorId, "user.invited", newUserId, requestedSchoolId, {
+    await writeAudit(admin, actorId, "user.invited", newUserId, profileSchoolId, {
       email, display_name: displayName, role_key: roleKey,
     });
     return reply(201, {
@@ -239,7 +241,7 @@ Deno.serve(async (req: Request) => {
       email,
       display_name: displayName,
       role_key: roleKey,
-      school_id: requestedSchoolId,
+      school_id: profileSchoolId,
       message: "Invitation sent. The user must complete the email invitation before signing in.",
     });
   }

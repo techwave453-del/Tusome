@@ -2,7 +2,6 @@ package com.example.tusome.data.repository
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Base64
 import com.example.tusome.data.local.ActivityProgressManager
 import com.example.tusome.data.local.SubStrandProgress
 import com.example.tusome.data.model.PerformanceLevel
@@ -30,7 +29,7 @@ object LearnerProgressSyncRepository {
     private val syncing = AtomicBoolean(false)
     @Volatile private var latestManager: ActivityProgressManager? = null
 
-    private val syncRunnable = Runnable {
+    private val syncRunnable: Runnable by lazy { Runnable {
         val manager = latestManager ?: return@Runnable
         if (manager.signedInUserId.isNullOrBlank()) return@Runnable
         if (!syncing.compareAndSet(false, true)) {
@@ -55,7 +54,7 @@ object LearnerProgressSyncRepository {
                 }
             }
         }
-    }
+    } }
 
     fun scheduleSync(manager: ActivityProgressManager) {
         if (manager.signedInUserId.isNullOrBlank()) return

@@ -17,6 +17,7 @@ import com.example.tusome.R
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.repository.CbcRepository
 import com.example.tusome.data.repository.SupabaseCurriculumRepository
+import com.example.tusome.data.repository.selectFeaturedLearningArea
 import com.example.tusome.data.repository.SupabaseAuthRepository
 import com.example.tusome.ui.StrandDetailActivity
 import com.example.tusome.ui.adapters.GradeChipAdapter
@@ -71,10 +72,7 @@ class HomeFragment : Fragment() {
             SupabaseCurriculumRepository.fetchLearningAreas(selectedGrade) { areasResult ->
                 if (!isAdded) return@fetchLearningAreas
                 val areas = areasResult.getOrNull().orEmpty()
-                val featuredArea = areas.firstOrNull {
-                    it.title.contains("agriculture", ignoreCase = true) ||
-                        it.title.contains("nutrition", ignoreCase = true)
-                } ?: areas.firstOrNull()
+                val featuredArea = selectFeaturedLearningArea(areas)
 
                 if (featuredArea == null) {
                     btnStartHeroActivity.isEnabled = true

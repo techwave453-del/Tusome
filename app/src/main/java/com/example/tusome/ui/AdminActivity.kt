@@ -40,7 +40,6 @@ class AdminActivity : AppCompatActivity() {
     private lateinit var roleKeys: List<String>
     private val schools = mutableListOf<SchoolOption>()
     private var isPlatformAdmin = false
-    private var currentUserId: String? = null
     private var ownSchoolId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +52,6 @@ class AdminActivity : AppCompatActivity() {
         }
 
         isPlatformAdmin = "platform_admin" in session.roles
-        currentUserId = session.userId
         ownSchoolId = session.schoolId
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -132,16 +130,6 @@ class AdminActivity : AppCompatActivity() {
         inviteButton.setOnClickListener { inviteUser() }
 
         section(page, "Users and role assignments")
-        if (isPlatformAdmin) {
-            page.addView(TextView(this).apply {
-                text = "Your platform administrator role is protected. You can change your secondary role here without losing administrator access."
-                textSize = 12f
-                setTextColor(Color.DKGRAY)
-            }, margins(top = 4, bottom = 6))
-            page.addView(actionButton("Change my secondary role").apply {
-                setOnClickListener { showRoleAssignmentDialog(currentUserId.orEmpty(), replaceOwn = true) }
-            }, margins(bottom = 10))
-        }
         usersContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
@@ -323,7 +311,7 @@ class AdminActivity : AppCompatActivity() {
                         val roleSchoolId = role.optString("school_id").takeIf { it.isNotBlank() && it != "null" }
                         val roleLabel = roleKey.replace('_', ' ')
                         card.addView(messageText("Role: $roleLabel"), margins(top = 4))
-                        val canRevoke = userId != currentUserId && roleKey != "platform_admin" &&
+                        val canRevoke = roleKey != "learner" && roleKey != "platform_admin" &&
                             (isPlatformAdmin || roleKey == "teacher")
                         if (canRevoke) {
                             val revokeButton = Button(this).apply {
@@ -337,15 +325,6 @@ class AdminActivity : AppCompatActivity() {
                             card.addView(revokeButton, margins(top = 3))
                         }
                     }
-                    if (isPlatformAdmin && userId != currentUserId) {
-                        card.addView(Button(this).apply {
-                            text = "Assign additional role"
-                            isAllCaps = false
-                            setOnClickListener {
-                                showRoleAssignmentDialog(userId, replaceOwn = false)
-                            }
-                        }, margins(top = 6))
-                    }
                     usersContainer.addView(card, margins(bottom = 8))
                     val divider = View(this).apply { setBackgroundColor(Color.rgb(220, 226, 220)) }
                     usersContainer.addView(divider, LinearLayout.LayoutParams(-1, dp(1)).apply {
@@ -357,103 +336,6 @@ class AdminActivity : AppCompatActivity() {
                 usersContainer.addView(messageText(error.message ?: "Could not load users."))
             }
         }
-    }
-
-    private fun showRoleAssignmentDialog(targetUserId: String, replaceOwn: Boolean) {
-        if (!isPlatformAdmin) {
-            Toast.makeText(this, "Only the super user can manage additional roles.", Toast.LENGTH_LONG).show()
-            return
-        }
-        if (targetUserId.isBlank()) return
-
-        val availableRoleKeys = listOf("learner", "teacher", "school_admin", "curriculum_editor")
-        val dialogContent = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(8), dp(20), 0)
-        }
-        dialogContent.addView(TextView(this).apply {
-            text = if (replaceOwn) {
-                "Choose one secondary role. Your platform administrator role will remain unchanged."
-            } else {
-                "This explicitly assigns an additional role to the selected user."
-            }
-            textSize = 13f
-            setTextColor(Color.DKGRAY)
-        }, margins(bottom = 8))
-
-        val roleChoice = Spinner(this).apply {
-            adapter = ArrayAdapter(
-                this@AdminActivity,
-                android.R.layout.simple_spinner_dropdown_item,
-                availableRoleKeys.map { it.replace('_', ' ').replaceFirstChar { ch -> ch.uppercase() } }
-            )
-        }
-        val schoolChoice = Spinner(this).apply {
-            adapter = ArrayAdapter(
-                this@AdminActivity,
-                android.R.layout.simple_spinner_dropdown_item,
-                schools
-            )
-            isEnabled = schools.isNotEmpty()
-        }
-        dialogContent.addView(TextView(this).apply {
-            text = "Role"
-            setTextColor(Color.DKGRAY)
-            textSize = 12f
-        })
-        dialogContent.addView(roleChoice, margins(bottom = 8))
-        dialogContent.addView(TextView(this).apply {
-            text = "School (required for Teacher and School Administrator)"
-            setTextColor(Color.DKGRAY)
-            textSize = 12f
-        })
-        dialogContent.addView(schoolChoice, margins(bottom = 8))
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(if (replaceOwn) "Change my secondary role" else "Assign an additional role")
-            .setView(dialogContent)
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton(if (replaceOwn) "Change role" else "Assign role", null)
-            .create()
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val roleKey = availableRoleKeys.getOrNull(roleChoice.selectedItemPosition) ?: "learner"
-                val selectedSchool = schools.getOrNull(schoolChoice.selectedItemPosition)?.id
-                val needsSchool = roleKey == "teacher" || roleKey == "school_admin"
-                if (needsSchool && selectedSchool == null) {
-                    Toast.makeText(this, "Create or select an active school first.", Toast.LENGTH_LONG).show()
-                    return@setOnClickListener
-                }
-
-                val payload = JSONObject()
-                    .put("action", if (replaceOwn) "replace_secondary_role" else "assign_role")
-                    .put("user_id", targetUserId)
-                    .put("role_key", roleKey)
-                if (needsSchool && selectedSchool != null) payload.put("school_id", selectedSchool)
-
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                SupabaseAuthRepository.manageSchoolUsers(this, payload) { result ->
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                    result.onSuccess { response ->
-                        Toast.makeText(
-                            this,
-                            response.optString("message", "Role assignment updated."),
-                            Toast.LENGTH_LONG
-                        ).show()
-                        dialog.dismiss()
-                        loadUsers()
-                        loadAuditLog()
-                    }.onFailure { error ->
-                        Toast.makeText(
-                            this,
-                            error.message ?: "Role assignment could not be updated.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-        }
-        dialog.show()
     }
 
     private fun confirmRevoke(userId: String, displayName: String, roleKey: String, schoolId: String?) {

@@ -40,8 +40,9 @@
         android:background="@color/surface_white"
         app:elevation="10dp"
         app:itemIconSize="24dp"
-        app:itemIconTint="@color/primary_green"
-        app:itemTextColor="@color/primary_green"
+        app:itemIconTint="@color/nav_item_color"
+        app:itemTextColor="@color/nav_item_color"
+        app:itemActiveIndicatorColor="@color/primary_container_green"
         app:labelVisibilityMode="labeled"
         app:itemHorizontalTranslationEnabled="false"
         app:menu="@menu/bottom_nav_menu" />

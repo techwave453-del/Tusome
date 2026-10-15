@@ -35,11 +35,12 @@ Permissions are normalized in `app_permissions` and `role_permissions`. Assignme
 - Users can read their own role assignments. School-level access is filtered by school scope; global governance requires the platform role.
 - Role/permission lookup helpers live in the non-exposed `private` schema, use a fixed empty search path, and are executable by authenticated users only.
 - The client contains only the Supabase publishable key. Never put a service-role or secret key in the APK.
+- `learner_activity_progress` has row-level security and only permits authenticated users to read, insert, and update their own rows. Anonymous access and client-side deletion are revoked.
 
 ## Remaining work
 
-1. Replace remaining demo learner progress and assessment data with user-owned, RLS-protected tables and offline-first local storage.
-2. Implement sync conflict handling and visible pending-sync status for offline learning activity.
+1. Add a visible sync status and retry action for learner activity progress.
+2. Move remaining assessment attempts and results into user-owned, RLS-protected tables with offline-first storage.
 3. Add role-aware teacher, curriculum editor, and platform administrator workflows beyond the school-management screen.
 4. Add account recovery, email-confirmation states, and automated authorization tests for cross-user and cross-school access.
 
@@ -49,4 +50,6 @@ Permissions are normalized in `app_permissions` and `role_permissions`. Assignme
 - User listing returns up to 200 recent profiles per request, and the audit view returns up to 50 recent records.
 - Audit logging is best-effort in the Edge Function; a failed audit insert is logged to function logs and does not roll back an already completed operation.
 - Curriculum catalogue reads remain published-content reads and do not require a signed-in role.
-- Do not claim that all learner progress is cloud-synced or isolated by user until the progress repository and database policies are migrated and tested.
+- Learner activity progress is now stored locally per signed-in account and synchronizes with `learner_activity_progress` when connectivity and a valid session are available. Local saves happen first, and a later save or screen launch retries failed sync. Conflicts use the latest client timestamp; the local copy remains available offline.
+- The first signed-in account receives a one-time migration of older shared local progress. The legacy preference file is retained as a backup. This is a transitional migration for existing installations; future accounts use separate local preference stores.
+- Sync is currently best-effort and has no visible pending/error indicator yet. Assessment attempts and results have not yet been migrated to the same cloud/offline model.

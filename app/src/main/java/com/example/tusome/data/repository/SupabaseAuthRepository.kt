@@ -124,6 +124,28 @@ object SupabaseAuthRepository {
         }
     }
 
+    /** Calls the server-authorized school/user management function using the signed-in JWT. */
+    fun manageSchoolUsers(
+        context: Context,
+        payload: JSONObject,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        refreshSessionIfNeeded(context) { refreshed ->
+            val session = refreshed.getOrNull()
+            if (session == null) {
+                onResult(Result.failure(refreshed.exceptionOrNull()
+                    ?: IllegalStateException("Sign in is required to manage school users.")))
+                return@refreshSessionIfNeeded
+            }
+            executor.execute {
+                val result = runCatching {
+                    request("/functions/v1/manage-school-users", payload, session.accessToken) as JSONObject
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
     fun signOut(context: Context) {
         val appContext = context.applicationContext
         val session = currentSession(appContext)
@@ -239,6 +261,7 @@ object SupabaseAuthRepository {
                 val message = error?.optString("msg")?.takeIf { it.isNotBlank() }
                     ?: error?.optString("message")?.takeIf { it.isNotBlank() }
                     ?: error?.optString("error_description")?.takeIf { it.isNotBlank() }
+                    ?: error?.optString("error")?.takeIf { it.isNotBlank() }
                     ?: "Request failed (HTTP $status). Check your details and try again."
                 throw IllegalStateException(message)
             }

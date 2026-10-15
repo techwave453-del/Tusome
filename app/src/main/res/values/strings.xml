@@ -7,6 +7,9 @@
     <string name="nav_assessments">Assessments</string>
     <string name="nav_competencies">Competencies</string>
     <string name="nav_profile">Profile</string>
+    <string name="open_navigation_menu">Open navigation menu</string>
+    <string name="drawer_more">More</string>
+    <string name="drawer_about">About Tusome</string>
 
     <string name="greeting_learner">Jambo, Learner!</string>
     <string name="greeting_sub">Nairobi Primary School • Grade 4 Upper Primary</string>

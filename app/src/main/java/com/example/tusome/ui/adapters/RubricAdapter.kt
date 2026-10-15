@@ -54,7 +54,7 @@ class RubricAdapter(
             PerformanceLevel.MEETS -> Triple(R.drawable.bg_badge_me, R.color.rubric_me, "ME - Meets Expectations")
             PerformanceLevel.APPROACHES -> Triple(R.drawable.bg_badge_ae, R.color.rubric_ae, "AE - Approaches Expectations")
             PerformanceLevel.BELOW -> Triple(R.drawable.bg_badge_be, R.color.rubric_be, "BE - Below Expectations")
-            null -> Triple(R.drawable.bg_badge_me, R.color.rubric_me, "ME - Meets Expectations")
+            null -> Triple(R.drawable.bg_badge_me, R.color.rubric_me, "Not evaluated")
         }
 
         holder.tvPerformanceLevelBadge.setBackgroundResource(bgRes)

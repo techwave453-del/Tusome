@@ -31,7 +31,7 @@
 
 ## Existing test baseline
 
-The inspected `ExampleUnitTest.kt` only checks integer addition. The inspected instrumented test only verifies the package name. These are template smoke tests and do not establish business-feature coverage.
+The inspected `ExampleUnitTest.kt` only checks integer addition and the instrumented test only verifies the package name. Added `CurriculumSelectionTest.kt` covers preferred featured-area selection, fallback to the first published area and empty catalogues. These are a start, not complete feature coverage.
 
 ## Definition of done
 

@@ -17,38 +17,41 @@ import com.example.tusome.data.repository.CbcRepository
 import com.example.tusome.ui.StrandDetailActivity
 import com.example.tusome.ui.adapters.GradeChipAdapter
 import com.example.tusome.ui.adapters.LearningAreaAdapter
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomeFragment : Fragment() {
 
     private var selectedGrade = GradeLevel.GRADE_4
+    private var learningAreasRecyclerView: RecyclerView? = null
+    private var learningAreasHeading: TextView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
-    }
+    ): View = inflater.inflate(R.layout.fragment_home, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val rvGradeChips: RecyclerView = view.findViewById(R.id.rvGradeChips)
-        val rvLearningAreas: RecyclerView = view.findViewById(R.id.rvLearningAreas)
+        learningAreasRecyclerView = view.findViewById(R.id.rvLearningAreas)
+        learningAreasHeading = view.findViewById(R.id.tvLearningAreasHeading)
         val btnStartHeroActivity: Button = view.findViewById(R.id.btnStartHeroActivity)
+        val tvViewAll: TextView = view.findViewById(R.id.tvViewAllLearningAreas)
 
-        // Setup Grade Selector Chips
         val gradeAdapter = GradeChipAdapter(GradeLevel.values().toList(), selectedGrade) { grade ->
             selectedGrade = grade
-            loadLearningAreas(rvLearningAreas)
+            updateLearningAreasHeading()
+            learningAreasRecyclerView?.let(::loadLearningAreas)
         }
-        rvGradeChips.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        rvGradeChips.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         rvGradeChips.adapter = gradeAdapter
 
-        // Setup Learning Areas Grid
-        loadLearningAreas(rvLearningAreas)
+        updateLearningAreasHeading()
+        learningAreasRecyclerView?.let(::loadLearningAreas)
 
-        // Hero Activity Button
         btnStartHeroActivity.setOnClickListener {
             val intent = Intent(requireContext(), StrandDetailActivity::class.java).apply {
                 putExtra("LEARNING_AREA_ID", "agri_nutr")
@@ -56,17 +59,31 @@ class HomeFragment : Fragment() {
             }
             startActivity(intent)
         }
+
+        tvViewAll.setOnClickListener {
+            activity?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+                ?.selectedItemId = R.id.navigation_strands
+        }
+    }
+
+    private fun updateLearningAreasHeading() {
+        learningAreasHeading?.text = "${selectedGrade.title} Learning Areas"
     }
 
     private fun loadLearningAreas(recyclerView: RecyclerView) {
         val learningAreas = CbcRepository.getLearningAreas(selectedGrade)
-        val adapter = LearningAreaAdapter(learningAreas) { area ->
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
+        recyclerView.adapter = LearningAreaAdapter(learningAreas) { area ->
             val intent = Intent(requireContext(), StrandDetailActivity::class.java).apply {
                 putExtra("LEARNING_AREA_ID", area.id)
             }
             startActivity(intent)
         }
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
-        recyclerView.adapter = adapter
+    }
+
+    override fun onDestroyView() {
+        learningAreasRecyclerView = null
+        learningAreasHeading = null
+        super.onDestroyView()
     }
 }

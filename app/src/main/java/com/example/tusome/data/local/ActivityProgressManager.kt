@@ -25,6 +25,15 @@ class ActivityProgressManager(context: Context) {
         return prefs.getString("note_$subStrandId", "") ?: ""
     }
 
+    /** Returns null when the learner has not submitted a self-evaluation yet. */
+    fun getSavedSelfEvaluation(subStrandId: String): PerformanceLevel? {
+        val key = "level_$subStrandId"
+        if (!prefs.contains(key)) return null
+        return runCatching {
+            PerformanceLevel.valueOf(prefs.getString(key, null) ?: return null)
+        }.getOrNull()
+    }
+
     fun getSelfEvaluation(subStrandId: String): PerformanceLevel {
         val levelName = prefs.getString("level_$subStrandId", PerformanceLevel.MEETS.name)
         return try {

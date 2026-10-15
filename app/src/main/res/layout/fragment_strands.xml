@@ -6,7 +6,6 @@
     android:background="@color/bg_app"
     android:orientation="vertical">
 
-    <!-- Search Box -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -43,20 +42,24 @@
                 android:textSize="14sp" />
 
         </LinearLayout>
-
     </LinearLayout>
 
-    <!-- Filter Chips for Subjects -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvSubjectChips"
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="12dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        android:fillViewport="false"
+        android:scrollbars="none">
 
-    <!-- Strands List -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupSubjects"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            app:chipSpacingHorizontal="8dp"
+            app:singleLine="true" />
+    </HorizontalScrollView>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvStrandsList"
         android:layout_width="match_parent"

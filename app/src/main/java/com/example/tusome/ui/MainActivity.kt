@@ -110,6 +110,9 @@ class MainActivity : AppCompatActivity() {
 
         updateToolbarTitle(itemId)
 
+        // Apply tab changes immediately so rapid taps never queue stale destinations.
+        if (fragmentManager.isStateSaved) return
+
         fragmentManager.beginTransaction().apply {
             setReorderingAllowed(true)
             fragmentManager.fragments.forEach { fragment ->
@@ -122,7 +125,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 show(target)
             }
-        }.commit()
+        }.commitNow()
     }
 
     private fun createDestination(itemId: Int): Fragment = when (itemId) {

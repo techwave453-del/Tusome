@@ -159,7 +159,6 @@ class StrandDetailActivity : AppCompatActivity() {
                 PerformanceLevel.MEETS -> cgSelfEvaluation.check(R.id.chipME)
                 PerformanceLevel.APPROACHES -> cgSelfEvaluation.check(R.id.chipAE)
                 PerformanceLevel.BELOW -> cgSelfEvaluation.check(R.id.chipBE)
-                null -> Unit
             }
 
             btnSaveProgress.setOnClickListener {

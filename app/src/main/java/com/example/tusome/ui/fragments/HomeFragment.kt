@@ -24,6 +24,7 @@ class HomeFragment : Fragment() {
     private var selectedGrade = GradeLevel.GRADE_4
     private var learningAreasRecyclerView: RecyclerView? = null
     private var learningAreasHeading: TextView? = null
+    private var viewAllLearningAreas: TextView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,7 +39,7 @@ class HomeFragment : Fragment() {
         learningAreasRecyclerView = view.findViewById(R.id.rvLearningAreas)
         learningAreasHeading = view.findViewById(R.id.tvLearningAreasHeading)
         val btnStartHeroActivity: Button = view.findViewById(R.id.btnStartHeroActivity)
-        val tvViewAll: TextView = view.findViewById(R.id.tvViewAllLearningAreas)
+        viewAllLearningAreas = view.findViewById(R.id.tvViewAllLearningAreas)
 
         val gradeAdapter = GradeChipAdapter(GradeLevel.values().toList(), selectedGrade) { grade ->
             selectedGrade = grade
@@ -60,7 +61,7 @@ class HomeFragment : Fragment() {
             startActivity(intent)
         }
 
-        tvViewAll.setOnClickListener {
+        viewAllLearningAreas?.setOnClickListener {
             activity?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
                 ?.selectedItemId = R.id.navigation_strands
         }
@@ -72,6 +73,7 @@ class HomeFragment : Fragment() {
 
     private fun loadLearningAreas(recyclerView: RecyclerView) {
         val learningAreas = CbcRepository.getLearningAreas(selectedGrade)
+        viewAllLearningAreas?.text = "View All (${learningAreas.size})"
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
         recyclerView.adapter = LearningAreaAdapter(learningAreas) { area ->
             val intent = Intent(requireContext(), StrandDetailActivity::class.java).apply {
@@ -84,6 +86,7 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         learningAreasRecyclerView = null
         learningAreasHeading = null
+        viewAllLearningAreas = null
         super.onDestroyView()
     }
 }

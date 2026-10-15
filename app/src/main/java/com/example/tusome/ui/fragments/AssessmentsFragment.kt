@@ -51,14 +51,17 @@ class AssessmentsFragment : Fragment() {
         var beCount = 0
 
         val updatedRubrics = rawRubrics.map { r ->
-            val savedLevel = progressManager.getSelfEvaluation(r.subStrandId)
+            val savedLevel = progressManager.getSavedSelfEvaluation(r.subStrandId)
             val savedNote = progressManager.getLearnerNote(r.subStrandId)
 
+            // Count submitted self-evaluations only; do not count untouched rubrics
+            // as "Meets Expectations" just because the local default is ME.
             when (savedLevel) {
                 PerformanceLevel.EXCEEDS -> eeCount++
                 PerformanceLevel.MEETS -> meCount++
                 PerformanceLevel.APPROACHES -> aeCount++
                 PerformanceLevel.BELOW -> beCount++
+                null -> Unit
             }
 
             val subStrand = subStrandsById[r.subStrandId]

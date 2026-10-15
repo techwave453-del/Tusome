@@ -1,7 +1,9 @@
 package com.example.tusome.ui
 
+import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -12,18 +14,33 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tusome.data.repository.SupabaseAuthRepository
+import org.json.JSONArray
 import org.json.JSONObject
+
+private data class SchoolOption(
+    val id: String,
+    val name: String,
+    val active: Boolean
+) {
+    override fun toString(): String = if (active) name else "$name (inactive)"
+}
 
 class AdminActivity : AppCompatActivity() {
     private lateinit var schoolName: EditText
     private lateinit var county: EditText
     private lateinit var inviteName: EditText
     private lateinit var inviteEmail: EditText
-    private lateinit var schoolId: EditText
+    private lateinit var schoolSpinner: Spinner
     private lateinit var roleSpinner: Spinner
     private lateinit var createSchoolButton: Button
     private lateinit var inviteButton: Button
+    private lateinit var usersContainer: LinearLayout
+    private lateinit var auditContainer: LinearLayout
+    private lateinit var refreshButton: Button
     private lateinit var roleKeys: List<String>
+    private val schools = mutableListOf<SchoolOption>()
+    private var isPlatformAdmin = false
+    private var ownSchoolId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +51,8 @@ class AdminActivity : AppCompatActivity() {
             return
         }
 
-        val isPlatformAdmin = "platform_admin" in session.roles
+        isPlatformAdmin = "platform_admin" in session.roles
+        ownSchoolId = session.schoolId
         val page = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(20), dp(20), dp(28))
@@ -55,7 +73,11 @@ class AdminActivity : AppCompatActivity() {
             text = "Signed in as ${session.displayName}\nRole: ${session.roles.joinToString()}"
             textSize = 14f
             setTextColor(Color.DKGRAY)
-        }, margins(top = 6, bottom = 18))
+        }, margins(top = 6, bottom = 12))
+
+        refreshButton = actionButton("Refresh users and activity")
+        page.addView(refreshButton, margins(bottom = 18))
+        refreshButton.setOnClickListener { refreshAll() }
 
         if (isPlatformAdmin) {
             section(page, "Create a school")
@@ -73,23 +95,30 @@ class AdminActivity : AppCompatActivity() {
         inviteEmail = field("Email address").apply {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         }
-        schoolId = field("School ID (UUID; required for school roles)")
-        if (!isPlatformAdmin) schoolId.setText(session.schoolId.orEmpty())
+        schoolSpinner = Spinner(this)
         roleSpinner = Spinner(this)
         roleKeys = if (isPlatformAdmin) {
             listOf("learner", "teacher", "school_admin", "curriculum_editor", "platform_admin")
         } else {
             listOf("learner", "teacher")
         }
-        val roleLabels = roleKeys.map { it.replace('_', ' ').replaceFirstChar { ch -> ch.uppercase() } }
-        roleSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, roleLabels)
+        roleSpinner.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            roleKeys.map { it.replace('_', ' ').replaceFirstChar { ch -> ch.uppercase() } }
+        )
         page.addView(inviteName, margins(top = 8))
         page.addView(inviteEmail, margins(top = 8))
+        page.addView(TextView(this).apply {
+            text = "School (select a school; the ID is handled securely)"
+            textSize = 12f
+            setTextColor(Color.DKGRAY)
+        }, margins(top = 8))
+        page.addView(schoolSpinner, margins(top = 2))
         page.addView(roleSpinner, margins(top = 8))
-        page.addView(schoolId, margins(top = 8))
         page.addView(TextView(this).apply {
             text = if (isPlatformAdmin) {
-                "For teacher and school administrator roles, enter the school's UUID. Creating a school above fills this field automatically."
+                "Platform administrators can invite users to a selected school. Global roles do not require a school."
             } else {
                 "You can invite learners and teachers to your assigned school only."
             }
@@ -97,16 +126,74 @@ class AdminActivity : AppCompatActivity() {
             setTextColor(Color.DKGRAY)
         }, margins(top = 8))
         inviteButton = actionButton("Send invitation")
-        page.addView(inviteButton, margins(top = 14))
+        page.addView(inviteButton, margins(top = 12, bottom = 22))
         inviteButton.setOnClickListener { inviteUser() }
 
-        val backButton = Button(this).apply {
+        section(page, "Users and role assignments")
+        usersContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        page.addView(usersContainer, margins(top = 6, bottom = 20))
+
+        section(page, "Recent administration activity")
+        auditContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        page.addView(auditContainer, margins(top = 6, bottom = 20))
+
+        page.addView(Button(this).apply {
             text = "Back to learning"
             isAllCaps = false
             setOnClickListener { finish() }
-        }
-        page.addView(backButton, margins(top = 10))
+        }, margins(top = 10))
         setContentView(scroll)
+        refreshAll()
+    }
+
+    private fun refreshAll() {
+        refreshButton.isEnabled = false
+        loadSchools()
+        loadUsers()
+        loadAuditLog()
+        refreshButton.postDelayed({ refreshButton.isEnabled = true }, 800)
+    }
+
+    private fun loadSchools(selectId: String? = null) {
+        SupabaseAuthRepository.manageSchoolUsers(
+            this,
+            JSONObject().put("action", "list_schools")
+        ) { result ->
+            result.onSuccess { response ->
+                schools.clear()
+                val rows = response.optJSONArray("schools") ?: JSONArray()
+                for (index in 0 until rows.length()) {
+                    val row = rows.optJSONObject(index) ?: continue
+                    val id = row.optString("id")
+                    if (id.isBlank()) continue
+                    schools.add(
+                        SchoolOption(
+                            id = id,
+                            name = row.optString("name", "Unnamed school"),
+                            active = row.optBoolean("is_active", true)
+                        )
+                    )
+                }
+                schoolSpinner.adapter = ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    schools
+                )
+                val preferredId = selectId ?: ownSchoolId
+                val preferredIndex = schools.indexOfFirst { it.id == preferredId }
+                if (preferredIndex >= 0) schoolSpinner.setSelection(preferredIndex)
+                schoolSpinner.isEnabled = isPlatformAdmin && schools.size > 1
+                if (schools.isEmpty()) {
+                    Toast.makeText(this, "No schools are available yet. A platform administrator can create one.", Toast.LENGTH_LONG).show()
+                }
+            }.onFailure { error ->
+                Toast.makeText(this, error.message ?: "Could not load schools.", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun createSchool() {
@@ -127,12 +214,11 @@ class AdminActivity : AppCompatActivity() {
             result.onSuccess { response ->
                 val school = response.optJSONObject("school")
                 val id = school?.optString("id").orEmpty()
-                if (id.isNotBlank()) schoolId.setText(id)
-                Toast.makeText(
-                    this,
-                    if (id.isNotBlank()) "School created. Its ID has been filled into the invitation form." else "School created.",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this, "School created.", Toast.LENGTH_LONG).show()
+                schoolName.text.clear()
+                county.text.clear()
+                loadSchools(id.takeIf { it.isNotBlank() })
+                loadAuditLog()
             }.onFailure { error ->
                 Toast.makeText(this, error.message ?: "Could not create school.", Toast.LENGTH_LONG).show()
             }
@@ -143,7 +229,7 @@ class AdminActivity : AppCompatActivity() {
         val name = inviteName.text.toString().trim()
         val email = inviteEmail.text.toString().trim()
         val role = roleKeys.getOrNull(roleSpinner.selectedItemPosition) ?: "learner"
-        val school = schoolId.text.toString().trim()
+        val school = schools.getOrNull(schoolSpinner.selectedItemPosition)?.id
         if (name.length < 2) {
             inviteName.error = "Enter the user's full name"
             return
@@ -152,8 +238,8 @@ class AdminActivity : AppCompatActivity() {
             inviteEmail.error = "Enter a valid email address"
             return
         }
-        if (role in listOf("teacher", "school_admin") && school.isBlank()) {
-            schoolId.error = "A school ID is required for this role"
+        if (role in listOf("teacher", "school_admin") && school == null) {
+            Toast.makeText(this, "Select a school for this role.", Toast.LENGTH_LONG).show()
             return
         }
 
@@ -163,7 +249,7 @@ class AdminActivity : AppCompatActivity() {
             .put("display_name", name)
             .put("email", email)
             .put("role_key", role)
-        if (school.isNotBlank()) payload.put("school_id", school)
+        if (school != null) payload.put("school_id", school)
         SupabaseAuthRepository.manageSchoolUsers(this, payload) { result ->
             inviteButton.isEnabled = true
             result.onSuccess { response ->
@@ -174,8 +260,134 @@ class AdminActivity : AppCompatActivity() {
                 ).show()
                 inviteName.text.clear()
                 inviteEmail.text.clear()
+                loadUsers()
+                loadAuditLog()
             }.onFailure { error ->
                 Toast.makeText(this, error.message ?: "Could not send invitation.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun loadUsers() {
+        usersContainer.removeAllViews()
+        usersContainer.addView(messageText("Loading users…"))
+        SupabaseAuthRepository.manageSchoolUsers(
+            this,
+            JSONObject().put("action", "list_users")
+        ) { result ->
+            usersContainer.removeAllViews()
+            result.onSuccess { response ->
+                val rows = response.optJSONArray("users") ?: JSONArray()
+                if (rows.length() == 0) {
+                    usersContainer.addView(messageText("No users found in this administration scope."))
+                    return@onSuccess
+                }
+                for (index in 0 until rows.length()) {
+                    val user = rows.optJSONObject(index) ?: continue
+                    val userId = user.optString("user_id")
+                    val displayName = user.optString("display_name").ifBlank { "Unnamed user" }
+                    val email = user.optString("email").ifBlank { "Email unavailable" }
+                    val schoolName = user.optString("school_name")
+                    val roles = user.optJSONArray("roles") ?: JSONArray()
+                    val card = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(12), dp(10), dp(12), dp(10))
+                        setBackgroundColor(Color.WHITE)
+                    }
+                    card.addView(TextView(this).apply {
+                        text = displayName
+                        textSize = 16f
+                        setTextColor(Color.rgb(32, 63, 34))
+                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                    }, params())
+                    card.addView(messageText(email + if (schoolName.isNotBlank()) "\nSchool: $schoolName" else ""), margins(top = 3))
+                    if (roles.length() == 0) {
+                        card.addView(messageText("No role assignments returned."), margins(top = 4))
+                    }
+                    for (roleIndex in 0 until roles.length()) {
+                        val role = roles.optJSONObject(roleIndex) ?: continue
+                        val roleKey = role.optString("role_key")
+                        val roleSchoolId = role.optString("school_id").takeIf { it.isNotBlank() && it != "null" }
+                        val roleLabel = roleKey.replace('_', ' ')
+                        card.addView(messageText("Role: $roleLabel"), margins(top = 4))
+                        val canRevoke = roleKey != "learner" && roleKey != "platform_admin" &&
+                            (isPlatformAdmin || roleKey == "teacher")
+                        if (canRevoke) {
+                            val revokeButton = Button(this).apply {
+                                text = "Revoke $roleLabel"
+                                isAllCaps = false
+                                setTextColor(Color.rgb(150, 35, 35))
+                                setOnClickListener {
+                                    confirmRevoke(userId, displayName, roleKey, roleSchoolId)
+                                }
+                            }
+                            card.addView(revokeButton, margins(top = 3))
+                        }
+                    }
+                    usersContainer.addView(card, margins(bottom = 8))
+                    val divider = View(this).apply { setBackgroundColor(Color.rgb(220, 226, 220)) }
+                    usersContainer.addView(divider, LinearLayout.LayoutParams(-1, dp(1)).apply {
+                        bottomMargin = dp(8)
+                    })
+                }
+            }.onFailure { error ->
+                usersContainer.removeAllViews()
+                usersContainer.addView(messageText(error.message ?: "Could not load users."))
+            }
+        }
+    }
+
+    private fun confirmRevoke(userId: String, displayName: String, roleKey: String, schoolId: String?) {
+        AlertDialog.Builder(this)
+            .setTitle("Revoke role?")
+            .setMessage("Remove the $roleKey role from $displayName? This does not delete the user's account or learning progress.")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Revoke") { _, _ ->
+                val payload = JSONObject()
+                    .put("action", "revoke_role")
+                    .put("user_id", userId)
+                    .put("role_key", roleKey)
+                if (schoolId != null) payload.put("school_id", schoolId)
+                SupabaseAuthRepository.manageSchoolUsers(this, payload) { result ->
+                    result.onSuccess { response ->
+                        Toast.makeText(this, response.optString("message", "Role revoked."), Toast.LENGTH_LONG).show()
+                        loadUsers()
+                        loadAuditLog()
+                    }.onFailure { error ->
+                        Toast.makeText(this, error.message ?: "Could not revoke role.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun loadAuditLog() {
+        auditContainer.removeAllViews()
+        auditContainer.addView(messageText("Loading recent activity…"))
+        SupabaseAuthRepository.manageSchoolUsers(
+            this,
+            JSONObject().put("action", "list_audit_logs")
+        ) { result ->
+            auditContainer.removeAllViews()
+            result.onSuccess { response ->
+                val rows = response.optJSONArray("events") ?: JSONArray()
+                if (rows.length() == 0) {
+                    auditContainer.addView(messageText("No administrative activity has been recorded yet."))
+                    return@onSuccess
+                }
+                for (index in 0 until rows.length()) {
+                    val event = rows.optJSONObject(index) ?: continue
+                    val details = event.optJSONObject("details") ?: JSONObject()
+                    val action = event.optString("action_key").replace('.', ' ').replace('_', ' ')
+                    val target = details.optString("email").ifBlank {
+                        details.optString("name").ifBlank { event.optString("target_user_id") }
+                    }
+                    val line = if (target.isBlank()) action else "$action — $target"
+                    auditContainer.addView(messageText("$line\n${event.optString("created_at")}"), margins(bottom = 8))
+                }
+            }.onFailure { error ->
+                auditContainer.removeAllViews()
+                auditContainer.addView(messageText(error.message ?: "Could not load administration activity."))
             }
         }
     }
@@ -196,6 +408,12 @@ class AdminActivity : AppCompatActivity() {
         setTextColor(Color.rgb(35, 45, 36))
         setHintTextColor(Color.GRAY)
         setPadding(dp(12), dp(10), dp(12), dp(10))
+    }
+
+    private fun messageText(value: String) = TextView(this).apply {
+        text = value
+        textSize = 13f
+        setTextColor(Color.DKGRAY)
     }
 
     private fun actionButton(label: String) = Button(this).apply {

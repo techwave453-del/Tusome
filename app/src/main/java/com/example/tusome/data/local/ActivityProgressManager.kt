@@ -17,6 +17,10 @@ data class SubStrandProgress(
 
 class ActivityProgressManager(context: Context) {
 
+    private companion object {
+        val LEGACY_MIGRATION_LOCK = Any()
+    }
+
     internal val appContext: Context = context.applicationContext
     internal val signedInUserId: String? =
         SupabaseAuthRepository.currentSession(appContext)?.userId?.takeIf { it.isNotBlank() }
@@ -27,8 +31,46 @@ class ActivityProgressManager(context: Context) {
     )
 
     init {
+        migrateLegacyProgressForFirstSignedInUser()
         // Cloud sync is best-effort. Local progress remains usable when the device is offline.
         if (signedInUserId != null) LearnerProgressSyncRepository.scheduleSync(this)
+    }
+
+    private fun migrateLegacyProgressForFirstSignedInUser() {
+        val userId = signedInUserId ?: return
+        val migrationPrefs = appContext.getSharedPreferences(
+            "tusome_cbc_progress_migration",
+            Context.MODE_PRIVATE
+        )
+        if (migrationPrefs.getBoolean("legacy_progress_assigned", false)) return
+
+        synchronized(LEGACY_MIGRATION_LOCK) {
+            if (migrationPrefs.getBoolean("legacy_progress_assigned", false)) return
+            val legacy = appContext.getSharedPreferences("tusome_cbc_progress_prefs", Context.MODE_PRIVATE)
+            val editor = prefs.edit()
+            legacy.all.forEach { (key, value) ->
+                if (!key.startsWith("completed_") &&
+                    !key.startsWith("note_") &&
+                    !key.startsWith("level_") &&
+                    !key.startsWith("time_")
+                ) return@forEach
+                if (prefs.contains(key)) return@forEach
+                when (value) {
+                    is Boolean -> editor.putBoolean(key, value)
+                    is String -> editor.putString(key, value)
+                    is Long -> editor.putLong(key, value)
+                    is Int -> editor.putInt(key, value)
+                    is Float -> editor.putFloat(key, value)
+                }
+            }
+            editor.apply()
+            // Preserve the old preference file as a local backup; only the first signed-in
+            // account receives its previously shared progress.
+            migrationPrefs.edit()
+                .putBoolean("legacy_progress_assigned", true)
+                .putString("legacy_progress_user_id", userId)
+                .apply()
+        }
     }
 
     fun isSubStrandCompleted(subStrandId: String): Boolean =

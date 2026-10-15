@@ -96,12 +96,19 @@ class HomeFragment : Fragment() {
                     renderLearningAreas(recyclerView, areas, fromLiveCatalogue = true)
                 }
             }.onFailure {
-                curriculumSyncStatus?.text = "Offline • showing the on-device curriculum catalogue"
-                renderLearningAreas(
-                    recyclerView,
-                    CbcRepository.getLearningAreas(requestedGrade),
-                    fromLiveCatalogue = false
-                )
+                if (requestedGrade == GradeLevel.GRADE_4) {
+                    curriculumSyncStatus?.text =
+                        "Offline • showing the bundled sample catalogue, not live KICD data"
+                    renderLearningAreas(
+                        recyclerView,
+                        CbcRepository.getLearningAreas(requestedGrade),
+                        fromLiveCatalogue = false
+                    )
+                } else {
+                    curriculumSyncStatus?.text =
+                        "Offline • no saved curriculum catalogue is available for ${requestedGrade.title} yet"
+                    renderLearningAreas(recyclerView, emptyList(), fromLiveCatalogue = false)
+                }
             }
         }
     }

@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Amani Muthoni"
+                android:text="Tusome user"
                 android:textColor="@color/surface_white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -52,7 +52,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Adm No: NPS-2024-0482 • Grade 4"
+                android:text="Signed-in account"
                 android:textColor="#C8E6C9"
                 android:textSize="13sp" />
 
@@ -87,7 +87,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="School: Nairobi Primary School"
+                    android:text="School: Not assigned yet"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp" />
 
@@ -96,7 +96,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="County: Nairobi City County (Westlands Sub-County)"
+                    android:text="Learning level: Not assigned"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -105,7 +105,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Guardian Contact: +254 712 345 678"
+                    android:text="Account details are loaded from your Tusome profile."
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -157,7 +157,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="• Upper Primary (Grade 4 - 6): [CURRENT LEVEL]"
+                    android:text="• Upper Primary (Grade 4 - 6): Intermediate Skills"
                     android:textColor="@color/primary_green"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -216,7 +216,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Offline Curriculum Synced"
+                        android:text="Curriculum sync status"
                         android:textColor="@color/primary_green_dark"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -224,7 +224,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="All KICD Grade 1 - 9 strands ready for offline learning."
+                        android:text="Published curriculum is loaded online. Offline coverage depends on saved content."
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
 
@@ -233,6 +233,18 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSignOut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="24dp"
+            android:text="Sign out"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/primary_green_dark"
+            app:cornerRadius="12dp" />
 
     </LinearLayout>
 

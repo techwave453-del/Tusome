@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/drawer_home"
+            android:icon="@drawable/ic_home"
+            android:title="@string/nav_home" />
+        <item
+            android:id="@+id/drawer_strands"
+            android:icon="@drawable/ic_book"
+            android:title="@string/nav_strands" />
+        <item
+            android:id="@+id/drawer_assessments"
+            android:icon="@drawable/ic_assessment"
+            android:title="@string/nav_assessments" />
+        <item
+            android:id="@+id/drawer_competencies"
+            android:icon="@drawable/ic_psychology"
+            android:title="@string/nav_competencies" />
+        <item
+            android:id="@+id/drawer_admin"
+            android:icon="@drawable/ic_person"
+            android:title="@string/drawer_admin" />
+        <item
+            android:id="@+id/drawer_profile"
+            android:icon="@drawable/ic_person"
+            android:title="@string/nav_profile" />
+    </group>
+    <item android:title="@string/drawer_more">
+        <menu>
+            <item
+                android:id="@+id/drawer_about"
+                android:icon="@drawable/ic_info"
+                android:title="@string/drawer_about" />
+        </menu>
+    </item>
+</menu>

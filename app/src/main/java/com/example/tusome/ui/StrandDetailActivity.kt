@@ -1,6 +1,5 @@
 package com.example.tusome.ui
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.LinearLayout
@@ -59,16 +58,23 @@ class StrandDetailActivity : AppCompatActivity() {
             subCard.findViewById<TextView>(R.id.tvRubricSubstrand).text =
                 "Sub-strand ${sub.subStrandNumber}: ${sub.title}"
             subCard.findViewById<TextView>(R.id.tvRubricCriteria).text =
-                "Specific Outcomes: ${sub.specificLearningOutcomes.joinToString("\n• ", prefix = "• ")}"
+                formatBulletList(sub.specificLearningOutcomes, "Learning outcomes will be added for this sub-strand.")
+            subCard.findViewById<TextView>(R.id.tvKeyInquiryQuestions).text =
+                formatBulletList(sub.keyInquiryQuestions, "No inquiry questions have been added yet.")
+            subCard.findViewById<TextView>(R.id.tvSuggestedExperiences).text =
+                formatBulletList(sub.suggestedExperiences, "No suggested activities have been added yet.")
             subCard.findViewById<TextView>(R.id.tvTeacherRemark).text =
-                "Digital Literacy Task: ${sub.digitalTaskPrompt}"
-
-            val badge = subCard.findViewById<TextView>(R.id.tvPerformanceLevelBadge)
-            badge.text = sub.rubric.learnerLevel?.name ?: "ME"
-            badge.setBackgroundResource(R.drawable.bg_badge_ee)
-            badge.setTextColor(Color.parseColor("#2E7D32"))
+                sub.digitalTaskPrompt.ifBlank { "No digital learning task has been added yet." }
 
             containerSubstrands.addView(subCard)
+        }
+    }
+
+    private fun formatBulletList(items: List<String>, emptyMessage: String): String {
+        return if (items.isEmpty()) {
+            emptyMessage
+        } else {
+            items.joinToString(separator = "\n") { "• $it" }
         }
     }
 }

@@ -59,11 +59,21 @@ class HomeFragment : Fragment() {
         learningAreasRecyclerView?.let(::loadLearningAreas)
 
         btnStartHeroActivity.setOnClickListener {
-            val intent = Intent(requireContext(), StrandDetailActivity::class.java).apply {
-                putExtra("LEARNING_AREA_ID", "agri_nutr")
-                putExtra("STRAND_ID", "agri_s1")
+            SupabaseCurriculumRepository.fetchLearningAreaOverview(
+                selectedGrade,
+                "agriculture_nutrition"
+            ) { result ->
+                if (!isAdded) return@fetchLearningAreaOverview
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Agriculture and Nutrition • ${selectedGrade.title}")
+                    .setMessage(
+                        result.getOrElse {
+                            "Unable to load the live curriculum. Connect to the internet and try again."
+                        }
+                    )
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
             }
-            startActivity(intent)
         }
 
         viewAllLearningAreas?.setOnClickListener {

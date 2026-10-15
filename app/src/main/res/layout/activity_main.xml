@@ -12,18 +12,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_green_dark"
-        app:elevation="0dp">
+        app:elevation="2dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="@string/app_name"
+            android:layout_height="64dp"
+            android:contentInsetStartWithNavigation="16dp"
+            app:title="@string/nav_home"
             app:titleTextColor="@color/surface_white"
-            app:subtitle="@string/app_subtitle"
-            app:subtitleTextColor="#C8E6C9"
-            app:navigationIcon="@drawable/ic_leaf"
-            app:navigationIconTint="@color/accent_orange" />
+            app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -31,18 +29,21 @@
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="64dp"
+        android:layout_marginBottom="72dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="72dp"
         android:layout_gravity="bottom"
         android:background="@color/surface_white"
-        app:elevation="8dp"
+        app:elevation="10dp"
+        app:itemIconSize="24dp"
         app:itemIconTint="@color/primary_green"
         app:itemTextColor="@color/primary_green"
+        app:labelVisibilityMode="labeled"
+        app:itemHorizontalTranslationEnabled="false"
         app:menu="@menu/bottom_nav_menu" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

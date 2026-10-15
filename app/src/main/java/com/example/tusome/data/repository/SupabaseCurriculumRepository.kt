@@ -36,6 +36,75 @@ object SupabaseCurriculumRepository {
         }
     }
 
+
+    fun fetchLearningAreaOverview(
+        grade: GradeLevel,
+        learningAreaId: String,
+        onResult: (Result<String>) -> Unit
+    ) {
+        executor.execute {
+            val result = runCatching { requestLearningAreaOverview(grade, learningAreaId) }
+            mainHandler.post { onResult(result) }
+        }
+    }
+
+    private fun requestLearningAreaOverview(grade: GradeLevel, learningAreaId: String): String {
+        val gradeId = grade.code.lowercase(Locale.ROOT)
+        val endpoint = "$BASE_URL/rest/v1/curriculum_strands" +
+            "?select=title,sequence,description,curriculum_sub_strands(title,sequence,learning_outcomes(outcome_text,sequence))" +
+            "&grade_id=eq.$gradeId&learning_area_id=eq.$learningAreaId" +
+            "&is_published=eq.true&content_status=eq.published&order=sequence.asc" +
+            "&curriculum_sub_strands.order=sequence.asc&curriculum_sub_strands.learning_outcomes.order=sequence.asc"
+
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10000
+            readTimeout = 10000
+            setRequestProperty("apikey", PUBLISHABLE_KEY)
+            setRequestProperty("Authorization", "Bearer $PUBLISHABLE_KEY")
+            setRequestProperty("Accept", "application/json")
+        }
+
+        try {
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
+            check(status in 200..299) { "Supabase returned HTTP $status while loading curriculum details." }
+
+            val rows = JSONArray(body)
+            if (rows.length() == 0) {
+                return "This learning area is listed in the Tusome curriculum catalogue, but strand-level content for " +
+                    grade.title + " has not yet been reviewed and published.\\n\\n" +
+                    "Use KICD curriculum designs as the authoritative source while grade-specific content is verified.\\n\\n" +
+                    "KICD: https://kicd.ac.ke/cbc-materials/curriculum-designs/regular-curriculum-designs/"
+            }
+
+            val output = StringBuilder()
+            for (i in 0 until rows.length()) {
+                val strand = rows.getJSONObject(i)
+                output.append(strand.optInt("sequence")).append(". ")
+                    .append(strand.optString("title")).append("\\n")
+                val subs = strand.optJSONArray("curriculum_sub_strands") ?: JSONArray()
+                for (j in 0 until subs.length()) {
+                    val sub = subs.getJSONObject(j)
+                    output.append("   • ").append(sub.optString("title")).append("\\n")
+                    val outcomes = sub.optJSONArray("learning_outcomes") ?: JSONArray()
+                    for (k in 0 until outcomes.length()) {
+                        output.append("      – ").append(outcomes.getJSONObject(k).optString("outcome_text")).append("\\n")
+                    }
+                }
+                output.append("\\n")
+            }
+            if (learningAreaId == "agriculture_nutrition" && gradeId == "g4") {
+                output.append("Source: KICD, Grade 4 Agriculture and Nutrition curriculum design (revised 2024).\\n")
+                output.append("https://kicd.ac.ke/wp-content/uploads/2024/02/GRADE.4.AGRICULTURE.NUTRITION.16.1.2024.pdf")
+            }
+            return output.toString().trim()
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     private fun requestLearningAreas(grade: GradeLevel): List<LearningArea> {
         val gradeId = grade.code.lowercase(Locale.ROOT)
         val endpoint = "$BASE_URL/rest/v1/grade_learning_areas" +

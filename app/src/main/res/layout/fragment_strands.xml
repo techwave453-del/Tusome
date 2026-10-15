@@ -10,21 +10,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_green_dark"
+        android:orientation="vertical"
         android:paddingHorizontal="16dp"
-        android:paddingBottom="16dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="18dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Explore CBC"
+            android:textColor="@color/surface_white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="14dp"
+            android:text="Find strands, sub-strands and learning outcomes"
+            android:textColor="#C8E6C9"
+            android:textSize="13sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="50dp"
             android:background="@drawable/bg_search_box"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="14dp">
 
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:contentDescription="Search icon"
+                android:contentDescription="Search"
                 android:src="@drawable/ic_search"
                 app:tint="@color/text_secondary" />
 
@@ -32,11 +51,14 @@
                 android:id="@+id/etSearchStrands"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:background="@null"
                 android:hint="@string/search_strands_hint"
+                android:imeOptions="actionSearch"
                 android:inputType="text"
+                android:paddingVertical="0dp"
+                android:singleLine="true"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_muted"
                 android:textSize="14sp" />
@@ -60,12 +82,54 @@
             app:singleLine="true" />
     </HorizontalScrollView>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvStrandsList"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp" />
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvStrandsList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="4dp"
+            android:paddingBottom="16dp" />
+
+        <LinearLayout
+            android:id="@+id/layoutEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="32dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:contentDescription="No search results"
+                android:src="@drawable/ic_search"
+                app:tint="@color/text_muted" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center"
+                android:text="No matching strands"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="Try another keyword or choose a different subject."
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </FrameLayout>
 
 </LinearLayout>

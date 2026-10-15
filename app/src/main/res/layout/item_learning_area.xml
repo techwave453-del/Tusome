@@ -4,108 +4,82 @@
     android:id="@+id/cardLearningArea"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="5dp"
+    android:clickable="true"
+    android:focusable="true"
     app:cardBackgroundColor="@color/surface_white"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
-    app:strokeWidth="0dp">
+    app:cardCornerRadius="18dp"
+    app:cardElevation="1dp"
+    app:rippleColor="@color/primary_container_green"
+    app:strokeColor="#E7EDE3"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="15dp">
+
+        <FrameLayout
+            android:id="@+id/frameIconContainer"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_chip_unselected">
+
+            <ImageView
+                android:id="@+id/ivSubjectIcon"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center"
+                android:contentDescription="Learning area icon"
+                android:src="@drawable/ic_leaf"
+                app:tint="@color/primary_green" />
+        </FrameLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <!-- Subject Icon Frame -->
-            <FrameLayout
-                android:id="@+id/frameIconContainer"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_chip_unselected">
-
-                <ImageView
-                    android:id="@+id/ivSubjectIcon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_leaf"
-                    app:tint="@color/primary_green" />
-            </FrameLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvSubjectTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Agriculture &amp; Nutrition"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvSubjectKiswahili"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Kilimo na Lishe"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
+            android:layout_marginStart="13dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tvProgressPercent"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvSubjectTitle"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="75%"
-                android:textColor="@color/primary_green"
-                android:textSize="14sp"
+                android:text="Agriculture &amp; Nutrition"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
-        </LinearLayout>
-
-        <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:id="@+id/progressIndicator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:progress="75"
-            app:indicatorColor="@color/primary_green"
-            app:trackColor="@color/primary_container_green"
-            app:trackCornerRadius="4dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tvSubjectKiswahili"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Kilimo na Lishe"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/tvStrandsCount"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="4 Strands • 12 Sub-strands"
-                android:textColor="@color/text_muted"
+                android:layout_marginTop="7dp"
+                android:text="Explore strands and learning outcomes"
+                android:textColor="@color/primary_green"
                 android:textSize="12sp" />
-
-            <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@drawable/ic_chevron_right"
-                app:tint="@color/accent_orange" />
         </LinearLayout>
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:contentDescription="Open learning area"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="@color/accent_orange" />
 
     </LinearLayout>
 

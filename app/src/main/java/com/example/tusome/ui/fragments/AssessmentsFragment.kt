@@ -39,6 +39,10 @@ class AssessmentsFragment : Fragment() {
     }
 
     private fun loadRubricsAndSummary(rootView: View) {
+        val subStrandsById = CbcRepository.getLearningAreas(com.example.tusome.data.model.GradeLevel.GRADE_4)
+            .flatMap { area -> CbcRepository.getStrandsForArea(area.id) }
+            .flatMap { strand -> strand.subStrands }
+            .associateBy { it.id }
         val rawRubrics = CbcRepository.getAllRubrics()
 
         var eeCount = 0
@@ -47,19 +51,26 @@ class AssessmentsFragment : Fragment() {
         var beCount = 0
 
         val updatedRubrics = rawRubrics.map { r ->
-            val savedLevel = progressManager.getSelfEvaluation(r.subStrandId)
+            val savedLevel = progressManager.getSavedSelfEvaluation(r.subStrandId)
             val savedNote = progressManager.getLearnerNote(r.subStrandId)
 
+            // Count submitted self-evaluations only; do not count untouched rubrics
+            // as "Meets Expectations" just because the local default is ME.
             when (savedLevel) {
                 PerformanceLevel.EXCEEDS -> eeCount++
                 PerformanceLevel.MEETS -> meCount++
                 PerformanceLevel.APPROACHES -> aeCount++
                 PerformanceLevel.BELOW -> beCount++
+                null -> Unit
             }
 
+            val subStrand = subStrandsById[r.subStrandId]
             r.copy(
                 learnerLevel = savedLevel,
-                teacherComment = if (savedNote.isNotBlank()) "Learner Note: $savedNote" else r.teacherComment
+                teacherComment = if (savedNote.isNotBlank()) "Learner Note: $savedNote" else r.teacherComment,
+                subStrandTitle = subStrand?.title.orEmpty(),
+                keyInquiryQuestions = subStrand?.keyInquiryQuestions.orEmpty(),
+                suggestedExperiences = subStrand?.suggestedExperiences.orEmpty()
             )
         }
 

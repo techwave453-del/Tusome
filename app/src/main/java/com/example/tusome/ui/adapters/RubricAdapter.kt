@@ -19,6 +19,8 @@ class RubricAdapter(
         val tvPerformanceLevelBadge: TextView = view.findViewById(R.id.tvPerformanceLevelBadge)
         val tvRubricCriteria: TextView = view.findViewById(R.id.tvRubricCriteria)
         val tvTeacherRemark: TextView = view.findViewById(R.id.tvTeacherRemark)
+        val tvKeyInquiryQuestions: TextView = view.findViewById(R.id.tvKeyInquiryQuestions)
+        val tvSuggestedExperiences: TextView = view.findViewById(R.id.tvSuggestedExperiences)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -31,6 +33,20 @@ class RubricAdapter(
         val rubric = rubrics[position]
         holder.tvRubricCriteria.text = "Criteria: ${rubric.criteria}"
         holder.tvTeacherRemark.text = rubric.teacherComment
+        holder.tvKeyInquiryQuestions.text = rubric.keyInquiryQuestions
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString(separator = "\n") { "• $it" }
+            ?.let { "Key Inquiry Questions\n$it" }
+            .orEmpty()
+        holder.tvKeyInquiryQuestions.visibility =
+            if (rubric.keyInquiryQuestions.isEmpty()) View.GONE else View.VISIBLE
+        holder.tvSuggestedExperiences.text = rubric.suggestedExperiences
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString(separator = "\n") { "• $it" }
+            ?.let { "Suggested Experiences\n$it" }
+            .orEmpty()
+        holder.tvSuggestedExperiences.visibility =
+            if (rubric.suggestedExperiences.isEmpty()) View.GONE else View.VISIBLE
 
         val context = holder.itemView.context
         val (bgRes, textColorRes, textLabel) = when (rubric.learnerLevel) {
@@ -38,13 +54,15 @@ class RubricAdapter(
             PerformanceLevel.MEETS -> Triple(R.drawable.bg_badge_me, R.color.rubric_me, "ME - Meets Expectations")
             PerformanceLevel.APPROACHES -> Triple(R.drawable.bg_badge_ae, R.color.rubric_ae, "AE - Approaches Expectations")
             PerformanceLevel.BELOW -> Triple(R.drawable.bg_badge_be, R.color.rubric_be, "BE - Below Expectations")
-            null -> Triple(R.drawable.bg_badge_me, R.color.rubric_me, "ME - Meets Expectations")
+            null -> Triple(R.drawable.bg_badge_me, R.color.rubric_me, "Not evaluated")
         }
 
         holder.tvPerformanceLevelBadge.setBackgroundResource(bgRes)
         holder.tvPerformanceLevelBadge.setTextColor(ContextCompat.getColor(context, textColorRes))
         holder.tvPerformanceLevelBadge.text = textLabel
-        holder.tvRubricSubstrand.text = "Rubric Entry #${position + 1}"
+        holder.tvRubricSubstrand.text = rubric.subStrandTitle
+            .takeIf { it.isNotBlank() }
+            ?: "Sub-strand: ${rubric.subStrandId}"
     }
 
     override fun getItemCount(): Int = rubrics.size

@@ -16,5 +16,8 @@ data class AssessmentRubric(
     val approachesDescription: String,
     val belowDescription: String,
     val learnerLevel: PerformanceLevel? = PerformanceLevel.MEETS,
-    val teacherComment: String = "Good effort shown in demonstrating practical skills during group activity."
+    val teacherComment: String = "Good effort shown in demonstrating practical skills during group activity.",
+    val subStrandTitle: String = "",
+    val keyInquiryQuestions: List<String> = emptyList(),
+    val suggestedExperiences: List<String> = emptyList()
 )

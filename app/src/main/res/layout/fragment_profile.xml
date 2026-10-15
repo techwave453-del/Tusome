@@ -109,6 +109,16 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
+                <TextView
+                    android:id="@+id/tvProfileSyncStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:accessibilityLiveRegion="polite"
+                    android:text="Profile sync status"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>

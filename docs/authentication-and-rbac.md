@@ -4,7 +4,7 @@
 
 Tusome uses the dedicated Supabase project `wkwnoflielrotknvoflz`. Android authentication is handled through Supabase Auth REST endpoints. The app now has a sign-in / registration entry screen, persists the session encrypted with an AES-GCM key held in Android Keystore, and displays the signed-in account and its assigned role(s) in Profile.
 
-New registrations receive the `learner` role only. The app does not offer a role picker and never trusts a role sent in user metadata. Elevated roles must be assigned through a trusted administrator workflow; that workflow must not use a service-role key in the Android APK.
+New registrations receive the `learner` role only. The app does not offer a role picker and never trusts a role sent in user metadata. Elevated roles must be assigned through a trusted administrator workflow; that workflow must not use a service-role key in the Android APK. The deployed `manage-school-users` Edge Function supports platform-admin school creation and secure user invitations. The first platform administrator must be bootstrapped manually by a trusted operator as described in [first-platform-admin-bootstrap.md](first-platform-admin-bootstrap.md).
 
 ## Roles
 
@@ -32,7 +32,7 @@ Permissions are normalized in `app_permissions` and `role_permissions`. Assignme
 This is the first secure foundation, not the completed school-management system. Next implementation steps:
 
 1. Add refresh-token rotation and explicit session expiry handling before private API operations.
-2. Add a trusted Edge Function / server-side workflow to invite users, link them to schools, assign teacher/admin roles, and revoke access. Never allow a client to insert its own role assignments.
+2. Extend the deployed `manage-school-users` Edge Function with role revocation, school membership changes, and audit logging. Never allow a client to insert its own role assignments.
 3. Replace the remaining demo learner progress and assessment data with user-owned, RLS-protected tables and offline-first local storage.
 4. Add role-aware navigation and screens: learner, teacher, school administrator, curriculum editor, and platform administrator.
 5. Add school onboarding, account recovery, email-confirmation states, and authorization tests for cross-user and cross-school access.

@@ -41,12 +41,20 @@ class ProfileFragment : Fragment() {
         super.onResume()
         val root = view ?: return
         loadProfileData(root) // Show cached profile immediately, including while offline.
+        root.findViewById<TextView>(R.id.tvProfileSyncStatus).text = "Refreshing profile from Supabase…"
         SupabaseAuthRepository.refreshCurrentUserData(requireContext()) { result ->
             if (!isAdded) return@refreshCurrentUserData
+            val currentView = view ?: return@refreshCurrentUserData
             result.onSuccess {
-                view?.let(::loadProfileData)
+                loadProfileData(currentView)
+                currentView.findViewById<TextView>(R.id.tvProfileSyncStatus).text =
+                    "Profile and role assignments refreshed from Supabase."
+            }.onFailure { error ->
+                // Keep cached values visible, but make a failed refresh observable instead of silently
+                // leaving the user to assume the stale profile was saved successfully.
+                currentView.findViewById<TextView>(R.id.tvProfileSyncStatus).text =
+                    "Showing saved profile. Refresh failed: ${error.message ?: "Check your connection and try again."}"
             }
-            // Keep the cached profile visible if refresh fails; never blank the profile on network errors.
         }
     }
 

@@ -3,11 +3,11 @@ name: Android build
 on:
   push:
     branches:
-      - feature/foundation-navigation-fixes-20261015
+      - "feature/**"
   pull_request:
     branches:
       - main
-      - feature/foundation-navigation-fixes-20261015
+      - "feature/**"
   workflow_dispatch:
 
 permissions:

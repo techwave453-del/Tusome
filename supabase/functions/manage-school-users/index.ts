@@ -220,19 +220,6 @@ Deno.serve(async (req: Request) => {
     }
 
     if (roleKey !== "learner") {
-      // The auth trigger gives every new account the default learner role.
-      // Inviting someone to a different primary role must replace that default,
-      // not accidentally leave the new user with two roles.
-      const { error: defaultRoleError } = await admin.from("user_role_assignments")
-        .delete()
-        .eq("user_id", newUserId)
-        .eq("role_key", "learner")
-        .is("school_id", null);
-      if (defaultRoleError) {
-        await admin.auth.admin.deleteUser(newUserId);
-        return reply(500, { error: "Default role setup failed; the invitation was rolled back." });
-      }
-
       const scopedSchoolId = role.scope === "school" ? requestedSchoolId : null;
       const { error: assignmentError } = await admin.from("user_role_assignments").insert({
         user_id: newUserId,
@@ -259,120 +246,6 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  if (action === "replace_secondary_role") {
-    if (!isPlatformAdmin) return reply(403, { error: "Only the super user can change role assignments." });
-    const targetUserId = String(body.user_id ?? actorId).trim();
-    const roleKey = String(body.role_key ?? "").trim();
-    const requestedSchoolId = body.school_id ? String(body.school_id) : null;
-    if (targetUserId !== actorId) {
-      return reply(403, { error: "This action can only change your own secondary role." });
-    }
-    if (!["learner", "teacher", "school_admin", "curriculum_editor"].includes(roleKey)) {
-      return reply(400, { error: "Choose a valid secondary role. The platform administrator role is protected." });
-    }
-
-    const { data: role, error: roleError } = await admin.from("app_roles")
-      .select("role_key,scope").eq("role_key", roleKey).maybeSingle();
-    if (roleError || !role) return reply(400, { error: "Unknown role." });
-    if (role.scope === "school" && !requestedSchoolId) {
-      return reply(400, { error: "Choose a school for this role." });
-    }
-    if (role.scope === "global" && requestedSchoolId) {
-      return reply(400, { error: "Global roles do not accept a school scope." });
-    }
-    if (requestedSchoolId) {
-      const { data: school, error } = await admin.from("schools")
-        .select("id,is_active").eq("id", requestedSchoolId).maybeSingle();
-      if (error || !school || !school.is_active) return reply(400, { error: "Choose an active school." });
-    }
-
-    const scopedSchoolId = role.scope === "school" ? requestedSchoolId : null;
-    const { data: currentRows, error: currentRowsError } = await admin.from("user_role_assignments")
-      .select("id,role_key,school_id")
-      .eq("user_id", actorId);
-    if (currentRowsError) return reply(500, { error: "Unable to read your current role assignments." });
-
-    const existingDesired = (currentRows ?? []).find(
-      (row) => row.role_key === roleKey && row.school_id === scopedSchoolId,
-    );
-    if (!existingDesired) {
-      const { error: insertError } = await admin.from("user_role_assignments").insert({
-        user_id: actorId,
-        role_key: roleKey,
-        school_id: scopedSchoolId,
-        assigned_by: actorId,
-      });
-      if (insertError) return reply(500, { error: "The new secondary role could not be assigned." });
-    }
-
-    const obsoleteIds = (currentRows ?? [])
-      .filter((row) => row.role_key !== "platform_admin" &&
-        !(row.role_key === roleKey && row.school_id === scopedSchoolId))
-      .map((row) => row.id);
-    if (obsoleteIds.length > 0) {
-      const { error: deleteError } = await admin.from("user_role_assignments")
-        .delete().in("id", obsoleteIds);
-      if (deleteError) return reply(500, { error: "The new role was assigned, but the previous secondary role could not be removed. Refresh and try again." });
-    }
-
-    await writeAudit(admin, actorId, "role.secondary_changed", actorId, scopedSchoolId, {
-      role_key: roleKey,
-      previous_roles: (currentRows ?? []).filter((row) => row.role_key !== "platform_admin")
-        .map((row) => ({ role_key: row.role_key, school_id: row.school_id })),
-    });
-    return reply(200, { message: `Your secondary role is now ${roleKey.replaceAll("_", " ")}. Your platform administrator role remains active. Sign out and back in to refresh your permissions.` });
-  }
-
-  if (action === "assign_role") {
-    if (!isPlatformAdmin) return reply(403, { error: "Only the super user can assign additional roles." });
-    const targetUserId = String(body.user_id ?? "").trim();
-    const roleKey = String(body.role_key ?? "").trim();
-    const requestedSchoolId = body.school_id ? String(body.school_id) : null;
-    if (!targetUserId || targetUserId === actorId) {
-      return reply(400, { error: "Choose another user. Use the secondary-role control to change your own role." });
-    }
-    if (!["learner", "teacher", "school_admin", "curriculum_editor"].includes(roleKey)) {
-      return reply(400, { error: "Choose a valid additional role. Platform administrator assignments are managed separately." });
-    }
-
-    const { data: role, error: roleError } = await admin.from("app_roles")
-      .select("role_key,scope").eq("role_key", roleKey).maybeSingle();
-    if (roleError || !role) return reply(400, { error: "Unknown role." });
-    if (role.scope === "school" && !requestedSchoolId) {
-      return reply(400, { error: "Choose a school for this role." });
-    }
-    if (role.scope === "global" && requestedSchoolId) {
-      return reply(400, { error: "Global roles do not accept a school scope." });
-    }
-    if (requestedSchoolId) {
-      const { data: school, error } = await admin.from("schools")
-        .select("id,is_active").eq("id", requestedSchoolId).maybeSingle();
-      if (error || !school || !school.is_active) return reply(400, { error: "Choose an active school." });
-    }
-
-    const scopedSchoolId = role.scope === "school" ? requestedSchoolId : null;
-    const { data: existing, error: existingError } = await admin.from("user_role_assignments")
-      .select("id").eq("user_id", targetUserId).eq("role_key", roleKey)
-      .match(scopedSchoolId ? { school_id: scopedSchoolId } : {})
-      .maybeSingle();
-    if (existingError) return reply(500, { error: "Unable to check existing role assignments." });
-    if (existing) return reply(409, { error: "That user already has this role in the selected scope." });
-
-    const { error: insertError } = await admin.from("user_role_assignments").insert({
-      user_id: targetUserId,
-      role_key: roleKey,
-      school_id: scopedSchoolId,
-      assigned_by: actorId,
-    });
-    if (insertError) return reply(500, { error: "Additional role could not be assigned." });
-
-    await writeAudit(admin, actorId, "role.assigned", targetUserId, scopedSchoolId, {
-      role_key: roleKey,
-      explicitly_assigned: true,
-    });
-    return reply(200, { message: `Additional ${roleKey.replaceAll("_", " ")} role assigned.` });
-  }
-
   if (action === "revoke_role") {
     if (!canManageUsers) return reply(403, { error: "You do not have permission to manage roles." });
     const targetUserId = String(body.user_id ?? "").trim();
@@ -380,8 +253,8 @@ Deno.serve(async (req: Request) => {
     const requestedSchoolId = body.school_id ? String(body.school_id) : null;
     if (!targetUserId || !roleKey) return reply(400, { error: "A user and role are required." });
     if (targetUserId === actorId) return reply(400, { error: "You cannot revoke your own role assignment." });
-    if (roleKey === "platform_admin") {
-      return reply(403, { error: "The platform administrator role is protected and cannot be revoked from this screen." });
+    if (roleKey === "learner" || roleKey === "platform_admin") {
+      return reply(403, { error: "This role cannot be revoked from this screen." });
     }
     if (!isPlatformAdmin && (!isSchoolAdmin || roleKey !== "teacher" || requestedSchoolId !== actorProfile!.school_id)) {
       return reply(403, { error: "School administrators can revoke teacher roles only within their own school." });

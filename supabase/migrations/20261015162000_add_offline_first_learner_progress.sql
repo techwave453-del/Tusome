@@ -37,4 +37,6 @@ create policy "Learners update own activity progress"
   using (user_id = (select auth.uid()))
   with check (user_id = (select auth.uid()));
 
+revoke all on public.learner_activity_progress from anon;
+revoke delete on public.learner_activity_progress from authenticated;
 grant select, insert, update on public.learner_activity_progress to authenticated;

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/ic_home"
+        android:title="@string/nav_home" />
+    <item
+        android:id="@+id/navigation_strands"
+        android:icon="@drawable/ic_book"
+        android:title="@string/nav_strands" />
+    <item
+        android:id="@+id/navigation_assessments"
+        android:icon="@drawable/ic_assessment"
+        android:title="@string/nav_assessments" />
+    <item
+        android:id="@+id/navigation_competencies"
+        android:icon="@drawable/ic_psychology"
+        android:title="@string/nav_competencies" />
+    <item
+        android:id="@+id/navigation_profile"
+        android:icon="@drawable/ic_person"
+        android:title="@string/nav_profile" />
+</menu>

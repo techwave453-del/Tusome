@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tusome CBC</string>
+    <string name="app_subtitle">Kenyan Schools Learning Management System</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_strands">Strands</string>
+    <string name="nav_assessments">Assessments</string>
+    <string name="nav_competencies">Competencies</string>
+    <string name="nav_profile">Profile</string>
+
+    <string name="greeting_learner">Jambo, Learner!</string>
+    <string name="greeting_sub">Nairobi Primary School • Grade 4 Upper Primary</string>
+    <string name="daily_challenge_title">Daily CBC Strand Challenge</string>
+    <string name="daily_challenge_sub">Agriculture &amp; Nutrition: Soil Conservation</string>
+    <string name="start_activity">Start Activity</string>
+    <string name="learning_areas">Learning Areas (Subjects)</string>
+    <string name="view_all">View All</string>
+    <string name="search_strands_hint">Search CBC strands, subjects or outcomes…</string>
+    <string name="cbc_core_competencies">7 CBC Core Competencies</string>
+    <string name="assessment_rubrics">Formative Evaluation Rubrics</string>
+
+    <!-- Rubric Levels -->
+    <string name="rubric_ee_label">Exceeds Expectations (EE)</string>
+    <string name="rubric_me_label">Meets Expectations (ME)</string>
+    <string name="rubric_ae_label">Approaches Expectations (AE)</string>
+    <string name="rubric_be_label">Below Expectations (BE)</string>
+</resources>

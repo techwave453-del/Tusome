@@ -49,9 +49,10 @@
                 android:padding="8dp">
 
                 <TextView
+                    android:id="@+id/tvCountEE"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="8"
+                    android:text="0"
                     android:textColor="@color/rubric_ee"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -77,9 +78,10 @@
                 android:padding="8dp">
 
                 <TextView
+                    android:id="@+id/tvCountME"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="10"
+                    android:text="0"
                     android:textColor="@color/rubric_me"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -105,9 +107,10 @@
                 android:padding="8dp">
 
                 <TextView
+                    android:id="@+id/tvCountAE"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2"
+                    android:text="0"
                     android:textColor="@color/rubric_ae"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -133,6 +136,7 @@
                 android:padding="8dp">
 
                 <TextView
+                    android:id="@+id/tvCountBE"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"

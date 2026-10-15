@@ -229,7 +229,8 @@ class AdminActivity : AppCompatActivity() {
         val name = inviteName.text.toString().trim()
         val email = inviteEmail.text.toString().trim()
         val role = roleKeys.getOrNull(roleSpinner.selectedItemPosition) ?: "learner"
-        val school = schools.getOrNull(schoolSpinner.selectedItemPosition)?.id
+        val selectedSchool = schools.getOrNull(schoolSpinner.selectedItemPosition)?.id
+        val school = selectedSchool.takeIf { role in listOf("learner", "teacher", "school_admin") }
         if (name.length < 2) {
             inviteName.error = "Enter the user's full name"
             return

@@ -165,12 +165,20 @@ object SupabaseAuthRepository {
 
             executor.execute {
                 val result = runCatching {
+                    // Read both the canonical profile row and Supabase Auth metadata.
+                    // Some existing accounts pre-date user_profiles, while others may have
+                    // a display name updated through Auth metadata.
                     val profileRows = request(
                         "/rest/v1/user_profiles?user_id=eq.${session.userId}&select=display_name,grade_id,school_id",
                         null,
                         session.accessToken
                     ) as? JSONArray ?: JSONArray()
+                    val hasProfileRow = profileRows.length() > 0
                     val profile = profileRows.optJSONObject(0) ?: JSONObject()
+                    val authUser = request("/auth/v1/user", null, session.accessToken) as? JSONObject
+                        ?: JSONObject()
+                    val authDisplayName = authUser.optJSONObject("user_metadata")
+                        ?.optString("display_name").orEmpty()
 
                     val roleRows = request(
                         "/rest/v1/user_role_assignments?user_id=eq.${session.userId}&select=role_key",
@@ -185,13 +193,16 @@ object SupabaseAuthRepository {
                     }.distinct()
 
                     val updated = session.copy(
-                        displayName = profile.optString("display_name")
+                        displayName = profile.optString("display_name").trim()
+                            .ifBlank { authDisplayName.trim() }
                             .ifBlank { session.displayName.ifBlank { session.email.substringBefore("@") } },
                         roles = roles,
-                        gradeId = profile.optString("grade_id")
-                            .takeIf { it.isNotBlank() && it != "null" } ?: session.gradeId,
-                        schoolId = profile.optString("school_id")
-                            .takeIf { it.isNotBlank() && it != "null" } ?: session.schoolId
+                        // A present profile row is authoritative, including explicit NULL values
+                        // when a grade or school has been unassigned.
+                        gradeId = if (hasProfileRow) profile.optString("grade_id")
+                            .takeIf { it.isNotBlank() && it != "null" } else session.gradeId,
+                        schoolId = if (hasProfileRow) profile.optString("school_id")
+                            .takeIf { it.isNotBlank() && it != "null" } else session.schoolId
                     )
                     saveSession(appContext, updated)
                     updated

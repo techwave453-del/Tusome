@@ -64,20 +64,45 @@ class HomeFragment : Fragment() {
         learningAreasRecyclerView?.let(::loadLearningAreas)
 
         btnStartHeroActivity.setOnClickListener {
-            SupabaseCurriculumRepository.fetchLearningAreaOverview(
-                selectedGrade,
-                "agriculture_nutrition"
-            ) { result ->
-                if (!isAdded) return@fetchLearningAreaOverview
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Agriculture and Nutrition • ${selectedGrade.title}")
-                    .setMessage(
-                        result.getOrElse {
-                            "Unable to load the live curriculum. Connect to the internet and try again."
-                        }
-                    )
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
+            // Resolve the featured activity from the selected grade's published catalogue.
+            // Do not hard-code a learning-area ID: IDs differ between the bundled sample
+            // catalogue and the live Supabase catalogue.
+            btnStartHeroActivity.isEnabled = false
+            SupabaseCurriculumRepository.fetchLearningAreas(selectedGrade) { areasResult ->
+                if (!isAdded) return@fetchLearningAreas
+                val areas = areasResult.getOrNull().orEmpty()
+                val featuredArea = areas.firstOrNull {
+                    it.title.contains("agriculture", ignoreCase = true) ||
+                        it.title.contains("nutrition", ignoreCase = true)
+                } ?: areas.firstOrNull()
+
+                if (featuredArea == null) {
+                    btnStartHeroActivity.isEnabled = true
+                    Toast.makeText(
+                        requireContext(),
+                        areasResult.exceptionOrNull()?.message
+                            ?: "No published learning areas are available for ${selectedGrade.title} yet.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@fetchLearningAreas
+                }
+
+                SupabaseCurriculumRepository.fetchLearningAreaOverview(
+                    selectedGrade,
+                    featuredArea.id
+                ) { overviewResult ->
+                    if (!isAdded) return@fetchLearningAreaOverview
+                    btnStartHeroActivity.isEnabled = true
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("${featuredArea.title} • ${selectedGrade.title}")
+                        .setMessage(
+                            overviewResult.getOrElse {
+                                "Unable to load the live curriculum. Connect to the internet and try again."
+                            }
+                        )
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
             }
         }
 

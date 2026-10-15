@@ -22,6 +22,7 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollStrandDetail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
@@ -148,9 +149,6 @@
                             android:text="Previous"
                             android:textAllCaps="false"
                             android:textColor="@color/primary_green_dark"
-                            app:icon="@drawable/ic_chevron_right"
-                            app:iconGravity="textStart"
-                            app:iconTint="@color/primary_green_dark"
                             app:strokeColor="@color/primary_green" />
 
                         <com.google.android.material.button.MaterialButton

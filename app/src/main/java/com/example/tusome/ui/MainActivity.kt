@@ -34,6 +34,14 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(R.layout.activity_main)
 
+        // Rotate near-expiry access tokens in the background. A temporary network failure
+        // must not prevent learners from opening the app's locally available screens.
+        SupabaseAuthRepository.refreshSessionIfNeeded(this) { result ->
+            result.onFailure {
+                // Keep the encrypted cached session for offline use; retry on a later launch.
+            }
+        }
+
         toolbar = findViewById(R.id.toolbar)
         bottomNav = findViewById(R.id.bottomNavigationView)
         drawerLayout = findViewById(R.id.drawerLayout)

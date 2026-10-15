@@ -24,6 +24,8 @@ data class AuthSession(
     val email: String,
     val displayName: String,
     val roles: List<String>,
+    val gradeId: String?,
+    val schoolId: String?,
     val accessToken: String,
     val refreshToken: String
 )
@@ -146,6 +148,8 @@ object SupabaseAuthRepository {
                 }
             },
             roles = roles,
+            gradeId = profile.optString("grade_id").takeIf { it.isNotBlank() && it != "null" },
+            schoolId = profile.optString("school_id").takeIf { it.isNotBlank() && it != "null" },
             accessToken = token,
             refreshToken = refreshToken
         )
@@ -198,6 +202,8 @@ object SupabaseAuthRepository {
             .put("email", session.email)
             .put("displayName", session.displayName)
             .put("roles", JSONArray(session.roles))
+            .put("gradeId", session.gradeId)
+            .put("schoolId", session.schoolId)
             .put("accessToken", session.accessToken)
             .put("refreshToken", session.refreshToken)
             .toString()
@@ -222,6 +228,8 @@ object SupabaseAuthRepository {
             email = json.optString("email"),
             displayName = json.optString("displayName"),
             roles = roles,
+            gradeId = json.optString("gradeId").takeIf { it.isNotBlank() && it != "null" },
+            schoolId = json.optString("schoolId").takeIf { it.isNotBlank() && it != "null" },
             accessToken = token,
             refreshToken = json.optString("refreshToken")
         )

@@ -3,21 +3,26 @@
     <item
         android:id="@+id/navigation_home"
         android:icon="@drawable/ic_home"
-        android:title="@string/nav_home" />
+        android:title="@string/nav_home"
+        android:contentDescription="@string/nav_home" />
     <item
         android:id="@+id/navigation_strands"
         android:icon="@drawable/ic_book"
-        android:title="@string/nav_strands" />
+        android:title="@string/nav_strands"
+        android:contentDescription="@string/nav_strands" />
     <item
         android:id="@+id/navigation_assessments"
         android:icon="@drawable/ic_assessment"
-        android:title="@string/nav_assessments" />
+        android:title="@string/nav_assessments"
+        android:contentDescription="@string/nav_assessments" />
     <item
         android:id="@+id/navigation_competencies"
         android:icon="@drawable/ic_psychology"
-        android:title="@string/nav_competencies" />
+        android:title="@string/nav_competencies"
+        android:contentDescription="@string/nav_competencies" />
     <item
         android:id="@+id/navigation_profile"
         android:icon="@drawable/ic_person"
-        android:title="@string/nav_profile" />
+        android:title="@string/nav_profile"
+        android:contentDescription="@string/nav_profile" />
 </menu>

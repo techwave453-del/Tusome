@@ -95,6 +95,17 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/tvCurriculumSyncStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:accessibilityLiveRegion="polite"
+            android:text="Connecting to the live CBC catalogue…"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
         <!-- Featured Daily Hero Card (Green Modern Food Menu Style) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardHeroChallenge"
@@ -149,7 +160,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Agriculture &amp; Nutrition: Soil Erosion Control"
+                    android:text="Agriculture and Nutrition: Conservation of Resources"
                     android:textColor="@color/surface_white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -159,7 +170,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Build a mini mulch bed or terrace in school compound to protect fertile topsoil."
+                    android:text="Explore soil and water conservation, efficient fuel use and responsible wildlife protection."
                     android:textColor="#E0E8DC"
                     android:textSize="13sp" />
 
@@ -189,7 +200,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="12dp"
                         android:layout_weight="1"
-                        android:text="SLO 1.1 • Group Practical"
+                        android:text="Grade 4 • KICD design"
                         android:textColor="#B2DFDB"
                         android:textSize="12sp" />
 

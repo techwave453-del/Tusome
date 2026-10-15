@@ -14,7 +14,7 @@
             android:id="@+id/toolbarDetail"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_chevron_right"
+            app:navigationIcon="@drawable/ic_arrow_back"
             app:navigationIconTint="@color/surface_white"
             app:title="Strand Details"
             app:titleTextColor="@color/surface_white" />
@@ -22,8 +22,11 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollStrandDetail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="false"
         android:paddingBottom="24dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
@@ -33,13 +36,14 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Title Header Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="@color/surface_white"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                app:cardElevation="2dp"
+                app:strokeColor="@color/surface_variant"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -66,20 +70,105 @@
                         android:layout_marginTop="8dp"
                         android:text="Conserving Our Environment"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvDetailDesc"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="2dp"
                         android:text="Methods of soil conservation, water retention techniques, and kitchen garden preparation in school."
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="14sp" />
 
                 </LinearLayout>
 
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="@color/primary_container_green"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:id="@+id/tvStrandPosition"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Strand 1 of 2"
+                        android:textColor="@color/primary_green_dark"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvStrandProgress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="0 of 2 activities completed"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <ProgressBar
+                        android:id="@+id/progressStrand"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="8dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressBackgroundTint="@color/surface_white"
+                        android:progressTint="@color/primary_green"
+                        android:indeterminate="false" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPreviousStrand"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:text="Previous"
+                            android:textAllCaps="false"
+                            android:textColor="@color/primary_green_dark"
+                            app:strokeColor="@color/primary_green" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnNextStrand"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:backgroundTint="@color/primary_green"
+                            android:text="Next strand"
+                            android:textAllCaps="false"
+                            android:textColor="@color/surface_white"
+                            app:cornerRadius="12dp"
+                            app:icon="@drawable/ic_chevron_right"
+                            app:iconGravity="textEnd"
+                            app:iconTint="@color/surface_white" />
+
+                    </LinearLayout>
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
@@ -102,12 +191,11 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
-            <!-- Sub-strand Container -->
             <LinearLayout
                 android:id="@+id/containerSubstrands"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:orientation="vertical" />
 
         </LinearLayout>

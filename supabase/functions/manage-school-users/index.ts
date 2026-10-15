@@ -320,7 +320,7 @@ Deno.serve(async (req: Request) => {
       previous_roles: (currentRows ?? []).filter((row) => row.role_key !== "platform_admin")
         .map((row) => ({ role_key: row.role_key, school_id: row.school_id })),
     });
-    return reply(200, { message: `Your secondary role is now ${roleKey.replaceAll("_", " ")}. Your platform administrator role remains active.` });
+    return reply(200, { message: `Your secondary role is now ${roleKey.replaceAll("_", " ")}. Your platform administrator role remains active. Sign out and back in to refresh your permissions.` });
   }
 
   if (action === "assign_role") {

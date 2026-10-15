@@ -53,7 +53,7 @@ class StrandDetailActivity : AppCompatActivity() {
 
         val inflater = LayoutInflater.from(this)
         strand.subStrands.forEach { sub ->
-            val subCard = inflater.inflate(R.layout.item_rubric, containerSubstrands, false) as MaterialCardView
+            val subCard = inflater.inflate(R.layout.item_substrand_content, containerSubstrands, false) as MaterialCardView
 
             subCard.findViewById<TextView>(R.id.tvRubricSubstrand).text =
                 "Sub-strand ${sub.subStrandNumber}: ${sub.title}"

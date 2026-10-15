@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +29,7 @@ class StrandsFragment : Fragment() {
     private lateinit var allStrands: List<Strand>
     private lateinit var rvStrandsList: RecyclerView
     private lateinit var chipGroupSubjects: ChipGroup
+    private lateinit var layoutEmptyState: View
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,6 +42,7 @@ class StrandsFragment : Fragment() {
 
         rvStrandsList = view.findViewById(R.id.rvStrandsList)
         chipGroupSubjects = view.findViewById(R.id.chipGroupSubjects)
+        layoutEmptyState = view.findViewById(R.id.layoutEmptyState)
         val etSearchStrands: EditText = view.findViewById(R.id.etSearchStrands)
 
         val learningAreas = CbcRepository.getLearningAreas(GradeLevel.GRADE_4)
@@ -106,6 +109,8 @@ class StrandsFragment : Fragment() {
             matchesArea && matchesQuery
         }
 
+        rvStrandsList.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
+        layoutEmptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         rvStrandsList.adapter = StrandAdapter(filtered) { strand ->
             val intent = Intent(requireContext(), StrandDetailActivity::class.java).apply {
                 putExtra("LEARNING_AREA_ID", strand.learningAreaId)

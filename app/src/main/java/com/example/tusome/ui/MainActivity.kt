@@ -25,7 +25,6 @@ class MainActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar)
         bottomNav = findViewById(R.id.bottomNavigationView)
 
-        // The toolbar reflects the current destination instead of keeping a static app title.
         toolbar.navigationIcon = null
         toolbar.title = getString(R.string.nav_home)
         toolbar.subtitle = null
@@ -42,8 +41,8 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        // Selecting the active tab should not recreate its fragment.
-        bottomNav.setOnItemReselectedListener { /* Keep the current destination in place. */ }
+        // Reselecting the current tab should not reset its scroll position or form state.
+        bottomNav.setOnItemReselectedListener { }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -58,20 +57,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDestination(itemId: Int) {
-        val fragment: Fragment = when (itemId) {
-            R.id.navigation_home -> HomeFragment()
-            R.id.navigation_strands -> StrandsFragment()
-            R.id.navigation_assessments -> AssessmentsFragment()
-            R.id.navigation_competencies -> CompetenciesFragment()
-            R.id.navigation_profile -> ProfileFragment()
-            else -> HomeFragment()
-        }
+        val tag = itemId.toString()
+        val fragmentManager = supportFragmentManager
+        val existingFragment = fragmentManager.findFragmentByTag(tag)
+        val target = existingFragment ?: createDestination(itemId)
 
         updateToolbarTitle(itemId)
-        supportFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(R.id.fragmentContainer, fragment, itemId.toString())
-            .commit()
+
+        fragmentManager.beginTransaction().apply {
+            setReorderingAllowed(true)
+            fragmentManager.fragments.forEach { fragment ->
+                if (fragment.isAdded && fragment != target) {
+                    hide(fragment)
+                }
+            }
+            if (existingFragment == null) {
+                add(R.id.fragmentContainer, target, tag)
+            } else {
+                show(target)
+            }
+        }.commit()
+    }
+
+    private fun createDestination(itemId: Int): Fragment = when (itemId) {
+        R.id.navigation_home -> HomeFragment()
+        R.id.navigation_strands -> StrandsFragment()
+        R.id.navigation_assessments -> AssessmentsFragment()
+        R.id.navigation_competencies -> CompetenciesFragment()
+        R.id.navigation_profile -> ProfileFragment()
+        else -> HomeFragment()
     }
 
     private fun updateToolbarTitle(itemId: Int) {

@@ -27,7 +27,8 @@ data class AuthSession(
     val gradeId: String?,
     val schoolId: String?,
     val accessToken: String,
-    val refreshToken: String
+    val refreshToken: String,
+    val expiresAtMillis: Long = 0L
 )
 
 data class SignUpResult(val session: AuthSession?, val message: String)
@@ -92,6 +93,32 @@ object SupabaseAuthRepository {
                     saveSession(appContext, session)
                     SignUpResult(session, "Account created.")
                 }
+            }
+            mainHandler.post { onResult(result) }
+        }
+    }
+
+    /** Refreshes a session before its access token expires. Network failures preserve the
+     * encrypted session so the app can continue to provide its offline-capable screens. */
+    fun refreshSessionIfNeeded(
+        context: Context,
+        onResult: (Result<AuthSession?>) -> Unit
+    ) {
+        val appContext = context.applicationContext
+        executor.execute {
+            val result = runCatching {
+                val existing = readSession(appContext) ?: return@runCatching null
+                if (existing.expiresAtMillis > System.currentTimeMillis() + 60_000L) {
+                    return@runCatching existing
+                }
+                if (existing.refreshToken.isBlank()) {
+                    throw IllegalStateException("Your session has expired. Please sign in again.")
+                }
+                val payload = JSONObject().put("refresh_token", existing.refreshToken)
+                val auth = request("/auth/v1/token?grant_type=refresh_token", payload, null) as JSONObject
+                val refreshed = sessionFromAuth(auth, appContext)
+                saveSession(appContext, refreshed)
+                refreshed
             }
             mainHandler.post { onResult(result) }
         }
@@ -175,7 +202,8 @@ object SupabaseAuthRepository {
             gradeId = profile.optString("grade_id").takeIf { it.isNotBlank() && it != "null" },
             schoolId = profile.optString("school_id").takeIf { it.isNotBlank() && it != "null" },
             accessToken = token,
-            refreshToken = refreshToken
+            refreshToken = refreshToken,
+            expiresAtMillis = System.currentTimeMillis() + (auth.optLong("expires_in", 3600L).coerceAtLeast(1L) * 1000L)
         )
     }
 
@@ -230,6 +258,7 @@ object SupabaseAuthRepository {
             .put("schoolId", session.schoolId)
             .put("accessToken", session.accessToken)
             .put("refreshToken", session.refreshToken)
+            .put("expiresAtMillis", session.expiresAtMillis)
             .toString()
         val encrypted = encrypt(json.toByteArray(Charsets.UTF_8))
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -255,7 +284,8 @@ object SupabaseAuthRepository {
             gradeId = json.optString("gradeId").takeIf { it.isNotBlank() && it != "null" },
             schoolId = json.optString("schoolId").takeIf { it.isNotBlank() && it != "null" },
             accessToken = token,
-            refreshToken = json.optString("refreshToken")
+            refreshToken = json.optString("refreshToken"),
+            expiresAtMillis = json.optLong("expiresAtMillis", 0L)
         )
     }
 

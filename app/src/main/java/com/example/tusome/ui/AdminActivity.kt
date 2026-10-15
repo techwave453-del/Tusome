@@ -37,6 +37,7 @@ class AdminActivity : AppCompatActivity() {
     private lateinit var usersContainer: LinearLayout
     private lateinit var auditContainer: LinearLayout
     private lateinit var refreshButton: Button
+    private lateinit var accountSummary: TextView
     private lateinit var roleKeys: List<String>
     private val schools = mutableListOf<SchoolOption>()
     private var isPlatformAdmin = false
@@ -71,11 +72,12 @@ class AdminActivity : AppCompatActivity() {
             setTextColor(Color.rgb(27, 94, 32))
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         }, params())
-        page.addView(TextView(this).apply {
+        accountSummary = TextView(this).apply {
             text = "Signed in as ${session.displayName}\nRole: ${session.roles.joinToString()}"
             textSize = 14f
             setTextColor(Color.DKGRAY)
-        }, margins(top = 6, bottom = 12))
+        }
+        page.addView(accountSummary, margins(top = 6, bottom = 12))
 
         refreshButton = actionButton("Refresh users and activity")
         page.addView(refreshButton, margins(bottom = 18))
@@ -170,6 +172,30 @@ class AdminActivity : AppCompatActivity() {
         refreshButton.postDelayed({ refreshButton.isEnabled = true }, 800)
     }
 
+    /**
+     * Re-fetch the signed-in user's profile and role assignments after a successful
+     * admin write, then reload all visible admin data. Cached data stays usable offline.
+     */
+    private fun refreshAfterMutation(selectSchoolId: String? = null) {
+        SupabaseAuthRepository.refreshCurrentUserData(this) { result ->
+            if (isFinishing || isDestroyed) return@refreshCurrentUserData
+            result.onSuccess { session ->
+                currentUserId = session.userId
+                ownSchoolId = session.schoolId
+                isPlatformAdmin = "platform_admin" in session.roles
+                accountSummary.text =
+                    "Signed in as ${session.displayName}\nRole: ${session.roles.joinToString()}"
+            }
+            if (selectSchoolId == null) {
+                refreshAll()
+            } else {
+                loadSchools(selectSchoolId)
+                loadUsers()
+                loadAuditLog()
+            }
+        }
+    }
+
     private fun loadSchools(selectId: String? = null) {
         SupabaseAuthRepository.manageSchoolUsers(
             this,
@@ -229,8 +255,7 @@ class AdminActivity : AppCompatActivity() {
                 Toast.makeText(this, "School created.", Toast.LENGTH_LONG).show()
                 schoolName.text.clear()
                 county.text.clear()
-                loadSchools(id.takeIf { it.isNotBlank() })
-                loadAuditLog()
+                refreshAfterMutation(id.takeIf { it.isNotBlank() })
             }.onFailure { error ->
                 Toast.makeText(this, error.message ?: "Could not create school.", Toast.LENGTH_LONG).show()
             }
@@ -273,8 +298,7 @@ class AdminActivity : AppCompatActivity() {
                 ).show()
                 inviteName.text.clear()
                 inviteEmail.text.clear()
-                loadUsers()
-                loadAuditLog()
+                refreshAfterMutation()
             }.onFailure { error ->
                 Toast.makeText(this, error.message ?: "Could not send invitation.", Toast.LENGTH_LONG).show()
             }
@@ -441,8 +465,7 @@ class AdminActivity : AppCompatActivity() {
                             Toast.LENGTH_LONG
                         ).show()
                         dialog.dismiss()
-                        loadUsers()
-                        loadAuditLog()
+                        refreshAfterMutation()
                     }.onFailure { error ->
                         Toast.makeText(
                             this,
@@ -470,8 +493,7 @@ class AdminActivity : AppCompatActivity() {
                 SupabaseAuthRepository.manageSchoolUsers(this, payload) { result ->
                     result.onSuccess { response ->
                         Toast.makeText(this, response.optString("message", "Role revoked."), Toast.LENGTH_LONG).show()
-                        loadUsers()
-                        loadAuditLog()
+                        refreshAfterMutation()
                     }.onFailure { error ->
                         Toast.makeText(this, error.message ?: "Could not revoke role.", Toast.LENGTH_LONG).show()
                     }

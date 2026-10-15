@@ -39,6 +39,10 @@ class AssessmentsFragment : Fragment() {
     }
 
     private fun loadRubricsAndSummary(rootView: View) {
+        val subStrandsById = CbcRepository.getLearningAreas(com.example.tusome.data.model.GradeLevel.GRADE_4)
+            .flatMap { area -> CbcRepository.getStrandsForArea(area.id) }
+            .flatMap { strand -> strand.subStrands }
+            .associateBy { it.id }
         val rawRubrics = CbcRepository.getAllRubrics()
 
         var eeCount = 0
@@ -57,9 +61,13 @@ class AssessmentsFragment : Fragment() {
                 PerformanceLevel.BELOW -> beCount++
             }
 
+            val subStrand = subStrandsById[r.subStrandId]
             r.copy(
                 learnerLevel = savedLevel,
-                teacherComment = if (savedNote.isNotBlank()) "Learner Note: $savedNote" else r.teacherComment
+                teacherComment = if (savedNote.isNotBlank()) "Learner Note: $savedNote" else r.teacherComment,
+                subStrandTitle = subStrand?.title.orEmpty(),
+                keyInquiryQuestions = subStrand?.keyInquiryQuestions.orEmpty(),
+                suggestedExperiences = subStrand?.suggestedExperiences.orEmpty()
             )
         }
 

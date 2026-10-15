@@ -129,6 +129,24 @@ object SupabaseCurriculumRepository {
             }
 
             val rows = JSONArray(body)
+
+            // Fetch counts from the same published curriculum catalogue instead of
+            // keeping hard-coded sample counts in the Home cards. This makes newly
+            // published admin edits visible after the Home screen refreshes.
+            val countsEndpoint = "$BASE_URL/rest/v1/curriculum_strands" +
+                "?select=learning_area_id,curriculum_sub_strands(id)" +
+                "&grade_id=eq.$gradeId&is_published=eq.true&content_status=eq.published"
+            val countRows = requestArray(countsEndpoint)
+            val strandCounts = mutableMapOf<String, Int>()
+            val subStrandCounts = mutableMapOf<String, Int>()
+            for (index in 0 until countRows.length()) {
+                val strand = countRows.optJSONObject(index) ?: continue
+                val areaId = strand.optString("learning_area_id").takeIf { it.isNotBlank() } ?: continue
+                strandCounts[areaId] = (strandCounts[areaId] ?: 0) + 1
+                val subStrands = strand.optJSONArray("curriculum_sub_strands") ?: JSONArray()
+                subStrandCounts[areaId] = (subStrandCounts[areaId] ?: 0) + subStrands.length()
+            }
+
             buildList {
                 for (index in 0 until rows.length()) {
                     val row = rows.getJSONObject(index)
@@ -144,8 +162,8 @@ object SupabaseCurriculumRepository {
                             kiswahiliTitle = area.optString("kiswahili_name").takeIf { it.isNotBlank() } ?: name,
                             code = id.uppercase(Locale.ROOT),
                             gradeLevel = grade,
-                            strandsCount = if (gradeId == "g4" && id == "agriculture_nutrition") 4 else 0,
-                            subStrandsCount = if (gradeId == "g4" && id == "agriculture_nutrition") 13 else 0,
+                            strandsCount = strandCounts[id] ?: 0,
+                            subStrandsCount = subStrandCounts[id] ?: 0,
                             progressPercent = 0,
                             iconResId = icon,
                             bgColorHex = colors.first,
@@ -154,6 +172,30 @@ object SupabaseCurriculumRepository {
                     )
                 }
             }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun requestArray(endpoint: String): JSONArray {
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10000
+            readTimeout = 10000
+            setRequestProperty("apikey", PUBLISHABLE_KEY)
+            setRequestProperty("Authorization", "Bearer $PUBLISHABLE_KEY")
+            setRequestProperty("Accept", "application/json")
+        }
+        try {
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.let {
+                BufferedReader(InputStreamReader(it, Charsets.UTF_8)).use { reader -> reader.readText() }
+            }.orEmpty()
+            check(status in 200..299) {
+                "Supabase returned HTTP $status while refreshing published CBC counts."
+            }
+            return JSONArray(body)
         } finally {
             connection.disconnect()
         }

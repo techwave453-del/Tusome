@@ -37,7 +37,7 @@
                         android:id="@+id/tvGreeting"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Jambo, Amani!"
+                        android:text="Welcome to Tusome"
                         android:textColor="@color/surface_white"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -47,7 +47,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Nairobi Primary School • Grade 4"
+                        android:text="Kenya CBC • Learn at your own pace"
                         android:textColor="#C8E6C9"
                         android:textSize="13sp" />
 

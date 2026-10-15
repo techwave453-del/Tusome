@@ -134,9 +134,10 @@ object SupabaseCurriculumRepository {
             // keeping hard-coded sample counts in the Home cards. This makes newly
             // published admin edits visible after the Home screen refreshes.
             val countsEndpoint = "$BASE_URL/rest/v1/curriculum_strands" +
-                "?select=learning_area_id,curriculum_sub_strands(id)" +
-                "&grade_id=eq.$gradeId&is_published=eq.true&content_status=eq.published"
-            val countRows = requestArray(countsEndpoint)
+                "?select=learning_area_id,curriculum_sub_strands(id,is_published)" +
+                "&grade_id=eq.$gradeId&is_published=eq.true&content_status=eq.published" +
+                "&curriculum_sub_strands.is_published=eq.true"
+            val countRows = runCatching { requestArray(countsEndpoint) }.getOrElse { JSONArray() }
             val strandCounts = mutableMapOf<String, Int>()
             val subStrandCounts = mutableMapOf<String, Int>()
             for (index in 0 until countRows.length()) {
@@ -144,7 +145,10 @@ object SupabaseCurriculumRepository {
                 val areaId = strand.optString("learning_area_id").takeIf { it.isNotBlank() } ?: continue
                 strandCounts[areaId] = (strandCounts[areaId] ?: 0) + 1
                 val subStrands = strand.optJSONArray("curriculum_sub_strands") ?: JSONArray()
-                subStrandCounts[areaId] = (subStrandCounts[areaId] ?: 0) + subStrands.length()
+                val publishedSubStrandCount = (0 until subStrands.length()).count { subIndex ->
+                    subStrands.optJSONObject(subIndex)?.optBoolean("is_published", false) == true
+                }
+                subStrandCounts[areaId] = (subStrandCounts[areaId] ?: 0) + publishedSubStrandCount
             }
 
             buildList {

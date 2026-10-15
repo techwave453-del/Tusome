@@ -8,6 +8,7 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.example.tusome.R
+import com.example.tusome.data.repository.SupabaseAuthRepository
 import com.example.tusome.ui.fragments.AssessmentsFragment
 import com.example.tusome.ui.fragments.CompetenciesFragment
 import com.example.tusome.ui.fragments.HomeFragment
@@ -26,6 +27,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (SupabaseAuthRepository.currentSession(this) == null) {
+            startActivity(android.content.Intent(this, AuthActivity::class.java))
+            finish()
+            return
+        }
         setContentView(R.layout.activity_main)
 
         toolbar = findViewById(R.id.toolbar)

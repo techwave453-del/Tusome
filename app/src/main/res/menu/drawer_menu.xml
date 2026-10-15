@@ -18,6 +18,10 @@
             android:icon="@drawable/ic_psychology"
             android:title="@string/nav_competencies" />
         <item
+            android:id="@+id/drawer_admin"
+            android:icon="@drawable/ic_person"
+            android:title="@string/drawer_admin" />
+        <item
             android:id="@+id/drawer_profile"
             android:icon="@drawable/ic_person"
             android:title="@string/nav_profile" />

@@ -9,7 +9,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tusome.R
 import com.example.tusome.data.model.LearningArea
-import com.google.android.material.progressindicator.LinearProgressIndicator
 
 class LearningAreaAdapter(
     private val items: List<LearningArea>,
@@ -21,8 +20,6 @@ class LearningAreaAdapter(
         val ivSubjectIcon: ImageView = view.findViewById(R.id.ivSubjectIcon)
         val tvSubjectTitle: TextView = view.findViewById(R.id.tvSubjectTitle)
         val tvSubjectKiswahili: TextView = view.findViewById(R.id.tvSubjectKiswahili)
-        val tvProgressPercent: TextView = view.findViewById(R.id.tvProgressPercent)
-        val progressIndicator: LinearProgressIndicator = view.findViewById(R.id.progressIndicator)
         val tvStrandsCount: TextView = view.findViewById(R.id.tvStrandsCount)
     }
 
@@ -36,15 +33,12 @@ class LearningAreaAdapter(
         val item = items[position]
         holder.tvSubjectTitle.text = item.title
         holder.tvSubjectKiswahili.text = item.kiswahiliTitle
-        holder.tvProgressPercent.text = "${item.progressPercent}%"
-        holder.progressIndicator.progress = item.progressPercent
-        holder.tvStrandsCount.text = "${item.strandsCount} Strands • ${item.subStrandsCount} Sub-strands"
+        holder.tvStrandsCount.text = holder.itemView.context.getString(R.string.explore_learning_area)
         holder.ivSubjectIcon.setImageResource(item.iconResId)
 
         try {
             holder.frameIconContainer.setBackgroundColor(Color.parseColor(item.bgColorHex))
             holder.ivSubjectIcon.setColorFilter(Color.parseColor(item.iconColorHex))
-            holder.progressIndicator.setIndicatorColor(Color.parseColor(item.iconColorHex))
         } catch (_: Exception) {
         }
 

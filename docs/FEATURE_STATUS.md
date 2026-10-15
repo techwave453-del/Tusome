@@ -10,13 +10,13 @@
 | `AuthActivity` | `SupabaseAuthRepository` | Supabase Auth; encrypted local session | Sign-in/sign-up path exists; expiry, recovery and end-to-end tests needed |
 | `MainActivity` | `SupabaseAuthRepository` | Cached session role list | Role-gated navigation exists; server must independently authorize operations |
 | `AdminActivity` | `SupabaseAuthRepository.manageSchoolUsers` | `manage-school-users` Edge Function; admin tables | School/user management UI exists; verify each action and post-write refresh |
-| `HomeFragment` | `SupabaseCurriculumRepository`, `CbcRepository`, `SupabaseAuthRepository` | Live published CBC plus bundled Grade 4 fallback | Live refresh exists; fallback data is not a complete offline cache |
+| `HomeFragment` | `SupabaseCurriculumRepository`, `CbcRepository`, `SupabaseAuthRepository` | Live published CBC plus bundled Grade 4 fallback | Featured activity now resolves from the selected grade's published catalogue; fallback data is not a complete offline cache |
 | `ProfileFragment` | `SupabaseAuthRepository` | Encrypted session and Supabase profile/role refresh | Read/refresh exists; no edit/save form in inspected fragment |
 | `StrandsFragment` | `CbcRepository` | Bundled Kotlin sample catalogue | Not unified with live Supabase curriculum |
 | `StrandDetailActivity` | `CbcRepository`, `ActivityProgressManager` | Bundled strand data and local preferences | Live strand IDs may not resolve in bundled catalogue |
 | `AssessmentsFragment` | `CbcRepository`, `ActivityProgressManager` | Bundled rubrics and local preferences | No demonstrated remote submission or cross-device sync |
 | `CompetenciesFragment` | `CbcRepository` | Bundled competencies | Database-driven updates not established |
-| `RubricAdapter` | Adapter/model | `AssessmentRubric` instances | Displays generic “Rubric Entry #”; XML inquiry/experience views are not populated by inspected adapter |
+| `RubricAdapter` | Adapter/model | `AssessmentRubric` enriched from bundled sub-strand data | Displays actual sub-strand title, inquiry questions and suggested experiences when available; untouched evaluations are labelled “Not evaluated” |
 
 ## Data-source inventory
 
@@ -36,7 +36,8 @@
 - Local progress is not account-synchronized.
 - A sample learner profile includes identifying-looking example values; remove from production paths or clearly isolate as demo fixtures.
 - Home count errors must not be silently represented as zero.
-- Automated tests are currently only Android template smoke tests in the inspected files.
+- Added `CurriculumSelectionTest` for preferred/fallback/empty featured-area selection. Other important workflows still need coverage.
+- Added `.github/workflows/android-ci.yml` to run unit tests and assemble a debug APK on branch pushes and pull requests; CI has not yet reported a result for these changes.
 - Migration application and live RLS behavior have not been verified by this source inspection.
 
 ## Status labels

@@ -2,7 +2,6 @@ package com.example.tusome.ui
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -131,7 +130,7 @@ class AdminActivity : AppCompatActivity() {
                 if (id.isNotBlank()) schoolId.setText(id)
                 Toast.makeText(
                     this,
-                    if (id.isNotBlank()) "School created. Its ID has been copied into the invitation form." else "School created.",
+                    if (id.isNotBlank()) "School created. Its ID has been filled into the invitation form." else "School created.",
                     Toast.LENGTH_LONG
                 ).show()
             }.onFailure { error ->

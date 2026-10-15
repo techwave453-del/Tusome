@@ -98,11 +98,35 @@ object SupabaseAuthRepository {
     }
 
     fun signOut(context: Context) {
-        context.applicationContext
-            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val appContext = context.applicationContext
+        val session = currentSession(appContext)
+        appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()
             .remove(SESSION_KEY)
             .apply()
+
+        // Revoke the server-side refresh session when possible; local credentials are cleared immediately.
+        if (session != null && session.accessToken.isNotBlank()) {
+            executor.execute {
+                runCatching {
+                    val connection = (URL("$BASE_URL/auth/v1/logout").openConnection() as HttpURLConnection).apply {
+                        requestMethod = "POST"
+                        connectTimeout = 8000
+                        readTimeout = 8000
+                        doOutput = true
+                        setRequestProperty("apikey", PUBLISHABLE_KEY)
+                        setRequestProperty("Authorization", "Bearer ${session.accessToken}")
+                        setRequestProperty("Content-Type", "application/json")
+                    }
+                    try {
+                        connection.outputStream.use { it.write("{}".toByteArray(Charsets.UTF_8)) }
+                        connection.responseCode
+                    } finally {
+                        connection.disconnect()
+                    }
+                }
+            }
+        }
     }
 
     private fun sessionFromAuth(auth: JSONObject, context: Context): AuthSession {

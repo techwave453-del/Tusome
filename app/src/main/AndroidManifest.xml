@@ -28,6 +28,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.AdminActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.StrandDetailActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />

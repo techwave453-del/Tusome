@@ -4,14 +4,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tusome.R
+import com.example.tusome.data.local.ActivityProgressManager
+import com.example.tusome.data.model.PerformanceLevel
 import com.example.tusome.data.repository.CbcRepository
 import com.example.tusome.ui.adapters.RubricAdapter
 
 class AssessmentsFragment : Fragment() {
+
+    private lateinit var progressManager: ActivityProgressManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -24,11 +29,48 @@ class AssessmentsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val rvRubricsList: RecyclerView = view.findViewById(R.id.rvRubricsList)
-        val rubrics = CbcRepository.getAllRubrics()
+        progressManager = ActivityProgressManager(requireContext())
+        loadRubricsAndSummary(view)
+    }
 
-        val adapter = RubricAdapter(rubrics)
+    override fun onResume() {
+        super.onResume()
+        view?.let { loadRubricsAndSummary(it) }
+    }
+
+    private fun loadRubricsAndSummary(rootView: View) {
+        val rawRubrics = CbcRepository.getAllRubrics()
+
+        var eeCount = 0
+        var meCount = 0
+        var aeCount = 0
+        var beCount = 0
+
+        val updatedRubrics = rawRubrics.map { r ->
+            val savedLevel = progressManager.getSelfEvaluation(r.subStrandId)
+            val savedNote = progressManager.getLearnerNote(r.subStrandId)
+
+            when (savedLevel) {
+                PerformanceLevel.EXCEEDS -> eeCount++
+                PerformanceLevel.MEETS -> meCount++
+                PerformanceLevel.APPROACHES -> aeCount++
+                PerformanceLevel.BELOW -> beCount++
+            }
+
+            r.copy(
+                learnerLevel = savedLevel,
+                teacherComment = if (savedNote.isNotBlank()) "Learner Note: $savedNote" else r.teacherComment
+            )
+        }
+
+        // Update counter badges
+        rootView.findViewById<TextView>(R.id.tvCountEE)?.text = eeCount.toString()
+        rootView.findViewById<TextView>(R.id.tvCountME)?.text = meCount.toString()
+        rootView.findViewById<TextView>(R.id.tvCountAE)?.text = aeCount.toString()
+        rootView.findViewById<TextView>(R.id.tvCountBE)?.text = beCount.toString()
+
+        val rvRubricsList: RecyclerView = rootView.findViewById(R.id.rvRubricsList)
         rvRubricsList.layoutManager = LinearLayoutManager(requireContext())
-        rvRubricsList.adapter = adapter
+        rvRubricsList.adapter = RubricAdapter(updatedRubrics)
     }
 }

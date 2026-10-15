@@ -17,6 +17,7 @@ import com.example.tusome.R
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.repository.CbcRepository
 import com.example.tusome.data.repository.SupabaseCurriculumRepository
+import com.example.tusome.data.repository.SupabaseAuthRepository
 import com.example.tusome.ui.StrandDetailActivity
 import com.example.tusome.ui.adapters.GradeChipAdapter
 import com.example.tusome.ui.adapters.LearningAreaAdapter
@@ -29,6 +30,8 @@ class HomeFragment : Fragment() {
     private var learningAreasHeading: TextView? = null
     private var viewAllLearningAreas: TextView? = null
     private var curriculumSyncStatus: TextView? = null
+    private var greetingText: TextView? = null
+    private var schoolSubtitle: TextView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,6 +43,8 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val rvGradeChips: RecyclerView = view.findViewById(R.id.rvGradeChips)
+        greetingText = view.findViewById(R.id.tvGreeting)
+        schoolSubtitle = view.findViewById(R.id.tvSchoolSub)
         learningAreasRecyclerView = view.findViewById(R.id.rvLearningAreas)
         learningAreasHeading = view.findViewById(R.id.tvLearningAreasHeading)
         curriculumSyncStatus = view.findViewById(R.id.tvCurriculumSyncStatus)
@@ -79,6 +84,36 @@ class HomeFragment : Fragment() {
         viewAllLearningAreas?.setOnClickListener {
             activity?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
                 ?.selectedItemId = R.id.navigation_strands
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshHomeData()
+    }
+
+    /**
+     * Re-read the saved account and published curriculum whenever the learner returns
+     * to Home. SupabaseCurriculumRepository performs a fresh request; if offline, the
+     * existing fallback remains available.
+     */
+    private fun refreshHomeData() {
+        val context = context ?: return
+        SupabaseAuthRepository.refreshCurrentUserData(context) { result ->
+            if (!isAdded) return@refreshCurrentUserData
+            val session = result.getOrNull() ?: SupabaseAuthRepository.currentSession(context)
+            greetingText?.text = session?.displayName
+                ?.takeIf { it.isNotBlank() }
+                ?.let { "Welcome, $it" }
+                ?: "Welcome to Tusome"
+            schoolSubtitle?.text = session?.roles
+                ?.takeIf { it.isNotEmpty() }
+                ?.joinToString(" • ") { role ->
+                    role.replace('_', ' ').replaceFirstChar { ch -> ch.uppercase() }
+                }
+                ?: "Kenya CBC • Learn at your own pace"
+
+            learningAreasRecyclerView?.let(::loadLearningAreas)
         }
     }
 
@@ -166,6 +201,8 @@ class HomeFragment : Fragment() {
         learningAreasHeading = null
         viewAllLearningAreas = null
         curriculumSyncStatus = null
+        greetingText = null
+        schoolSubtitle = null
         super.onDestroyView()
     }
 }

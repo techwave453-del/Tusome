@@ -95,6 +95,17 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/tvCurriculumSyncStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:accessibilityLiveRegion="polite"
+            android:text="Connecting to the live CBC catalogue…"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
         <!-- Featured Daily Hero Card (Green Modern Food Menu Style) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardHeroChallenge"

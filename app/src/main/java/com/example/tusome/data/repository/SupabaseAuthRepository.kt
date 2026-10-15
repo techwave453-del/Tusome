@@ -57,7 +57,7 @@ object SupabaseAuthRepository {
                 val payload = JSONObject()
                     .put("email", email.trim())
                     .put("password", password)
-                val auth = request("/auth/v1/token?grant_type=password", payload, null)
+                val auth = request("/auth/v1/token?grant_type=password", payload, null) as JSONObject
                 val session = sessionFromAuth(auth, appContext)
                 saveSession(appContext, session)
                 session
@@ -80,7 +80,7 @@ object SupabaseAuthRepository {
                     .put("email", email.trim())
                     .put("password", password)
                     .put("data", JSONObject().put("display_name", displayName.trim()))
-                val auth = request("/auth/v1/signup", payload, null)
+                val auth = request("/auth/v1/signup", payload, null) as JSONObject
                 val accessToken = auth.optString("access_token")
                 if (accessToken.isBlank()) {
                     SignUpResult(
@@ -219,7 +219,7 @@ object SupabaseAuthRepository {
         val json = JSONObject(String(decrypt(bytes), Charsets.UTF_8))
         val rolesJson = json.optJSONArray("roles") ?: JSONArray()
         val roles = buildList {
-            for (i in 0 until rolesJson.length()) rolesJson.optString(i).takeIf(String::isNotBlank)?.let(::add)
+            for (i in 0 until rolesJson.length()) rolesJson.optString(i).takeIf { it.isNotBlank() }?.let(::add)
         }
         val token = json.optString("accessToken")
         if (token.isBlank()) return null

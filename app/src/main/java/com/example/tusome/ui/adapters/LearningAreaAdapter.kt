@@ -18,6 +18,7 @@ class LearningAreaAdapter(
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val frameIconContainer: View = view.findViewById(R.id.frameIconContainer)
         val ivSubjectIcon: ImageView = view.findViewById(R.id.ivSubjectIcon)
+        val tvGradeBadge: TextView = view.findViewById(R.id.tvGradeBadge)
         val tvSubjectTitle: TextView = view.findViewById(R.id.tvSubjectTitle)
         val tvSubjectKiswahili: TextView = view.findViewById(R.id.tvSubjectKiswahili)
         val tvStrandsCount: TextView = view.findViewById(R.id.tvStrandsCount)
@@ -31,6 +32,7 @@ class LearningAreaAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
+        holder.tvGradeBadge.text = "${item.gradeLevel.title} • CBC"
         holder.tvSubjectTitle.text = item.title
         holder.tvSubjectKiswahili.text = item.kiswahiliTitle
         holder.tvStrandsCount.text = holder.itemView.context.getString(R.string.explore_learning_area)

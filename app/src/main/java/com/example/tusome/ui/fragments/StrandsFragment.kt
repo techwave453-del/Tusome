@@ -46,6 +46,14 @@ class StrandsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        selectedGrade = GradeLevel.values().firstOrNull {
+            it.code.equals(
+                requireContext().getSharedPreferences("tusome_curriculum", android.content.Context.MODE_PRIVATE)
+                    .getString("selected_grade", GradeLevel.GRADE_4.code),
+                ignoreCase = true
+            )
+        } ?: GradeLevel.GRADE_4
+
         rvStrandsList = view.findViewById(R.id.rvStrandsList)
         chipGroupGrades = view.findViewById(R.id.chipGroupGrades)
         chipGroupSubjects = view.findViewById(R.id.chipGroupSubjects)
@@ -68,6 +76,22 @@ class StrandsFragment : Fragment() {
         loadGradeContent()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (!isAdded || !::chipGroupGrades.isInitialized) return
+        val savedCode = requireContext()
+            .getSharedPreferences("tusome_curriculum", android.content.Context.MODE_PRIVATE)
+            .getString("selected_grade", GradeLevel.GRADE_4.code)
+        val savedGrade = GradeLevel.values().firstOrNull {
+            it.code.equals(savedCode, ignoreCase = true)
+        } ?: GradeLevel.GRADE_4
+        if (savedGrade != selectedGrade) {
+            selectedGrade = savedGrade
+            setupGradeFilters()
+            loadGradeContent()
+        }
+    }
+
     private fun setupGradeFilters() {
         chipGroupGrades.removeAllViews()
         chipGroupGrades.isSingleSelection = true
@@ -81,6 +105,8 @@ class StrandsFragment : Fragment() {
                 setOnClickListener {
                     if (selectedGrade != grade) {
                         selectedGrade = grade
+                        requireContext().getSharedPreferences("tusome_curriculum", android.content.Context.MODE_PRIVATE)
+                            .edit().putString("selected_grade", grade.code).apply()
                         selectedLearningAreaId = null
                         chipGroupSubjects.clearCheck()
                         setupGradeFilters()

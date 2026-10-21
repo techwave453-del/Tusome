@@ -18,6 +18,7 @@ import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.PerformanceLevel
 import com.example.tusome.data.model.Strand
 import com.example.tusome.data.repository.CbcRepository
+import com.example.tusome.data.repository.SupabaseCurriculumRepository
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.ChipGroup
@@ -55,31 +56,72 @@ class StrandDetailActivity : AppCompatActivity() {
 
         val requestedAreaId = intent.getStringExtra("LEARNING_AREA_ID")
         val requestedStrandId = intent.getStringExtra("STRAND_ID")
-
-        val strandInRequest = if (requestedAreaId != null) {
-            CbcRepository.getStrandsForArea(requestedAreaId)
-                .firstOrNull { it.id == requestedStrandId }
-                ?: CbcRepository.getStrandsForArea(requestedAreaId).firstOrNull()
-        } else {
-            CbcRepository.getLearningAreas(GradeLevel.GRADE_4)
-                .flatMap { CbcRepository.getStrandsForArea(it.id) }
-                .firstOrNull { it.id == requestedStrandId }
-        }
-
-        if (strandInRequest == null) {
-            Toast.makeText(this, "This learning strand could not be found.", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
-        currentStrands = CbcRepository.getStrandsForArea(strandInRequest.learningAreaId)
-        currentStrandIndex = currentStrands.indexOfFirst { it.id == strandInRequest.id }
-            .coerceAtLeast(0)
+        val requestedGrade = GradeLevel.values().firstOrNull {
+            it.code.equals(intent.getStringExtra("GRADE_CODE"), ignoreCase = true)
+        } ?: GradeLevel.GRADE_4
+        val fromSupabase = intent.getBooleanExtra("FROM_SUPABASE", false)
 
         btnPreviousStrand.setOnClickListener { navigateStrand(-1) }
         btnNextStrand.setOnClickListener { navigateStrand(1) }
 
-        displayStrand(currentStrands[currentStrandIndex])
+        if (fromSupabase) {
+            findViewById<TextView>(R.id.tvDetailTitle).text = "Loading published curriculum…"
+            findViewById<TextView>(R.id.tvDetailDesc).text =
+                "Fetching ${requestedGrade.title} content from Supabase."
+            btnPreviousStrand.isEnabled = false
+            btnNextStrand.isEnabled = false
+
+            SupabaseCurriculumRepository.fetchStrands(requestedGrade) { result ->
+                if (isFinishing || isDestroyed) return@fetchStrands
+                result.onFailure {
+                    Toast.makeText(
+                        this,
+                        "Unable to load ${requestedGrade.title} curriculum. Check your connection and try again.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finish()
+                }.onSuccess { strands ->
+                    currentStrands = strands.filter { strand ->
+                        requestedAreaId == null || strand.learningAreaId == requestedAreaId
+                    }
+                    currentStrandIndex = currentStrands.indexOfFirst { it.id == requestedStrandId }
+                    if (currentStrandIndex < 0 && requestedStrandId == null && currentStrands.isNotEmpty()) {
+                        currentStrandIndex = 0
+                    }
+                    if (currentStrandIndex !in currentStrands.indices) {
+                        Toast.makeText(
+                            this,
+                            "No published strand was found for ${requestedGrade.title}.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        finish()
+                        return@onSuccess
+                    }
+                    displayStrand(currentStrands[currentStrandIndex])
+                }
+            }
+        } else {
+            val strandInRequest = if (requestedAreaId != null) {
+                CbcRepository.getStrandsForArea(requestedAreaId)
+                    .firstOrNull { it.id == requestedStrandId }
+                    ?: CbcRepository.getStrandsForArea(requestedAreaId).firstOrNull()
+            } else {
+                CbcRepository.getLearningAreas(GradeLevel.GRADE_4)
+                    .flatMap { CbcRepository.getStrandsForArea(it.id) }
+                    .firstOrNull { it.id == requestedStrandId }
+            }
+
+            if (strandInRequest == null) {
+                Toast.makeText(this, "This learning strand could not be found.", Toast.LENGTH_LONG).show()
+                finish()
+                return
+            }
+
+            currentStrands = CbcRepository.getStrandsForArea(strandInRequest.learningAreaId)
+            currentStrandIndex = currentStrands.indexOfFirst { it.id == strandInRequest.id }
+                .coerceAtLeast(0)
+            displayStrand(currentStrands[currentStrandIndex])
+        }
     }
 
     private fun displayStrand(strand: Strand) {

@@ -41,6 +41,7 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        SupabaseCurriculumRepository.initialize(requireContext())
 
         selectedGrade = readSavedGrade()
 
@@ -139,7 +140,7 @@ class HomeFragment : Fragment() {
                 return@fetchLearningAreaOverview
             }
 
-            curriculumSyncStatus?.text = "Live Tusome curriculum connected"
+            curriculumSyncStatus?.text = "Curriculum details loaded"
 
             val overviewText = result.getOrElse {
                 "Unable to load the live curriculum details. Connect to the internet and try again."
@@ -162,7 +163,7 @@ class HomeFragment : Fragment() {
 
     private fun loadLearningAreas(recyclerView: RecyclerView) {
         val requestedGrade = selectedGrade
-        curriculumSyncStatus?.text = "Connecting to the live CBC catalogue…"
+        curriculumSyncStatus?.text = "Loading CBC catalogue…"
 
         SupabaseCurriculumRepository.fetchLearningAreas(requestedGrade) { result ->
             if (
@@ -177,7 +178,7 @@ class HomeFragment : Fragment() {
                 curriculumSyncStatus?.text = if (areas.isEmpty()) {
                     "Connected to Tusome, but no published learning areas are listed for ${requestedGrade.title}."
                 } else {
-                    "Live Tusome curriculum connected • ${areas.size} learning areas"
+                    "Curriculum catalogue available • ${areas.size} learning areas"
                 }
                 renderLearningAreas(recyclerView, areas, fromLiveCatalogue = true)
             }.onFailure {
@@ -213,7 +214,7 @@ class HomeFragment : Fragment() {
             if (fromLiveCatalogue) {
                 val requestedGrade = area.gradeLevel
                 curriculumSyncStatus?.text =
-                    "Loading ${area.title} from Supabase…"
+                    "Loading ${area.title} curriculum…"
 
                 SupabaseCurriculumRepository.fetchLearningAreaOverview(
                     requestedGrade,

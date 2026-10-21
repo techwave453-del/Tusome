@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
+    android:background="@color/bg_app"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimaryContainer"
+        android:background="@color/primary_green_dark"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:paddingTop="8dp"
@@ -19,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Explore CBC"
-            android:textColor="?attr/colorOnPrimaryContainer"
+            android:textColor="@color/surface_white"
             android:textSize="24sp"
             android:textStyle="bold" />
 
@@ -29,7 +29,7 @@
             android:layout_marginTop="3dp"
             android:layout_marginBottom="14dp"
             android:text="Find strands, sub-strands and learning outcomes"
-            android:textColor="?attr/colorOnPrimaryContainer"
+            android:textColor="#C8E6C9"
             android:textSize="13sp" />
 
         <LinearLayout
@@ -45,7 +45,7 @@
                 android:layout_height="20dp"
                 android:contentDescription="Search"
                 android:src="@drawable/ic_search"
-                app:tint="?attr/colorOnSurfaceVariant" />
+                app:tint="@color/text_secondary" />
 
             <EditText
                 android:id="@+id/etSearchStrands"
@@ -59,12 +59,40 @@
                 android:inputType="text"
                 android:paddingVertical="0dp"
                 android:singleLine="true"
-                android:textColor="?attr/colorOnSurface"
-                android:textColorHint="?attr/colorOnSurfaceVariant"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted"
                 android:textSize="14sp" />
 
         </LinearLayout>
     </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="false"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupGrades"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="2dp"
+            app:chipSpacingHorizontal="8dp"
+            app:singleLine="true" />
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/tvStrandsStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="4dp"
+        android:text="Loading published curriculumΓÇª"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -109,15 +137,15 @@
                 android:layout_height="52dp"
                 android:contentDescription="No search results"
                 android:src="@drawable/ic_search"
-                app:tint="?attr/colorOnSurfaceVariant" />
+                app:tint="@color/text_muted" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
                 android:gravity="center"
-                android:text="No matching strands"
-                android:textColor="?attr/colorOnSurface"
+                android:text="No published strands found"
+                android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -126,8 +154,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:gravity="center"
-                android:text="Try another keyword or choose a different subject."
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:text="Try another keyword, select a different grade, or check back when more curriculum is published."
+                android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
         </LinearLayout>
     </FrameLayout>

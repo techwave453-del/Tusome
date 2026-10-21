@@ -46,5 +46,10 @@ class GradeChipAdapter(
         }
     }
 
+    fun setSelectedGrade(grade: GradeLevel) {
+        selectedGrade = grade
+        notifyDataSetChanged()
+    }
+
     override fun getItemCount(): Int = grades.size
 }

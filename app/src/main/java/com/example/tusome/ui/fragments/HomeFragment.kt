@@ -25,6 +25,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 class HomeFragment : Fragment() {
 
     private var selectedGrade = GradeLevel.GRADE_4
+    private var gradeAdapter: GradeChipAdapter? = null
     private var learningAreasRecyclerView: RecyclerView? = null
     private var learningAreasHeading: TextView? = null
     private var viewAllLearningAreas: TextView? = null
@@ -54,7 +55,7 @@ class HomeFragment : Fragment() {
         val btnStartHeroActivity: Button = view.findViewById(R.id.btnStartHeroActivity)
         viewAllLearningAreas = view.findViewById(R.id.tvViewAllLearningAreas)
 
-        val gradeAdapter = GradeChipAdapter(GradeLevel.values().toList(), selectedGrade) { grade ->
+        gradeAdapter = GradeChipAdapter(GradeLevel.values().toList(), selectedGrade) { grade ->
             selectedGrade = grade
             requireContext().getSharedPreferences("tusome_curriculum", android.content.Context.MODE_PRIVATE)
                 .edit().putString("selected_grade", grade.code).apply()
@@ -89,6 +90,23 @@ class HomeFragment : Fragment() {
         viewAllLearningAreas?.setOnClickListener {
             activity?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
                 ?.selectedItemId = R.id.navigation_strands
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isAdded || learningAreasRecyclerView == null) return
+        val savedCode = requireContext()
+            .getSharedPreferences("tusome_curriculum", android.content.Context.MODE_PRIVATE)
+            .getString("selected_grade", GradeLevel.GRADE_4.code)
+        val savedGrade = GradeLevel.values().firstOrNull {
+            it.code.equals(savedCode, ignoreCase = true)
+        } ?: GradeLevel.GRADE_4
+        if (savedGrade != selectedGrade) {
+            selectedGrade = savedGrade
+            gradeAdapter?.setSelectedGrade(savedGrade)
+            updateLearningAreasHeading()
+            learningAreasRecyclerView?.let(::loadLearningAreas)
         }
     }
 

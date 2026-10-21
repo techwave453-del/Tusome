@@ -11,8 +11,8 @@
     android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="20dp"
-    app:cardElevation="2dp"
-    app:strokeColor="?attr/colorOutline"
+    app:cardElevation="1dp"
+    app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -20,23 +20,23 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="12dp">
 
         <FrameLayout
             android:id="@+id/frameIconContainer"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="top"
-            android:background="@drawable/bg_chip_unselected">
+            android:layout_width="92dp"
+            android:layout_height="104dp"
+            android:background="@drawable/bg_learning_area_art"
+            android:clipToOutline="true">
 
             <ImageView
                 android:id="@+id/ivSubjectIcon"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_gravity="center"
-                android:contentDescription="Learning area icon"
-                android:src="@drawable/ic_leaf"
-                app:tint="?attr/colorPrimary" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/illustration_learning_area_general" />
         </FrameLayout>
 
         <LinearLayout
@@ -87,20 +87,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="9dp"
-                android:text="Explore strands and learning outcomes"
+                android:text="Explore learning strands"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <ImageView
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:layout_marginStart="8dp"
-            android:contentDescription="Open learning area"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@null"
             android:src="@drawable/ic_chevron_right"
             app:tint="?attr/colorPrimary" />
 
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>

@@ -6,7 +6,6 @@ import com.example.tusome.R
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.LearningArea
 import com.example.tusome.data.model.AssessmentRubric
-import com.example.tusome.data.model.PerformanceLevel
 import com.example.tusome.data.model.Strand
 import com.example.tusome.data.model.SubStrand
 import org.json.JSONArray

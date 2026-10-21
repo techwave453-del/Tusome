@@ -1,49 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tusome Green Modern Vegetable Food Menu Theme Colors -->
-    <color name="primary_green">#3B5B28</color>
-    <color name="primary_green_dark">#28401A</color>
-    <color name="primary_green_light">#587B43</color>
-    <color name="primary_container_green">#E8F0E3</color>
+    <!-- Material 3 Light Color Roles (Fallback when Dynamic Color is off) -->
+    <color name="md_theme_light_primary">#006874</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#97F0FF</color>
+    <color name="md_theme_light_onPrimaryContainer">#001F24</color>
+    <color name="md_theme_light_secondary">#4A6267</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#CDE7EC</color>
+    <color name="md_theme_light_onSecondaryContainer">#051F23</color>
+    <color name="md_theme_light_background">#FAFDFC</color>
+    <color name="md_theme_light_onBackground">#191C1D</color>
+    <color name="md_theme_light_surface">#FAFDFC</color>
+    <color name="md_theme_light_onSurface">#191C1D</color>
+    <color name="md_theme_light_surfaceVariant">#DBE4E6</color>
+    <color name="md_theme_light_onSurfaceVariant">#3F484A</color>
+    <color name="md_theme_light_outline">#6F797A</color>
 
-    <!-- Accent Amber/Orange from Food Menu Design -->
-    <color name="accent_orange">#FF8D38</color>
-    <color name="accent_orange_dark">#D96E1E</color>
-    <color name="accent_orange_light">#FFF1E8</color>
-
-    <!-- Surface & Backgrounds -->
-    <color name="bg_app">#F7F9F5</color>
+    <!-- Surface & Card Backgrounds -->
+    <color name="bg_app">#FAFDFC</color>
     <color name="surface_white">#FFFFFF</color>
-    <color name="surface_card">#FFFFFF</color>
     <color name="surface_variant">#EFF3EB</color>
 
-    <!-- Text Colors -->
-    <color name="text_primary">#1A2318</color>
-    <color name="text_secondary">#5C6E55</color>
-    <color name="text_muted">#8A9B83</color>
-    <color name="text_on_primary">#FFFFFF</color>
-
-    <!-- CBC Assessment Rubric Colors -->
-    <color name="rubric_ee">#2E7D32</color> <!-- Exceeds Expectations (Green) -->
+    <!-- CBC Assessment Rubric Status Colors -->
+    <color name="rubric_ee">#2E7D32</color> <!-- Exceeds Expectations -->
     <color name="rubric_ee_bg">#E8F5E9</color>
-    <color name="rubric_me">#0288D1</color> <!-- Meets Expectations (Blue) -->
+    <color name="rubric_me">#0288D1</color> <!-- Meets Expectations -->
     <color name="rubric_me_bg">#E1F5FE</color>
-    <color name="rubric_ae">#F57C00</color> <!-- Approaches Expectations (Orange) -->
+    <color name="rubric_ae">#F57C00</color> <!-- Approaches Expectations -->
     <color name="rubric_ae_bg">#FFF3E0</color>
-    <color name="rubric_be">#D32F2F</color> <!-- Below Expectations (Red) -->
+    <color name="rubric_be">#D32F2F</color> <!-- Below Expectations -->
     <color name="rubric_be_bg">#FFEBEE</color>
 
-    <!-- Subject Card Accent Colors -->
-    <color name="subject_math_bg">#E8F5E9</color>
-    <color name="subject_math_icon">#2E7D32</color>
-    <color name="subject_lang_bg">#E1F5FE</color>
-    <color name="subject_lang_icon">#0288D1</color>
-    <color name="subject_science_bg">#FFF3E0</color>
-    <color name="subject_science_icon">#EF6C00</color>
-    <color name="subject_agri_bg">#F1F8E9</color>
-    <color name="subject_agri_icon">#558B2F</color>
-    <color name="subject_arts_bg">#F3E5F5</color>
-    <color name="subject_arts_icon">#7B1FA2</color>
-    <color name="subject_social_bg">#E0F2F1</color>
-    <color name="subject_social_icon">#00695C</color>
+    <!-- Legacy Color Tokens mapped to clean theme system -->
+    <color name="primary_green">#006874</color>
+    <color name="primary_green_dark">#00363D</color>
+    <color name="primary_green_light">#4FD8EB</color>
+    <color name="primary_container_green">#CDE7EC</color>
+    <color name="accent_orange">#006874</color>
+    <color name="accent_orange_dark">#00363D</color>
+    <color name="accent_orange_light">#CDE7EC</color>
+    <color name="text_primary">#191C1D</color>
+    <color name="text_secondary">#4A6267</color>
+    <color name="text_muted">#6F797A</color>
+    <color name="text_on_primary">#FFFFFF</color>
 </resources>

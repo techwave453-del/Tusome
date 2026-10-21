@@ -4,13 +4,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tusome.R
 import com.example.tusome.data.model.GradeLevel
+import com.google.android.material.color.MaterialColors
 
 class GradeChipAdapter(
-    private val grades: List<GradeLevel>,
+    private var grades: List<GradeLevel>,
     private var selectedGrade: GradeLevel,
     private val onGradeSelected: (GradeLevel) -> Unit
 ) : RecyclerView.Adapter<GradeChipAdapter.ViewHolder>() {
@@ -33,18 +33,40 @@ class GradeChipAdapter(
         holder.tvGradeChip.setBackgroundResource(
             if (isSelected) R.drawable.bg_chip_selected else R.drawable.bg_chip_unselected
         )
-        holder.tvGradeChip.setTextColor(
-            ContextCompat.getColor(
-                holder.itemView.context,
-                if (isSelected) R.color.surface_white else R.color.primary_green
-            )
-        )
 
-        holder.itemView.setOnClickListener {
-            selectedGrade = grade
-            notifyDataSetChanged()
-            onGradeSelected(grade)
+        val selectedColor = MaterialColors.getColor(
+            holder.itemView,
+            com.google.android.material.R.attr.colorOnPrimary
+        )
+        val unselectedColor = MaterialColors.getColor(
+            holder.itemView,
+            com.google.android.material.R.attr.colorOnSurfaceVariant
+        )
+        holder.tvGradeChip.setTextColor(if (isSelected) selectedColor else unselectedColor)
+        holder.tvGradeChip.isSelected = isSelected
+        holder.tvGradeChip.contentDescription =
+            if (isSelected) "${grade.title}, selected" else grade.title
+
+        holder.tvGradeChip.setOnClickListener {
+            if (selectedGrade != grade) {
+                selectedGrade = grade
+                notifyDataSetChanged()
+                onGradeSelected(grade)
+            }
         }
+    }
+
+    fun setGrades(newGrades: List<GradeLevel>) {
+        grades = newGrades
+        if (grades.none { it == selectedGrade } && grades.isNotEmpty()) {
+            selectedGrade = grades.first()
+        }
+        notifyDataSetChanged()
+    }
+
+    fun setSelectedGrade(grade: GradeLevel) {
+        selectedGrade = grade
+        notifyDataSetChanged()
     }
 
     override fun getItemCount(): Int = grades.size

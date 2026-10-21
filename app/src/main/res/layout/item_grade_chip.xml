@@ -10,6 +10,6 @@
     android:paddingHorizontal="16dp"
     android:paddingVertical="8dp"
     android:text="Grade 4"
-    android:textColor="@color/primary_green"
+    android:textColor="?attr/colorOnSurfaceVariant"
     android:textSize="13sp"
     android:textStyle="bold" />

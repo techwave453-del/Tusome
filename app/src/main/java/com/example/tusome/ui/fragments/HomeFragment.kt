@@ -1,4 +1,4 @@
-﻿package com.example.tusome.ui.fragments
+package com.example.tusome.ui.fragments
 
 import android.content.Context
 import android.content.Intent
@@ -6,14 +6,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tusome.R
+import com.example.tusome.data.local.ActivityProgressManager
+import com.example.tusome.data.model.GradeCategory
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.LearningArea
 import com.example.tusome.data.repository.CbcRepository
@@ -23,6 +23,7 @@ import com.example.tusome.ui.adapters.GradeChipAdapter
 import com.example.tusome.ui.adapters.LearningAreaAdapter
 import com.example.tusome.ui.dialogs.LearningAreaBottomSheetDialog
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButtonToggleGroup
 
 class HomeFragment : Fragment() {
 
@@ -32,6 +33,10 @@ class HomeFragment : Fragment() {
     private var learningAreasHeading: TextView? = null
     private var viewAllLearningAreas: TextView? = null
     private var curriculumSyncStatus: TextView? = null
+    private var completedActivitiesCount: TextView? = null
+    private var assessmentProgressCount: TextView? = null
+    private var progressManager: ActivityProgressManager? = null
+    private var gradeCategoryGroup: MaterialButtonToggleGroup? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,19 +47,20 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         SupabaseCurriculumRepository.initialize(requireContext())
-
         selectedGrade = readSavedGrade()
+        progressManager = ActivityProgressManager(requireContext())
 
         val rvGradeChips: RecyclerView = view.findViewById(R.id.rvGradeChips)
         learningAreasRecyclerView = view.findViewById(R.id.rvLearningAreas)
         learningAreasHeading = view.findViewById(R.id.tvLearningAreasHeading)
         curriculumSyncStatus = view.findViewById(R.id.tvCurriculumSyncStatus)
-        val btnStartHeroActivity: Button =
-            view.findViewById(R.id.btnStartHeroActivity)
+        completedActivitiesCount = view.findViewById(R.id.tvCompletedActivitiesCount)
+        assessmentProgressCount = view.findViewById(R.id.tvAssessmentProgressCount)
         viewAllLearningAreas = view.findViewById(R.id.tvViewAllLearningAreas)
+        gradeCategoryGroup = view.findViewById(R.id.groupGradeCategory)
 
         gradeAdapter = GradeChipAdapter(
-            GradeLevel.values().toList(),
+            gradesFor(selectedGrade.category),
             selectedGrade
         ) { grade ->
             if (selectedGrade != grade) {
@@ -65,25 +71,21 @@ class HomeFragment : Fragment() {
             }
         }
 
-        rvGradeChips.layoutManager =
-            LinearLayoutManager(
-                requireContext(),
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
+        rvGradeChips.layoutManager = LinearLayoutManager(
+            requireContext(),
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
         rvGradeChips.adapter = gradeAdapter
 
-        updateLearningAreasHeading()
-        learningAreasRecyclerView?.let(::loadLearningAreas)
-
-        btnStartHeroActivity.setOnClickListener {
-            showLearningAreaDialog(
-                title = "Agriculture & Nutrition",
-                kiswahiliTitle = "Kilimo na Lishe",
-                areaId = "agriculture_nutrition",
-                iconResId = R.drawable.ic_leaf
-            )
+        gradeCategoryGroup?.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) onCategorySelected(checkedId)
         }
+        gradeCategoryGroup?.check(categoryButtonFor(selectedGrade.category))
+
+        updateLearningAreasHeading()
+        refreshProgressSummary()
+        learningAreasRecyclerView?.let(::loadLearningAreas)
 
         viewAllLearningAreas?.setOnClickListener {
             activity
@@ -91,6 +93,40 @@ class HomeFragment : Fragment() {
                 ?.selectedItemId = R.id.navigation_strands
         }
     }
+
+    private fun onCategorySelected(buttonId: Int) {
+        val category = when (buttonId) {
+            R.id.btnPrePrimary -> GradeCategory.PRE_PRIMARY
+            R.id.btnLowerPrimary -> GradeCategory.LOWER_PRIMARY
+            R.id.btnUpperPrimary -> GradeCategory.UPPER_PRIMARY
+            R.id.btnJuniorSchool -> GradeCategory.JUNIOR_SECONDARY
+            R.id.btnSeniorSchool -> GradeCategory.SENIOR_SECONDARY
+            else -> return
+        }
+
+        val grades = gradesFor(category)
+        gradeAdapter?.setGrades(grades)
+        if (selectedGrade.category != category) {
+            selectedGrade = grades.first()
+            gradeAdapter?.setSelectedGrade(selectedGrade)
+            saveSelectedGrade(selectedGrade)
+            updateLearningAreasHeading()
+            learningAreasRecyclerView?.let(::loadLearningAreas)
+        } else {
+            gradeAdapter?.setSelectedGrade(selectedGrade)
+        }
+    }
+
+    private fun categoryButtonFor(category: GradeCategory): Int = when (category) {
+        GradeCategory.PRE_PRIMARY -> R.id.btnPrePrimary
+        GradeCategory.LOWER_PRIMARY -> R.id.btnLowerPrimary
+        GradeCategory.UPPER_PRIMARY -> R.id.btnUpperPrimary
+        GradeCategory.JUNIOR_SECONDARY -> R.id.btnJuniorSchool
+        GradeCategory.SENIOR_SECONDARY -> R.id.btnSeniorSchool
+    }
+
+    private fun gradesFor(category: GradeCategory): List<GradeLevel> =
+        GradeLevel.values().filter { it.category == category }
 
     private fun readSavedGrade(): GradeLevel {
         val savedCode = requireContext()
@@ -114,56 +150,31 @@ class HomeFragment : Fragment() {
         super.onResume()
         if (!isAdded || learningAreasRecyclerView == null) return
 
+        refreshProgressSummary()
         val savedGrade = readSavedGrade()
         if (savedGrade != selectedGrade) {
             selectedGrade = savedGrade
+            gradeAdapter?.setGrades(gradesFor(savedGrade.category))
             gradeAdapter?.setSelectedGrade(savedGrade)
+            gradeCategoryGroup?.check(categoryButtonFor(savedGrade.category))
             updateLearningAreasHeading()
             learningAreasRecyclerView?.let(::loadLearningAreas)
         }
     }
 
-    private fun showLearningAreaDialog(
-        title: String,
-        kiswahiliTitle: String,
-        areaId: String,
-        iconResId: Int
-    ) {
-        val requestedGrade = selectedGrade
-        curriculumSyncStatus?.text = "Loading $title curriculum details…"
-
-        SupabaseCurriculumRepository.fetchLearningAreaOverview(
-            requestedGrade,
-            areaId
-        ) { result ->
-            if (!isAdded || selectedGrade != requestedGrade) {
-                return@fetchLearningAreaOverview
-            }
-
-            curriculumSyncStatus?.text = "Curriculum details loaded"
-
-            val overviewText = result.getOrElse {
-                "Unable to load the live curriculum details. Connect to the internet and try again."
-            }
-
-            LearningAreaBottomSheetDialog.newInstance(
-                title = title,
-                kiswahiliTitle = kiswahiliTitle,
-                gradeTitle = requestedGrade.title,
-                overviewText = overviewText,
-                areaId = areaId,
-                iconResId = iconResId
-            ).show(childFragmentManager, "LearningAreaOverview")
-        }
+    private fun refreshProgressSummary() {
+        val manager = progressManager ?: return
+        completedActivitiesCount?.text = manager.getCompletedSubStrandsCount().toString()
+        assessmentProgressCount?.text = manager.getSavedSelfEvaluationsCount().toString()
     }
 
     private fun updateLearningAreasHeading() {
-        learningAreasHeading?.text = "${selectedGrade.title} Learning Areas"
+        learningAreasHeading?.text = "${selectedGrade.title} learning areas"
     }
 
     private fun loadLearningAreas(recyclerView: RecyclerView) {
         val requestedGrade = selectedGrade
-        curriculumSyncStatus?.text = "Loading CBC catalogue…"
+        curriculumSyncStatus?.text = "Loading CBC curriculum…"
 
         SupabaseCurriculumRepository.fetchLearningAreas(requestedGrade) { result ->
             if (
@@ -176,11 +187,11 @@ class HomeFragment : Fragment() {
 
             result.onSuccess { areas ->
                 curriculumSyncStatus?.text = if (areas.isEmpty()) {
-                    "Connected to Tusome, but no published learning areas are listed for ${requestedGrade.title}."
+                    "No published learning areas are currently listed for ${requestedGrade.title}."
                 } else {
-                    "Curriculum catalogue available • ${areas.size} learning areas"
+                    "Curriculum available • ${areas.size} learning areas"
                 }
-                renderLearningAreas(recyclerView, areas, fromLiveCatalogue = true)
+                renderLearningAreas(recyclerView, areas, fromRepositoryCatalogue = true)
             }.onFailure {
                 if (requestedGrade == GradeLevel.GRADE_4) {
                     curriculumSyncStatus?.text =
@@ -188,16 +199,12 @@ class HomeFragment : Fragment() {
                     renderLearningAreas(
                         recyclerView,
                         CbcRepository.getLearningAreas(requestedGrade),
-                        fromLiveCatalogue = false
+                        fromRepositoryCatalogue = false
                     )
                 } else {
                     curriculumSyncStatus?.text =
-                        "Offline • no saved curriculum catalogue is available for ${requestedGrade.title} yet"
-                    renderLearningAreas(
-                        recyclerView,
-                        emptyList(),
-                        fromLiveCatalogue = false
-                    )
+                        "Offline • no bundled sample catalogue is available for ${requestedGrade.title}"
+                    renderLearningAreas(recyclerView, emptyList(), fromRepositoryCatalogue = false)
                 }
             }
         }
@@ -206,15 +213,14 @@ class HomeFragment : Fragment() {
     private fun renderLearningAreas(
         recyclerView: RecyclerView,
         areas: List<LearningArea>,
-        fromLiveCatalogue: Boolean
+        fromRepositoryCatalogue: Boolean
     ) {
-        viewAllLearningAreas?.text = "View All (${areas.size})"
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
+        viewAllLearningAreas?.text = "View all (${areas.size})"
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = LearningAreaAdapter(areas) { area ->
-            if (fromLiveCatalogue) {
+            if (fromRepositoryCatalogue) {
                 val requestedGrade = area.gradeLevel
-                curriculumSyncStatus?.text =
-                    "Loading ${area.title} curriculum…"
+                curriculumSyncStatus?.text = "Loading ${area.title} curriculum…"
 
                 SupabaseCurriculumRepository.fetchLearningAreaOverview(
                     requestedGrade,
@@ -224,15 +230,13 @@ class HomeFragment : Fragment() {
                         return@fetchLearningAreaOverview
                     }
 
-                    curriculumSyncStatus?.text =
-                        "Live Tusome curriculum connected"
-
+                    curriculumSyncStatus?.text = "Curriculum details available"
                     LearningAreaBottomSheetDialog.newInstance(
                         title = area.title,
                         kiswahiliTitle = area.kiswahiliTitle,
                         gradeTitle = requestedGrade.title,
                         overviewText = result.getOrElse {
-                            "Unable to load curriculum details. Check your internet connection and try again."
+                            "Curriculum details could not be loaded right now. If you are offline, reconnect and try again."
                         },
                         areaId = area.id,
                         iconResId = area.iconResId
@@ -247,7 +251,7 @@ class HomeFragment : Fragment() {
             } else {
                 Toast.makeText(
                     requireContext(),
-                    "Detailed learning content is not available in the offline catalogue yet.",
+                    "Detailed learning content is not available in the bundled offline sample yet.",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -259,7 +263,11 @@ class HomeFragment : Fragment() {
         learningAreasHeading = null
         viewAllLearningAreas = null
         curriculumSyncStatus = null
+        completedActivitiesCount = null
+        assessmentProgressCount = null
+        progressManager = null
         gradeAdapter = null
+        gradeCategoryGroup = null
         super.onDestroyView()
     }
 }

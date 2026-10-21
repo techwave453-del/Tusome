@@ -5,6 +5,10 @@ import android.os.Looper
 import com.example.tusome.R
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.LearningArea
+import com.example.tusome.data.model.AssessmentRubric
+import com.example.tusome.data.model.PerformanceLevel
+import com.example.tusome.data.model.Strand
+import com.example.tusome.data.model.SubStrand
 import org.json.JSONArray
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -45,6 +49,128 @@ object SupabaseCurriculumRepository {
         executor.execute {
             val result = runCatching { requestLearningAreaOverview(grade, learningAreaId) }
             mainHandler.post { onResult(result) }
+        }
+    }
+
+    /** Fetches only published strands belonging to the requested grade. */
+    fun fetchStrands(
+        grade: GradeLevel,
+        onResult: (Result<List<Strand>>) -> Unit
+    ) {
+        executor.execute {
+            val result = runCatching { requestStrands(grade) }
+            mainHandler.post { onResult(result) }
+        }
+    }
+
+    private fun requestStrands(grade: GradeLevel): List<Strand> {
+        val gradeId = grade.code.lowercase(Locale.ROOT)
+        val endpoint = "$BASE_URL/rest/v1/curriculum_strands" +
+            "?select=id,learning_area_id,title,description,sequence," +
+            "curriculum_sub_strands(id,title,sequence,is_published," +
+            "learning_outcomes(outcome_text,sequence,is_published)," +
+            "inquiry_questions(question_text,sequence,is_published)," +
+            "learning_activities(activity_text,sequence,is_published))" +
+            "&grade_id=eq.$gradeId&is_published=eq.true&content_status=eq.published" +
+            "&curriculum_sub_strands.is_published=eq.true" +
+            "&curriculum_sub_strands.learning_outcomes.is_published=eq.true" +
+            "&curriculum_sub_strands.inquiry_questions.is_published=eq.true" +
+            "&curriculum_sub_strands.learning_activities.is_published=eq.true" +
+            "&order=sequence.asc&curriculum_sub_strands.order=sequence.asc" +
+            "&curriculum_sub_strands.learning_outcomes.order=sequence.asc" +
+            "&curriculum_sub_strands.inquiry_questions.order=sequence.asc" +
+            "&curriculum_sub_strands.learning_activities.order=sequence.asc"
+
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10000
+            readTimeout = 15000
+            setRequestProperty("apikey", PUBLISHABLE_KEY)
+            setRequestProperty("Authorization", "Bearer $PUBLISHABLE_KEY")
+            setRequestProperty("Accept", "application/json")
+        }
+
+        return try {
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
+            check(status in 200..299) {
+                "Supabase returned HTTP $status while loading " + grade.title + " strands."
+            }
+
+            val rows = JSONArray(body)
+            buildList {
+                for (i in 0 until rows.length()) {
+                    val row = rows.getJSONObject(i)
+                    val strandId = row.optString("id")
+                    val areaId = row.optString("learning_area_id")
+                    if (strandId.isBlank() || areaId.isBlank()) continue
+
+                    val subRows = row.optJSONArray("curriculum_sub_strands") ?: JSONArray()
+                    val subStrands = buildList {
+                        for (j in 0 until subRows.length()) {
+                            val sub = subRows.getJSONObject(j)
+                            val subId = sub.optString("id")
+                            if (subId.isBlank()) continue
+
+                            fun stringList(array: JSONArray?, field: String): List<String> {
+                                val values = mutableListOf<String>()
+                                if (array != null) {
+                                    for (k in 0 until array.length()) {
+                                        val value = array.optJSONObject(k)?.optString(field).orEmpty()
+                                        if (value.isNotBlank()) values.add(value)
+                                    }
+                                }
+                                return values
+                            }
+
+                            val outcomes = stringList(sub.optJSONArray("learning_outcomes"), "outcome_text")
+                            val questions = stringList(sub.optJSONArray("inquiry_questions"), "question_text")
+                            val activities = stringList(sub.optJSONArray("learning_activities"), "activity_text")
+                            val strandSequence = row.optInt("sequence", i + 1)
+                            val subSequence = sub.optInt("sequence", j + 1)
+                            add(
+                                SubStrand(
+                                    id = subId,
+                                    strandId = strandId,
+                                    subStrandNumber = strandSequence.toString() + "." + subSequence,
+                                    title = sub.optString("title", "Learning activity"),
+                                    specificLearningOutcomes = outcomes,
+                                    keyInquiryQuestions = questions,
+                                    suggestedExperiences = activities,
+                                    digitalTaskPrompt = activities.firstOrNull().orEmpty(),
+                                    rubric = AssessmentRubric(
+                                        id = "unreviewed-" + subId,
+                                        subStrandId = subId,
+                                        criteria = "Practice the skill and explain your learning.",
+                                        exceedsDescription = "Explains the idea clearly and applies it independently.",
+                                        meetsDescription = "Demonstrates the expected skill with appropriate support.",
+                                        approachesDescription = "Demonstrates part of the skill and benefits from guidance.",
+                                        belowDescription = "Needs additional guided practice.",
+                                        learnerLevel = PerformanceLevel.MEETS,
+                                        teacherComment = "Starter content: teacher review is required."
+                                    )
+                                )
+                            )
+                        }
+                    }
+
+                    add(
+                        Strand(
+                            id = strandId,
+                            learningAreaId = areaId,
+                            strandNumber = row.optInt("sequence", i + 1),
+                            title = row.optString("title", "Curriculum strand"),
+                            description = row.optString("description").takeIf { it.isNotBlank() }
+                                ?: "Published starter curriculum for " + grade.title + ".",
+                            coreCompetencies = emptyList(),
+                            subStrands = subStrands
+                        )
+                    )
+                }
+            }
+        } finally {
+            connection.disconnect()
         }
     }
 

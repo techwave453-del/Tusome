@@ -240,6 +240,11 @@ object SupabaseCurriculumRepository {
 
         try {
             val body = readResponseWithCache(connection, "overview_" + gradeId + "_" + learningAreaId, "Unable to load learning-area overview.")
+            val rows = JSONArray(body)
+            if (rows.length() == 0) {
+                return "No published strand details are available for " + grade.title + " yet. " +
+                    "Use the relevant KICD curriculum design as the authoritative reference while content is reviewed."
+            }
 
             val output = StringBuilder()
             for (i in 0 until rows.length()) {

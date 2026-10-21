@@ -8,7 +8,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tusome.R
 import com.example.tusome.data.model.LearningArea
-import com.google.android.material.color.MaterialColors
 
 class LearningAreaAdapter(
     private val items: List<LearningArea>,
@@ -34,21 +33,37 @@ class LearningAreaAdapter(
         holder.tvGradeBadge.text = "${item.gradeLevel.title} • CBC"
         holder.tvSubjectTitle.text = item.title
         holder.tvSubjectKiswahili.text = item.kiswahiliTitle
+        holder.tvSubjectKiswahili.visibility =
+            if (item.kiswahiliTitle.isBlank()) View.GONE else View.VISIBLE
         holder.tvStrandsCount.text = if (item.strandsCount > 0) {
-            item.strandsCount.toString() + " strands • " + item.subStrandsCount + " sub-strands"
+            "${item.strandsCount} strands • ${item.subStrandsCount} sub-strands"
         } else {
-            "Curriculum details not yet published"
+            "Explore available curriculum"
         }
-        holder.ivSubjectIcon.setImageResource(item.iconResId)
-
-        val primaryColor = MaterialColors.getColor(
-            holder.itemView,
-            androidx.appcompat.R.attr.colorPrimary
-        )
-        holder.ivSubjectIcon.setColorFilter(primaryColor)
+        holder.ivSubjectIcon.setImageResource(illustrationFor(item.title))
+        holder.ivSubjectIcon.contentDescription = null
+        holder.itemView.contentDescription =
+            "${item.title}. ${item.kiswahiliTitle}. ${holder.tvStrandsCount.text}. Open learning area."
 
         holder.itemView.setOnClickListener {
             onItemClick(item)
+        }
+    }
+
+    private fun illustrationFor(title: String): Int {
+        val name = title.lowercase()
+        return when {
+            listOf("agriculture", "nutrition", "environment", "nature", "livestock").any(name::contains) ->
+                R.drawable.illustration_learning_area_agriculture
+            listOf("mathematics", "math", "numeracy").any(name::contains) ->
+                R.drawable.illustration_learning_area_math
+            listOf("english", "kiswahili", "language", "literacy", "communication").any(name::contains) ->
+                R.drawable.illustration_learning_area_language
+            listOf("science", "technology", "integrated science", "computer", "digital").any(name::contains) ->
+                R.drawable.illustration_learning_area_science
+            listOf("creative", "arts", "music", "sport", "physical", "health", "movement").any(name::contains) ->
+                R.drawable.illustration_learning_area_creative
+            else -> R.drawable.illustration_learning_area_general
         }
     }
 

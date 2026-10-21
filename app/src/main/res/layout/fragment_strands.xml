@@ -144,7 +144,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
                 android:gravity="center"
-                android:text="No matching strands"
+                android:text="No published strands found"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -154,7 +154,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:gravity="center"
-                android:text="Try another keyword or choose a different subject."
+                android:text="Try another keyword, select a different grade, or check back when more curriculum is published."
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
         </LinearLayout>

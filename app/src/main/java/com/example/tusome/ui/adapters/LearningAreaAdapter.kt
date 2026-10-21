@@ -35,7 +35,11 @@ class LearningAreaAdapter(
         holder.tvGradeBadge.text = "${item.gradeLevel.title} • CBC"
         holder.tvSubjectTitle.text = item.title
         holder.tvSubjectKiswahili.text = item.kiswahiliTitle
-        holder.tvStrandsCount.text = holder.itemView.context.getString(R.string.explore_learning_area)
+        holder.tvStrandsCount.text = if (item.strandsCount > 0) {
+            item.strandsCount.toString() + " strands • " + item.subStrandsCount + " sub-strands"
+        } else {
+            "Curriculum details not yet published"
+        }
         holder.ivSubjectIcon.setImageResource(item.iconResId)
 
         try {

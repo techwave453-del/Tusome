@@ -10,7 +10,7 @@ import com.example.tusome.data.model.GradeLevel
 import com.google.android.material.color.MaterialColors
 
 class GradeChipAdapter(
-    private val grades: List<GradeLevel>,
+    private var grades: List<GradeLevel>,
     private var selectedGrade: GradeLevel,
     private val onGradeSelected: (GradeLevel) -> Unit
 ) : RecyclerView.Adapter<GradeChipAdapter.ViewHolder>() {
@@ -34,16 +34,34 @@ class GradeChipAdapter(
             if (isSelected) R.drawable.bg_chip_selected else R.drawable.bg_chip_unselected
         )
 
-        val selectedColor = MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorOnPrimary)
-        val unselectedColor = MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorOnSurfaceVariant)
-
+        val selectedColor = MaterialColors.getColor(
+            holder.itemView,
+            com.google.android.material.R.attr.colorOnPrimary
+        )
+        val unselectedColor = MaterialColors.getColor(
+            holder.itemView,
+            com.google.android.material.R.attr.colorOnSurfaceVariant
+        )
         holder.tvGradeChip.setTextColor(if (isSelected) selectedColor else unselectedColor)
+        holder.tvGradeChip.isSelected = isSelected
+        holder.tvGradeChip.contentDescription =
+            if (isSelected) "${grade.title}, selected" else grade.title
 
-        holder.itemView.setOnClickListener {
-            selectedGrade = grade
-            notifyDataSetChanged()
-            onGradeSelected(grade)
+        holder.tvGradeChip.setOnClickListener {
+            if (selectedGrade != grade) {
+                selectedGrade = grade
+                notifyDataSetChanged()
+                onGradeSelected(grade)
+            }
         }
+    }
+
+    fun setGrades(newGrades: List<GradeLevel>) {
+        grades = newGrades
+        if (grades.none { it == selectedGrade } && grades.isNotEmpty()) {
+            selectedGrade = grades.first()
+        }
+        notifyDataSetChanged()
     }
 
     fun setSelectedGrade(grade: GradeLevel) {

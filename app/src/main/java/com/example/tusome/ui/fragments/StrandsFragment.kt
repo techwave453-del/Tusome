@@ -45,6 +45,7 @@ class StrandsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        SupabaseCurriculumRepository.initialize(requireContext())
 
         selectedGrade = GradeLevel.values().firstOrNull {
             it.code.equals(
@@ -140,7 +141,7 @@ class StrandsFragment : Fragment() {
                         tvStrandsStatus.text = if (strands.isEmpty()) {
                             "Supabase connected • no published strand details are available for ${requestedGrade.title} yet."
                         } else {
-                            "Live Supabase curriculum • ${strands.size} strands for ${requestedGrade.title}"
+                            "Curriculum available • ${strands.size} strands for ${requestedGrade.title}"
                         }
                         renderStrands()
                     }.onFailure {

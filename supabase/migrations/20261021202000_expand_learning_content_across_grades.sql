@@ -98,23 +98,27 @@ begin
    else update public.curriculum_strands set is_published=true,content_status='published' where id=v_strand; end if;
    select id into v_sub from public.curriculum_sub_strands where strand_id=v_strand and title=v_sub1 limit 1;
    if v_sub is null then insert into public.curriculum_sub_strands(strand_id,title,sequence,description,source_id,is_published)
-    values(v_strand,v_sub1,1,'Starter topic for '||g.name||'; verify against the current KICD design.',v_source,true) returning id into v_sub; end if;
+    values(v_strand,v_sub1,1,'Starter topic for '||g.name||'; verify against the current KICD design.',v_source,true) returning id into v_sub;
+   else update public.curriculum_sub_strands set is_published=true where id=v_sub; end if;
    insert into public.learning_outcomes(sub_strand_id,outcome_text,outcome_type,sequence,source_id,is_published)
     select v_sub,x.t,'specific',x.n,v_source,true from (values(v_o1,1),(v_o2,2)) x(t,n)
     where not exists(select 1 from public.learning_outcomes lo where lo.sub_strand_id=v_sub and lo.outcome_text=x.t);
    insert into public.inquiry_questions(sub_strand_id,question_text,sequence,source_id,is_published)
-    select v_sub,v_act1,1,v_source,true where not exists(select 1 from public.inquiry_questions iq where iq.sub_strand_id=v_sub and iq.question_text=v_act1);
+    select v_sub,case when a.id='kiswahili' then 'Unawezaje kutumia "'||v_sub1||'" katika mawasiliano ya kila siku?' when a.id='mathematics' then 'How can "'||v_sub1||'" help you solve an everyday problem?' when a.id in ('science_technology','integrated_science') then 'What can you safely observe or investigate about "'||v_sub1||'"?' when a.id='social_studies' then 'How does "'||v_sub1||'" relate to people and your community?' when a.id='agriculture_nutrition' then 'How can "'||v_sub1||'" help people grow food, protect resources or stay healthy?' else 'What can you learn or explain about "'||v_sub1||'" in a familiar situation?' end,1,v_source,true
+    where not exists(select 1 from public.inquiry_questions iq where iq.sub_strand_id=v_sub and iq.question_text like 'How can %' or iq.question_text like 'Unawezaje %');
    insert into public.learning_activities(sub_strand_id,activity_text,resources,sequence,source_id,is_published)
     select v_sub,v_act1,'["exercise book","pencil","locally available materials"]'::jsonb,1,v_source,true
     where not exists(select 1 from public.learning_activities x where x.sub_strand_id=v_sub and x.activity_text=v_act1);
    select id into v_sub from public.curriculum_sub_strands where strand_id=v_strand and title=v_sub2 limit 1;
    if v_sub is null then insert into public.curriculum_sub_strands(strand_id,title,sequence,description,source_id,is_published)
-    values(v_strand,v_sub2,2,'Starter topic for '||g.name||'; verify against the current KICD design.',v_source,true) returning id into v_sub; end if;
+    values(v_strand,v_sub2,2,'Starter topic for '||g.name||'; verify against the current KICD design.',v_source,true) returning id into v_sub;
+   else update public.curriculum_sub_strands set is_published=true where id=v_sub; end if;
    insert into public.learning_outcomes(sub_strand_id,outcome_text,outcome_type,sequence,source_id,is_published)
     select v_sub,x.t,'specific',x.n,v_source,true from (values(v_o3,1),(v_o4,2)) x(t,n)
     where not exists(select 1 from public.learning_outcomes lo where lo.sub_strand_id=v_sub and lo.outcome_text=x.t);
    insert into public.inquiry_questions(sub_strand_id,question_text,sequence,source_id,is_published)
-    select v_sub,v_act2,1,v_source,true where not exists(select 1 from public.inquiry_questions iq where iq.sub_strand_id=v_sub and iq.question_text=v_act2);
+    select v_sub,case when a.id='kiswahili' then 'Unawezaje kutumia "'||v_sub2||'" katika mawasiliano ya kila siku?' when a.id='mathematics' then 'How can "'||v_sub2||'" help you solve an everyday problem?' when a.id in ('science_technology','integrated_science') then 'What can you safely observe or investigate about "'||v_sub2||'"?' when a.id='social_studies' then 'How does "'||v_sub2||'" relate to people and your community?' when a.id='agriculture_nutrition' then 'How can "'||v_sub2||'" help people grow food, protect resources or stay healthy?' else 'What can you learn or explain about "'||v_sub2||'" in a familiar situation?' end,1,v_source,true
+    where not exists(select 1 from public.inquiry_questions iq where iq.sub_strand_id=v_sub and iq.question_text like 'How can %' or iq.question_text like 'Unawezaje %');
    insert into public.learning_activities(sub_strand_id,activity_text,resources,sequence,source_id,is_published)
     select v_sub,v_act2,'["exercise book","pencil","locally available materials"]'::jsonb,1,v_source,true
     where not exists(select 1 from public.learning_activities x where x.sub_strand_id=v_sub and x.activity_text=v_act2);

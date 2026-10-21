@@ -1,5 +1,6 @@
 package com.example.tusome.data.repository
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import com.example.tusome.R
@@ -28,6 +29,36 @@ object SupabaseCurriculumRepository {
 
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
+    @Volatile private var applicationContext: Context? = null
+
+    /** Call once from an Activity or Fragment before fetching curriculum. */
+    fun initialize(context: Context) {
+        applicationContext = context.applicationContext
+    }
+
+    private fun readResponseWithCache(
+        connection: HttpURLConnection,
+        cacheKey: String,
+        errorMessage: String
+    ): String {
+        return runCatching {
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.let {
+                BufferedReader(InputStreamReader(it, Charsets.UTF_8)).use { reader -> reader.readText() }
+            }.orEmpty()
+            check(status in 200..299) { "$errorMessage (HTTP $status)" }
+            check(body.isNotBlank()) { "$errorMessage (empty response)" }
+            applicationContext?.getSharedPreferences("tusome_curriculum_cache", Context.MODE_PRIVATE)
+                ?.edit()?.putString(cacheKey, body)?.putLong("${cacheKey}_saved_at", System.currentTimeMillis())?.apply()
+            body
+        }.getOrElse { networkError ->
+            val cached = applicationContext
+                ?.getSharedPreferences("tusome_curriculum_cache", Context.MODE_PRIVATE)
+                ?.getString(cacheKey, null)
+            if (!cached.isNullOrBlank()) cached else throw networkError
+        }
+    }
 
     fun fetchLearningAreas(
         grade: GradeLevel,
@@ -94,12 +125,7 @@ object SupabaseCurriculumRepository {
         }
 
         return try {
-            val status = connection.responseCode
-            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
-            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
-            check(status in 200..299) {
-                "Supabase returned HTTP $status while loading " + grade.title + " strands."
-            }
+            val body = readResponseWithCache(connection, "strands_" + gradeId, "Unable to load published strands.")
 
             val rows = JSONArray(body)
             buildList {
@@ -213,18 +239,7 @@ object SupabaseCurriculumRepository {
         }
 
         try {
-            val status = connection.responseCode
-            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
-            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
-            check(status in 200..299) { "Supabase returned HTTP $status while loading curriculum details." }
-
-            val rows = JSONArray(body)
-            if (rows.length() == 0) {
-                return "This learning area is listed in the Tusome curriculum catalogue, but strand-level content for " +
-                    grade.title + " has not yet been reviewed and published.\n\n" +
-                    "Use KICD curriculum designs as the authoritative source while grade-specific content is verified.\n\n" +
-                    "KICD: https://kicd.ac.ke/cbc-materials/curriculum-designs/regular-curriculum-designs/"
-            }
+            val body = readResponseWithCache(connection, "overview_" + gradeId + "_" + learningAreaId, "Unable to load learning-area overview.")
 
             val output = StringBuilder()
             for (i in 0 until rows.length()) {
@@ -268,12 +283,7 @@ object SupabaseCurriculumRepository {
         }
 
         return try {
-            val status = connection.responseCode
-            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
-            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
-            check(status in 200..299) {
-                "Supabase returned HTTP $status. Check project status, network access and RLS."
-            }
+            val body = readResponseWithCache(connection, "areas_" + gradeId, "Unable to load learning areas.")
 
             val rows = JSONArray(body)
             val contentCounts = requestLearningAreaCounts(gradeId)
@@ -327,12 +337,7 @@ object SupabaseCurriculumRepository {
         }
 
         return try {
-            val status = connection.responseCode
-            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
-            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
-            check(status in 200..299) {
-                "Supabase returned HTTP $status while loading curriculum counts."
-            }
+            val body = readResponseWithCache(connection, "counts_" + gradeId, "Unable to load learning-area counts.")
 
             val counts = mutableMapOf<String, Pair<Int, Int>>()
             val rows = JSONArray(body)

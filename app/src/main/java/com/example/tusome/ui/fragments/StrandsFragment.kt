@@ -151,10 +151,6 @@ class StrandsFragment : Fragment() {
         setupSubjectFilterItems(areas.map { it.id to it.title })
     }
 
-    private fun setupSubjectFilters(areas: List<com.example.tusome.data.model.LearningArea>) {
-        setupSubjectFilterItems(areas.map { it.id to it.title })
-    }
-
     private fun setupSubjectFilterItems(areas: List<Pair<String, String>>) {
         chipGroupSubjects.removeAllViews()
         chipGroupSubjects.isSingleSelection = true

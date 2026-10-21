@@ -9,11 +9,10 @@
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    app:cardBackgroundColor="@color/surface_white"
+    app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="20dp"
     app:cardElevation="2dp"
-    app:rippleColor="@color/primary_container_green"
-    app:strokeColor="#E4EBE1"
+    app:strokeColor="?attr/colorOutline"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -37,7 +36,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="Learning area icon"
                 android:src="@drawable/ic_leaf"
-                app:tint="@color/primary_green" />
+                app:tint="?attr/colorPrimary" />
         </FrameLayout>
 
         <LinearLayout
@@ -51,12 +50,12 @@
                 android:id="@+id/tvGradeBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#E8F5E9"
+                android:background="@drawable/bg_chip_unselected"
                 android:paddingHorizontal="9dp"
                 android:paddingVertical="4dp"
                 android:text="GRADE 4 • CBC"
                 android:textAllCaps="true"
-                android:textColor="#2E6B35"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -68,7 +67,7 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:text="Agriculture &amp; Nutrition"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -80,7 +79,7 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:text="Kilimo na Lishe"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp" />
 
             <TextView
@@ -89,7 +88,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="9dp"
                 android:text="Explore strands and learning outcomes"
-                android:textColor="@color/primary_green"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -100,7 +99,7 @@
             android:layout_marginStart="8dp"
             android:contentDescription="Open learning area"
             android:src="@drawable/ic_chevron_right"
-            app:tint="@color/accent_orange" />
+            app:tint="?attr/colorPrimary" />
 
     </LinearLayout>
 

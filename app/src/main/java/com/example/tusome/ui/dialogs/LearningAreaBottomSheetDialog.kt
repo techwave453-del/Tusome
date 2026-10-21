@@ -20,6 +20,7 @@ import com.example.tusome.ui.StrandDetailActivity
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.color.MaterialColors
 import java.util.Locale
 
 data class ParsedSubStrand(
@@ -126,11 +127,13 @@ class LearningAreaBottomSheetDialog : BottomSheetDialogFragment() {
             "Environmental Citizenship",
             "Communication"
         )
+        val chipTextColor = MaterialColors.getColor(chipGroup, androidx.appcompat.R.attr.colorPrimary)
+
         competencies.forEach { comp ->
             val chip = Chip(requireContext()).apply {
                 text = comp
-                setChipBackgroundColorResource(R.color.primary_container_green)
-                setTextColor(requireContext().getColor(R.color.primary_green))
+                setChipBackgroundColorResource(R.color.surface_variant)
+                setTextColor(chipTextColor)
                 textSize = 11f
             }
             chipGroup.addView(chip)
@@ -250,7 +253,9 @@ class LearningAreaBottomSheetDialog : BottomSheetDialogFragment() {
             holder.tvDialogStrandTitle.text = item.title
 
             holder.containerDialogSubstrands.removeAllViews()
-            val inflater = LayoutInflater.from(holder.itemView.context)
+
+            val titleColor = MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorOnSurface)
+            val textColor = MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorOnSurfaceVariant)
 
             item.subStrands.forEach { sub ->
                 val subView = LinearLayout(holder.itemView.context).apply {
@@ -260,7 +265,7 @@ class LearningAreaBottomSheetDialog : BottomSheetDialogFragment() {
 
                 val subTitleView = TextView(holder.itemView.context).apply {
                     text = "• ${sub.title}"
-                    setTextColor(context.getColor(R.color.primary_green_dark))
+                    setTextColor(titleColor)
                     textSize = 13f
                     setTypeface(null, Typeface.BOLD)
                 }
@@ -269,7 +274,7 @@ class LearningAreaBottomSheetDialog : BottomSheetDialogFragment() {
                 sub.outcomes.forEach { outcome ->
                     val outcomeView = TextView(holder.itemView.context).apply {
                         text = "   – $outcome"
-                        setTextColor(context.getColor(R.color.text_secondary))
+                        setTextColor(textColor)
                         textSize = 12f
                     }
                     subView.addView(outcomeView)

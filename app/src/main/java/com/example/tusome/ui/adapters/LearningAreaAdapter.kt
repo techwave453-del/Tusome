@@ -1,6 +1,5 @@
 package com.example.tusome.ui.adapters
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tusome.R
 import com.example.tusome.data.model.LearningArea
+import com.google.android.material.color.MaterialColors
 
 class LearningAreaAdapter(
     private val items: List<LearningArea>,
@@ -16,7 +16,6 @@ class LearningAreaAdapter(
 ) : RecyclerView.Adapter<LearningAreaAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val frameIconContainer: View = view.findViewById(R.id.frameIconContainer)
         val ivSubjectIcon: ImageView = view.findViewById(R.id.ivSubjectIcon)
         val tvGradeBadge: TextView = view.findViewById(R.id.tvGradeBadge)
         val tvSubjectTitle: TextView = view.findViewById(R.id.tvSubjectTitle)
@@ -38,11 +37,11 @@ class LearningAreaAdapter(
         holder.tvStrandsCount.text = holder.itemView.context.getString(R.string.explore_learning_area)
         holder.ivSubjectIcon.setImageResource(item.iconResId)
 
-        try {
-            holder.frameIconContainer.setBackgroundColor(Color.parseColor(item.bgColorHex))
-            holder.ivSubjectIcon.setColorFilter(Color.parseColor(item.iconColorHex))
-        } catch (_: Exception) {
-        }
+        val primaryColor = MaterialColors.getColor(
+            holder.itemView,
+            androidx.appcompat.R.attr.colorPrimary
+        )
+        holder.ivSubjectIcon.setColorFilter(primaryColor)
 
         holder.itemView.setOnClickListener {
             onItemClick(item)

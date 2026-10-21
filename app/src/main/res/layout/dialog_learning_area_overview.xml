@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_app"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
     <!-- BottomSheet Drag Handle Bar -->
@@ -12,7 +12,7 @@
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginVertical="8dp"
-        android:background="@color/text_muted" />
+        android:background="?attr/colorOnSurfaceVariant" />
 
     <!-- Rich Header Card -->
     <LinearLayout
@@ -40,7 +40,7 @@
                     android:layout_gravity="center"
                     android:contentDescription="Subject icon"
                     android:src="@drawable/ic_leaf"
-                    app:tint="@color/primary_green" />
+                    app:tint="?attr/colorOnPrimaryContainer" />
 
             </FrameLayout>
 
@@ -56,7 +56,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Agriculture &amp; Nutrition"
-                    android:textColor="@color/surface_white"
+                    android:textColor="?attr/colorOnPrimaryContainer"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -66,7 +66,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="Kilimo na Lishe"
-                    android:textColor="#C8E6C9"
+                    android:textColor="?attr/colorOnPrimaryContainer"
                     android:textSize="13sp" />
 
             </LinearLayout>
@@ -76,11 +76,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_chip_selected"
-                android:backgroundTint="@color/accent_orange"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="6dp"
                 android:text="Grade 4"
-                android:textColor="@color/surface_white"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -117,7 +116,7 @@
                 android:layout_height="18dp"
                 android:contentDescription="Search"
                 android:src="@drawable/ic_search"
-                app:tint="@color/text_secondary" />
+                app:tint="?attr/colorOnSurfaceVariant" />
 
             <EditText
                 android:id="@+id/etDialogSearch"
@@ -128,8 +127,8 @@
                 android:background="@null"
                 android:hint="Filter strands or learning outcomes…"
                 android:inputType="text"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_muted"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp" />
 
         </LinearLayout>
@@ -150,11 +149,11 @@
         android:id="@+id/tvDialogSourceTag"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_variant"
+        android:background="?attr/colorSurfaceVariant"
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
         android:text="Source: KICD Official Kenya CBC Curriculum Design"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="11sp"
         android:textStyle="italic" />
 
@@ -162,19 +161,19 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_white"
+        android:background="?attr/colorSurface"
         android:orientation="horizontal"
         android:padding="12dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDialogClose"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Close Curriculum Overview"
-            android:textColor="@color/primary_green"
+            android:textColor="?attr/colorPrimary"
             app:cornerRadius="12dp"
-            app:strokeColor="@color/primary_green" />
+            app:strokeColor="?attr/colorPrimary" />
 
     </LinearLayout>
 

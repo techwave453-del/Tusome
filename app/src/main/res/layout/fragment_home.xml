@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_app"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -16,7 +16,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/primary_green_dark"
+            android:background="?attr/colorPrimaryContainer"
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
             android:paddingBottom="20dp">
@@ -38,7 +38,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Welcome to Tusome"
-                        android:textColor="@color/surface_white"
+                        android:textColor="?attr/colorOnPrimaryContainer"
                         android:textSize="22sp"
                         android:textStyle="bold" />
 
@@ -48,7 +48,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Kenya CBC • Learn at your own pace"
-                        android:textColor="#C8E6C9"
+                        android:textColor="?attr/colorOnPrimaryContainer"
                         android:textSize="13sp" />
 
                 </LinearLayout>
@@ -57,11 +57,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_chip_selected"
-                    android:backgroundTint="@color/accent_orange"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="6dp"
                     android:text="CBC 2-6-3-3"
-                    android:textColor="@color/surface_white"
+                    android:textColor="?attr/colorOnPrimary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -81,7 +80,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Select Grade Level"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -103,10 +102,10 @@
             android:layout_marginTop="8dp"
             android:accessibilityLiveRegion="polite"
             android:text="Connecting to the live CBC catalogue…"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
 
-        <!-- Featured Daily Hero Card (Green Modern Food Menu Style) -->
+        <!-- Featured Daily Hero Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardHeroChallenge"
             android:layout_width="match_parent"
@@ -114,7 +113,7 @@
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="16dp"
             app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
+            app:cardElevation="2dp"
             app:strokeWidth="0dp">
 
             <LinearLayout
@@ -133,11 +132,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="#30FFFFFF"
+                        android:background="#20000000"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
                         android:text="FEATURED CBC STRAND"
-                        android:textColor="@color/accent_orange"
+                        android:textColor="?attr/colorOnPrimaryContainer"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -151,7 +150,7 @@
                         android:layout_height="20dp"
                         android:contentDescription="Star"
                         android:src="@drawable/ic_star"
-                        app:tint="@color/accent_orange" />
+                        app:tint="?attr/colorOnPrimaryContainer" />
 
                 </LinearLayout>
 
@@ -161,7 +160,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="Agriculture and Nutrition: Conservation of Resources"
-                    android:textColor="@color/surface_white"
+                    android:textColor="?attr/colorOnPrimaryContainer"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -171,7 +170,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="Explore soil and water conservation, efficient fuel use and responsible wildlife protection."
-                    android:textColor="#E0E8DC"
+                    android:textColor="?attr/colorOnPrimaryContainer"
                     android:textSize="13sp" />
 
                 <LinearLayout
@@ -185,15 +184,14 @@
                         android:id="@+id/btnStartHeroActivity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:backgroundTint="@color/accent_orange"
                         android:paddingHorizontal="20dp"
                         android:text="Start Activity"
-                        android:textColor="@color/surface_white"
+                        android:textColor="?attr/colorOnPrimary"
                         android:textStyle="bold"
                         app:cornerRadius="16dp"
                         app:icon="@drawable/ic_chevron_right"
                         app:iconGravity="textEnd"
-                        app:iconTint="@color/surface_white" />
+                        app:iconTint="?attr/colorOnPrimary" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -201,7 +199,7 @@
                         android:layout_marginStart="12dp"
                         android:layout_weight="1"
                         android:text="Grade 4 • KICD design"
-                        android:textColor="#B2DFDB"
+                        android:textColor="?attr/colorOnPrimaryContainer"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -220,12 +218,12 @@
             android:orientation="horizontal">
 
             <TextView
+                android:id="@+id/tvLearningAreasHeading"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:id="@+id/tvLearningAreasHeading"
                 android:text="Grade 4 Learning Areas"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -236,7 +234,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:text="View All (6)"
-                android:textColor="@color/primary_green"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 

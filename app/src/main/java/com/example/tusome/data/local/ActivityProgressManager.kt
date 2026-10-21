@@ -85,6 +85,10 @@ class ActivityProgressManager(context: Context) {
             .getOrDefault(PerformanceLevel.MEETS)
     }
 
+    /** Counts only sub-strands for which a level was actually persisted, not default MEETS values. */
+    fun getSavedSelfEvaluationsCount(): Int =
+        prefs.all.keys.count { it.startsWith("level_") }
+
     fun saveSubStrandProgress(
         subStrandId: String,
         isCompleted: Boolean,

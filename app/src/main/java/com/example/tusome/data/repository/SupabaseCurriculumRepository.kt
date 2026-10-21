@@ -70,16 +70,20 @@ object SupabaseCurriculumRepository {
             "curriculum_sub_strands(id,title,sequence,is_published," +
             "learning_outcomes(outcome_text,sequence,is_published)," +
             "inquiry_questions(question_text,sequence,is_published)," +
-            "learning_activities(activity_text,sequence,is_published))" +
+            "learning_activities(activity_text,sequence,is_published)," +
+            "assessment_rubrics(id,criteria,exceeds_expectation,meets_expectation," +
+            "approaching_expectation,below_expectation,is_published))" +
             "&grade_id=eq.$gradeId&is_published=eq.true&content_status=eq.published" +
             "&curriculum_sub_strands.is_published=eq.true" +
             "&curriculum_sub_strands.learning_outcomes.is_published=eq.true" +
             "&curriculum_sub_strands.inquiry_questions.is_published=eq.true" +
             "&curriculum_sub_strands.learning_activities.is_published=eq.true" +
+            "&curriculum_sub_strands.assessment_rubrics.is_published=eq.true" +
             "&order=sequence.asc&curriculum_sub_strands.order=sequence.asc" +
             "&curriculum_sub_strands.learning_outcomes.order=sequence.asc" +
             "&curriculum_sub_strands.inquiry_questions.order=sequence.asc" +
-            "&curriculum_sub_strands.learning_activities.order=sequence.asc"
+            "&curriculum_sub_strands.learning_activities.order=sequence.asc" +
+            "&curriculum_sub_strands.assessment_rubrics.order=criteria.asc"
 
         val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
@@ -127,6 +131,34 @@ object SupabaseCurriculumRepository {
                             val outcomes = stringList(sub.optJSONArray("learning_outcomes"), "outcome_text")
                             val questions = stringList(sub.optJSONArray("inquiry_questions"), "question_text")
                             val activities = stringList(sub.optJSONArray("learning_activities"), "activity_text")
+                            val rubricRows = sub.optJSONArray("assessment_rubrics") ?: JSONArray()
+                            val publishedRubric = (0 until rubricRows.length())
+                                .map { rubricRows.optJSONObject(it) }
+                                .filterNotNull()
+                                .firstOrNull { it.optBoolean("is_published", true) }
+                            val rubric = publishedRubric?.let { rubricRow ->
+                                AssessmentRubric(
+                                    id = rubricRow.optString("id").ifBlank { "rubric-" + subId },
+                                    subStrandId = subId,
+                                    criteria = rubricRow.optString("criteria").ifBlank { "Assessment criteria require teacher review." },
+                                    exceedsDescription = rubricRow.optString("exceeds_expectation").ifBlank { "Demonstrates the learning independently and applies it in a new context." },
+                                    meetsDescription = rubricRow.optString("meets_expectation").ifBlank { "Demonstrates the expected learning with age-appropriate accuracy." },
+                                    approachesDescription = rubricRow.optString("approaching_expectation").ifBlank { "Demonstrates part of the learning with guided practice." },
+                                    belowDescription = rubricRow.optString("below_expectation").ifBlank { "Needs additional modelling and guided practice." },
+                                    learnerLevel = null,
+                                    teacherComment = ""
+                                )
+                            } ?: AssessmentRubric(
+                                id = "missing-published-rubric-" + subId,
+                                subStrandId = subId,
+                                criteria = "No published assessment rubric is available for this sub-strand yet.",
+                                exceedsDescription = "Not assessed: a reviewed rubric has not been published.",
+                                meetsDescription = "Not assessed: a reviewed rubric has not been published.",
+                                approachesDescription = "Not assessed: a reviewed rubric has not been published.",
+                                belowDescription = "Not assessed: a reviewed rubric has not been published.",
+                                learnerLevel = null,
+                                teacherComment = "Do not use this placeholder for grading. Publish a reviewed rubric first."
+                            )
                             val strandSequence = row.optInt("sequence", i + 1)
                             val subSequence = sub.optInt("sequence", j + 1)
                             add(
@@ -139,17 +171,7 @@ object SupabaseCurriculumRepository {
                                     keyInquiryQuestions = questions,
                                     suggestedExperiences = activities,
                                     digitalTaskPrompt = activities.firstOrNull().orEmpty(),
-                                    rubric = AssessmentRubric(
-                                        id = "unreviewed-" + subId,
-                                        subStrandId = subId,
-                                        criteria = "Practice the skill and explain your learning.",
-                                        exceedsDescription = "Explains the idea clearly and applies it independently.",
-                                        meetsDescription = "Demonstrates the expected skill with appropriate support.",
-                                        approachesDescription = "Demonstrates part of the skill and benefits from guidance.",
-                                        belowDescription = "Needs additional guided practice.",
-                                        learnerLevel = PerformanceLevel.MEETS,
-                                        teacherComment = "Starter content: teacher review is required."
-                                    )
+                                    rubric = rubric
                                 )
                             )
                         }

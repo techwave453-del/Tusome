@@ -129,6 +129,7 @@ object SupabaseCurriculumRepository {
             }
 
             val rows = JSONArray(body)
+            val contentCounts = requestLearningAreaCounts(gradeId)
             buildList {
                 for (index in 0 until rows.length()) {
                     val row = rows.getJSONObject(index)
@@ -144,8 +145,8 @@ object SupabaseCurriculumRepository {
                             kiswahiliTitle = area.optString("kiswahili_name").takeIf { it.isNotBlank() } ?: name,
                             code = id.uppercase(Locale.ROOT),
                             gradeLevel = grade,
-                            strandsCount = if (gradeId == "g4" && id == "agriculture_nutrition") 4 else 0,
-                            subStrandsCount = if (gradeId == "g4" && id == "agriculture_nutrition") 13 else 0,
+                            strandsCount = contentCounts[id]?.first ?: 0,
+                            subStrandsCount = contentCounts[id]?.second ?: 0,
                             progressPercent = 0,
                             iconResId = icon,
                             bgColorHex = colors.first,
@@ -154,6 +155,48 @@ object SupabaseCurriculumRepository {
                     )
                 }
             }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+
+    /**
+     * Counts only published grade-specific content, so cards never display invented totals.
+     * The nested relation is fetched in one request for the selected grade.
+     */
+    private fun requestLearningAreaCounts(gradeId: String): Map<String, Pair<Int, Int>> {
+        val endpoint = "$BASE_URL/rest/v1/curriculum_strands" +
+            "?select=learning_area_id,curriculum_sub_strands(id)" +
+            "&grade_id=eq.$gradeId&is_published=eq.true&content_status=eq.published" +
+            "&curriculum_sub_strands.is_published=eq.true&order=learning_area_id.asc"
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10000
+            readTimeout = 10000
+            setRequestProperty("apikey", PUBLISHABLE_KEY)
+            setRequestProperty("Authorization", "Bearer $PUBLISHABLE_KEY")
+            setRequestProperty("Accept", "application/json")
+        }
+
+        return try {
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = BufferedReader(InputStreamReader(stream, Charsets.UTF_8)).use { it.readText() }
+            check(status in 200..299) {
+                "Supabase returned HTTP $status while loading curriculum counts."
+            }
+
+            val counts = mutableMapOf<String, Pair<Int, Int>>()
+            val rows = JSONArray(body)
+            for (index in 0 until rows.length()) {
+                val row = rows.getJSONObject(index)
+                val areaId = row.optString("learning_area_id").takeIf { it.isNotBlank() } ?: continue
+                val subs = row.optJSONArray("curriculum_sub_strands") ?: JSONArray()
+                val previous = counts[areaId] ?: (0 to 0)
+                counts[areaId] = (previous.first + 1) to (previous.second + subs.length())
+            }
+            counts
         } finally {
             connection.disconnect()
         }

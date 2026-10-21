@@ -39,6 +39,14 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        selectedGrade = GradeLevel.values().firstOrNull {
+            it.code.equals(
+                requireContext().getSharedPreferences("tusome_curriculum", android.content.Context.MODE_PRIVATE)
+                    .getString("selected_grade", GradeLevel.GRADE_4.code),
+                ignoreCase = true
+            )
+        } ?: GradeLevel.GRADE_4
+
         val rvGradeChips: RecyclerView = view.findViewById(R.id.rvGradeChips)
         learningAreasRecyclerView = view.findViewById(R.id.rvLearningAreas)
         learningAreasHeading = view.findViewById(R.id.tvLearningAreasHeading)
@@ -48,6 +56,8 @@ class HomeFragment : Fragment() {
 
         val gradeAdapter = GradeChipAdapter(GradeLevel.values().toList(), selectedGrade) { grade ->
             selectedGrade = grade
+            requireContext().getSharedPreferences("tusome_curriculum", android.content.Context.MODE_PRIVATE)
+                .edit().putString("selected_grade", grade.code).apply()
             updateLearningAreasHeading()
             learningAreasRecyclerView?.let(::loadLearningAreas)
         }
@@ -133,7 +143,7 @@ class HomeFragment : Fragment() {
         recyclerView.adapter = LearningAreaAdapter(areas) { area ->
             if (fromLiveCatalogue) {
                 curriculumSyncStatus?.text = "Loading ${area.title} from Supabase…"
-                SupabaseCurriculumRepository.fetchLearningAreaOverview(selectedGrade, area.id) { result ->
+                SupabaseCurriculumRepository.fetchLearningAreaOverview(area.gradeLevel, area.id) { result ->
                     if (!isAdded) return@fetchLearningAreaOverview
                     curriculumSyncStatus?.text = "Live Tusome curriculum connected"
                     AlertDialog.Builder(requireContext())

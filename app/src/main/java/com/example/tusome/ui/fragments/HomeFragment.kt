@@ -8,18 +8,19 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tusome.R
 import com.example.tusome.data.model.GradeLevel
+import com.example.tusome.data.model.LearningArea
 import com.example.tusome.data.repository.CbcRepository
 import com.example.tusome.data.repository.SupabaseCurriculumRepository
 import com.example.tusome.ui.StrandDetailActivity
 import com.example.tusome.ui.adapters.GradeChipAdapter
 import com.example.tusome.ui.adapters.LearningAreaAdapter
+import com.example.tusome.ui.dialogs.LearningAreaBottomSheetDialog
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomeFragment : Fragment() {
@@ -59,26 +60,44 @@ class HomeFragment : Fragment() {
         learningAreasRecyclerView?.let(::loadLearningAreas)
 
         btnStartHeroActivity.setOnClickListener {
-            SupabaseCurriculumRepository.fetchLearningAreaOverview(
-                selectedGrade,
-                "agriculture_nutrition"
-            ) { result ->
-                if (!isAdded) return@fetchLearningAreaOverview
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Agriculture and Nutrition • ${selectedGrade.title}")
-                    .setMessage(
-                        result.getOrElse {
-                            "Unable to load the live curriculum. Connect to the internet and try again."
-                        }
-                    )
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-            }
+            showLearningAreaDialog(
+                title = "Agriculture & Nutrition",
+                kiswahiliTitle = "Kilimo na Lishe",
+                areaId = "agriculture_nutrition",
+                iconResId = R.drawable.ic_leaf
+            )
         }
 
         viewAllLearningAreas?.setOnClickListener {
             activity?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
                 ?.selectedItemId = R.id.navigation_strands
+        }
+    }
+
+    private fun showLearningAreaDialog(
+        title: String,
+        kiswahiliTitle: String,
+        areaId: String,
+        iconResId: Int
+    ) {
+        curriculumSyncStatus?.text = "Loading $title curriculum details…"
+        SupabaseCurriculumRepository.fetchLearningAreaOverview(selectedGrade, areaId) { result ->
+            if (!isAdded) return@fetchLearningAreaOverview
+            curriculumSyncStatus?.text = "Live Tusome curriculum connected"
+
+            val overviewText = result.getOrElse {
+                "Unable to load the live curriculum details. Connect to the internet and try again."
+            }
+
+            val dialog = LearningAreaBottomSheetDialog.newInstance(
+                title = title,
+                kiswahiliTitle = kiswahiliTitle,
+                gradeTitle = selectedGrade.title,
+                overviewText = overviewText,
+                areaId = areaId,
+                iconResId = iconResId
+            )
+            dialog.show(childFragmentManager, "LearningAreaOverview")
         }
     }
 
@@ -125,27 +144,19 @@ class HomeFragment : Fragment() {
 
     private fun renderLearningAreas(
         recyclerView: RecyclerView,
-        areas: List<com.example.tusome.data.model.LearningArea>,
+        areas: List<LearningArea>,
         fromLiveCatalogue: Boolean
     ) {
         viewAllLearningAreas?.text = "View All (${areas.size})"
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
         recyclerView.adapter = LearningAreaAdapter(areas) { area ->
             if (fromLiveCatalogue) {
-                curriculumSyncStatus?.text = "Loading ${area.title} from Supabase…"
-                SupabaseCurriculumRepository.fetchLearningAreaOverview(selectedGrade, area.id) { result ->
-                    if (!isAdded) return@fetchLearningAreaOverview
-                    curriculumSyncStatus?.text = "Live Tusome curriculum connected"
-                    AlertDialog.Builder(requireContext())
-                        .setTitle(area.title)
-                        .setMessage(
-                            result.getOrElse {
-                                "Unable to load curriculum details. Check your internet connection and try again."
-                            }
-                        )
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show()
-                }
+                showLearningAreaDialog(
+                    title = area.title,
+                    kiswahiliTitle = area.kiswahiliTitle,
+                    areaId = area.id,
+                    iconResId = area.iconResId
+                )
             } else if (CbcRepository.getStrandsForArea(area.id).isNotEmpty()) {
                 val intent = Intent(requireContext(), StrandDetailActivity::class.java).apply {
                     putExtra("LEARNING_AREA_ID", area.id)

@@ -18,7 +18,7 @@ import com.example.tusome.data.model.LearningArea
 import com.example.tusome.data.model.PerformanceLevel
 import com.example.tusome.data.repository.CbcRepository
 import com.example.tusome.data.repository.SupabaseCurriculumRepository
-import com.example.tusome.ui.SbaExamActivity
+import com.example.tusome.ui.AssessmentLibraryActivity
 import com.example.tusome.ui.adapters.RubricAdapter
 import com.google.android.material.button.MaterialButton
 
@@ -36,7 +36,7 @@ class AssessmentsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         progressManager = ActivityProgressManager(requireContext())
         loadRubricsAndSummary(view)
-        loadSbaPracticePapers(view)
+        loadAssessmentAreas(view)
     }
 
     override fun onResume() {
@@ -46,7 +46,7 @@ class AssessmentsFragment : Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden) view?.let { loadSbaPracticePapers(it) }
+        if (!hidden) view?.let { loadAssessmentAreas(it) }
     }
 
     private fun selectedGrade(): GradeLevel {
@@ -57,48 +57,36 @@ class AssessmentsFragment : Fragment() {
             ?: GradeLevel.GRADE_4
     }
 
-    private fun loadSbaPracticePapers(rootView: View) {
+    private fun loadAssessmentAreas(rootView: View) {
         val status = rootView.findViewById<TextView>(R.id.tvSbaStatus)
         val buttons = rootView.findViewById<LinearLayout>(R.id.layoutSbaSubjects)
         val grade = selectedGrade()
         buttons.removeAllViews()
 
-        if (grade != GradeLevel.GRADE_10) {
-            status.text = "Sample practice papers are currently available for Grade 10 only. Change your selected grade in Curriculum to view the available papers."
-            return
-        }
-
-        status.text = "Loading available Grade 10 sample papers…"
+        status.text = "Loading " + grade.title + " learning areas…"
         SupabaseCurriculumRepository.initialize(requireContext())
         SupabaseCurriculumRepository.fetchLearningAreas(grade) { result ->
             if (!isAdded || view !== rootView) return@fetchLearningAreas
             result.onSuccess { areas ->
-                val supported = areas.filter { area ->
-                    val value = (area.id + " " + area.title).lowercase()
-                    value.contains("chemistry") ||
-                        value.contains("mathematics") ||
-                        value.contains("core math") ||
-                        value.contains("agriculture")
-                }
                 buttons.removeAllViews()
-                if (supported.isEmpty()) {
-                    status.text = "No matching sample papers are available for the published Grade 10 learning areas yet."
+                if (areas.isEmpty()) {
+                    status.text = "No learning areas are currently published for " + grade.title + "."
                 } else {
-                    status.text = "Choose a learning area to open its sample practice paper. These are practice questions, not official examination papers."
-                    supported.forEach { area -> addSbaButton(buttons, area) }
+                    status.text = "Choose any learning area to view its published assessments. Papers are cached on this device when opened, ready for offline access."
+                    areas.forEach { area -> addAssessmentButton(buttons, area) }
                 }
             }.onFailure { error ->
-                status.text = "Could not load Grade 10 learning areas. Connect to the internet and reopen this screen. " + error.message.orEmpty()
+                status.text = "Could not load learning areas. Reopen this screen while online, or check whether this grade has been cached. " + error.message.orEmpty()
             }
         }
     }
 
-    private fun addSbaButton(container: LinearLayout, area: LearningArea) {
+    private fun addAssessmentButton(container: LinearLayout, area: LearningArea) {
         val button = MaterialButton(requireContext()).apply {
             text = area.title
             isAllCaps = false
             setOnClickListener {
-                startActivity(Intent(requireContext(), SbaExamActivity::class.java).apply {
+                startActivity(Intent(requireContext(), AssessmentLibraryActivity::class.java).apply {
                     putExtra("SUBJECT_ID", area.id)
                     putExtra("SUBJECT_TITLE", area.title)
                     putExtra("GRADE_CODE", area.gradeLevel.code)

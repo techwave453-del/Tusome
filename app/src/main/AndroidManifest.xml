@@ -44,6 +44,11 @@
             android:exported="false"
             android:parentActivityName=".ui.StrandDetailActivity" />
 
+        <activity
+            android:name=".ui.LessonReaderActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.StrandDetailActivity" />
+
     </application>
 
 </manifest>

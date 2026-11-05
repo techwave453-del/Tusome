@@ -285,12 +285,23 @@ class StrandDetailActivity : AppCompatActivity() {
             val tvInquiryQuestions = subCard.findViewById<TextView>(R.id.tvInquiryQuestions)
             val tvDigitalTaskPrompt = subCard.findViewById<TextView>(R.id.tvDigitalTaskPrompt)
             val tvSubstrandKicdCitation = subCard.findViewById<TextView>(R.id.tvSubstrandKicdCitation)
+            val btnReadFullLesson = subCard.findViewById<Button>(R.id.btnReadFullLesson)
             val btnGenerateSubstrandAi = subCard.findViewById<Button>(R.id.btnGenerateSubstrandAi)
             val etLearnerReflection = subCard.findViewById<EditText>(R.id.etLearnerReflection)
             val cgSelfEvaluation = subCard.findViewById<ChipGroup>(R.id.cgSelfEvaluation)
             val btnSaveProgress = subCard.findViewById<Button>(R.id.btnSaveProgress)
 
             tvSubstrandTitle.text = "Sub-strand ${sub.subStrandNumber}: ${sub.title}"
+
+            btnReadFullLesson.setOnClickListener {
+                val intent = Intent(this, LessonReaderActivity::class.java).apply {
+                    putExtra("SUBSTRAND_ID", sub.id)
+                    putExtra("SUBSTRAND_TITLE", sub.title)
+                    putExtra("STRAND_ID", strand.id)
+                    putExtra("GRADE_CODE", "G4")
+                }
+                startActivity(intent)
+            }
 
             // Check if AI generated KICD content exists in local offline cache
             val cachedKicdJson = offlineCache.getSubstrandKicdContent(sub.id)

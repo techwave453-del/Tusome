@@ -48,13 +48,27 @@
 
         </LinearLayout>
 
+        <!-- Read Full Lesson Notes Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReadFullLesson"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="?attr/colorPrimaryContainer"
+            android:text="📖 Read Full Detailed Lesson Notes"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_book"
+            app:iconGravity="textStart"
+            app:iconTint="?attr/colorOnPrimaryContainer" />
+
         <!-- KICD AI Content Generator Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnGenerateSubstrandAi"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="✨ Generate KICD Curriculum Content (AI)"
             android:textColor="?attr/colorPrimary"
             app:cornerRadius="12dp"

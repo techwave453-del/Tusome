@@ -14,9 +14,11 @@ import com.example.tusome.data.model.LearningResourceType
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 data class LearningResourceFetchResult(
@@ -35,7 +37,6 @@ data class LearningResourceFetchResult(
 object LearningResourceRepository {
     private const val BASE_URL = "https://wkwnoflielrotknvoflz.supabase.co"
     private const val PUBLISHABLE_KEY = "sb_publishable_jZsmwIcIMdu3Eq97AfU3xQ_929Bxo4J"
-    private const val CACHE_NAME = "tusome_published_learning_resources_v1"
     private const val CACHE_MAX_AGE_MILLIS = 30L * 24L * 60L * 60L * 1000L
 
     private val executor = Executors.newSingleThreadExecutor()
@@ -96,8 +97,7 @@ object LearningResourceRepository {
                 }.recoverCatching { networkError ->
                     val cached = readCache(appContext, cacheKey)
                         ?: throw networkError
-                    val savedAt = appContext.getSharedPreferences(CACHE_NAME, Context.MODE_PRIVATE)
-                        .getLong("${cacheKey}_saved_at", 0L)
+                    val savedAt = cacheFile(appContext, cacheKey).lastModified()
                     if (savedAt > 0L && System.currentTimeMillis() - savedAt > CACHE_MAX_AGE_MILLIS) {
                         // Old content remains useful offline, but callers can identify its age.
                     }
@@ -254,15 +254,31 @@ object LearningResourceRepository {
         return "resources_${gradeCode}_${subStrandId}_$language"
     }
 
-    private fun saveCache(context: Context, key: String, body: String) {
-        context.getSharedPreferences(CACHE_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(key, body)
-            .putLong("${key}_saved_at", System.currentTimeMillis())
-            .apply()
+    /**
+     * Lesson bodies can be substantially larger than progress/settings values, so keep
+     * offline resource payloads in private app files rather than SharedPreferences.
+     */
+    private fun cacheFile(context: Context, key: String): File {
+        val directory = File(context.filesDir, "published_learning_resources")
+        if (!directory.exists()) directory.mkdirs()
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(key.toByteArray(Charsets.UTF_8))
+            .joinToString("") { byte -> "%02x".format(byte) }
+        return File(directory, "$digest.json")
     }
 
-    private fun readCache(context: Context, key: String): String? =
-        context.getSharedPreferences(CACHE_NAME, Context.MODE_PRIVATE)
-            .getString(key, null)
+    private fun saveCache(context: Context, key: String, body: String) {
+        val destination = cacheFile(context, key)
+        val temporary = File(destination.parentFile, destination.name + ".tmp")
+        temporary.writeText(body, Charsets.UTF_8)
+        if (!temporary.renameTo(destination)) {
+            destination.writeText(body, Charsets.UTF_8)
+            temporary.delete()
+        }
+    }
+
+    private fun readCache(context: Context, key: String): String? {
+        val file = cacheFile(context, key)
+        return file.takeIf { it.isFile && it.length() > 0L }?.readText(Charsets.UTF_8)
+    }
 }

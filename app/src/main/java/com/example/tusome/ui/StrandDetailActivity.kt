@@ -1,6 +1,9 @@
 package com.example.tusome.ui
 
 import android.os.Bundle
+import android.graphics.Typeface
+import android.util.TypedValue
+import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -15,9 +18,13 @@ import androidx.core.widget.NestedScrollView
 import com.example.tusome.R
 import com.example.tusome.data.local.ActivityProgressManager
 import com.example.tusome.data.model.GradeLevel
+import com.example.tusome.data.model.LearningContentBlock
+import com.example.tusome.data.model.LearningContentBlockType
+import com.example.tusome.data.model.LearningResource
 import com.example.tusome.data.model.PerformanceLevel
 import com.example.tusome.data.model.Strand
 import com.example.tusome.data.repository.CbcRepository
+import com.example.tusome.data.repository.LearningResourceRepository
 import com.example.tusome.data.repository.SupabaseCurriculumRepository
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
@@ -35,6 +42,8 @@ class StrandDetailActivity : AppCompatActivity() {
     private lateinit var btnPreviousStrand: Button
     private lateinit var btnNextStrand: Button
     private var currentStrandIndex: Int = 0
+    private var currentGrade: GradeLevel = GradeLevel.GRADE_4
+    private var usesLiveCurriculum: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +69,8 @@ class StrandDetailActivity : AppCompatActivity() {
             it.code.equals(intent.getStringExtra("GRADE_CODE"), ignoreCase = true)
         } ?: GradeLevel.GRADE_4
         val fromSupabase = intent.getBooleanExtra("FROM_SUPABASE", false)
+        currentGrade = requestedGrade
+        usesLiveCurriculum = fromSupabase
 
         btnPreviousStrand.setOnClickListener { navigateStrand(-1) }
         btnNextStrand.setOnClickListener { navigateStrand(1) }
@@ -223,8 +234,169 @@ class StrandDetailActivity : AppCompatActivity() {
             }
 
             containerSubstrands.addView(subCard)
+            loadPublishedResources(subCard, sub, strand)
         }
     }
+
+    private fun loadPublishedResources(
+        subCard: MaterialCardView,
+        subStrand: com.example.tusome.data.model.SubStrand,
+        strand: Strand
+    ) {
+        val status = subCard.findViewById<TextView>(R.id.tvLearningResourcesStatus)
+        val container = subCard.findViewById<LinearLayout>(R.id.containerLearningResources)
+        if (!usesLiveCurriculum) {
+            status.text = "Published resources appear here when the live CBC curriculum is loaded."
+            return
+        }
+
+        status.text = "Loading reviewed resources…"
+        LearningResourceRepository.fetchPublishedForSubStrand(
+            context = this,
+            gradeCode = currentGrade.code,
+            learningAreaId = strand.learningAreaId,
+            strandId = strand.id,
+            subStrandId = subStrand.id
+        ) { result ->
+            if (isFinishing || isDestroyed || !subCard.isAttachedToWindow) return@fetchPublishedForSubStrand
+            container.removeAllViews()
+            result.onSuccess { fetched ->
+                val resources = fetched.resources
+                status.text = when {
+                    resources.isEmpty() -> "No reviewed supplementary resources have been published for this sub-strand yet."
+                    fetched.fromCache -> "Saved resources • available offline"
+                    else -> "${resources.size} reviewed resource${if (resources.size == 1) "" else "s"} available"
+                }
+                resources.forEach { resource -> renderLearningResource(container, resource) }
+            }.onFailure {
+                status.text = "Learning resources could not be loaded. Try again when connected."
+            }
+        }
+    }
+
+    private fun renderLearningResource(
+        parent: LinearLayout,
+        resource: LearningResource
+    ) {
+        val card = MaterialCardView(this).apply {
+            radius = dp(14).toFloat()
+            cardElevation = dp(1).toFloat()
+            strokeWidth = dp(1)
+            strokeColor = themedColor(android.R.attr.colorControlHighlight, R.color.surface_variant)
+            setCardBackgroundColor(themedColor(android.R.attr.colorBackground, R.color.surface_variant))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(8) }
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+        }
+        card.addView(content)
+
+        addResourceText(
+            content,
+            "${resource.type.displayName}: ${resource.title}",
+            14f,
+            bold = true
+        )
+        if (resource.summary.isNotBlank()) {
+            addResourceText(content, resource.summary, 12f)
+        }
+        resource.estimatedMinutes?.let {
+            addResourceText(content, "Estimated learning time: $it minutes", 11f)
+        }
+        resource.learningOutcomes.forEachIndexed { index, outcome ->
+            if (index == 0) addResourceText(content, "Learning outcomes", 12f, bold = true)
+            addResourceText(content, "• $outcome", 12f)
+        }
+        resource.sections.forEach { section ->
+            if (section.title.isNotBlank()) {
+                addResourceText(content, section.title, 13f, bold = true)
+            }
+            if (section.description.isNotBlank()) {
+                addResourceText(content, section.description, 12f)
+            }
+            section.blocks.forEach { block -> renderLearningBlock(content, block) }
+        }
+        parent.addView(card)
+    }
+
+    private fun renderLearningBlock(parent: LinearLayout, block: LearningContentBlock) {
+        when (block.type) {
+            LearningContentBlockType.BULLET_LIST -> {
+                block.items.forEach { addResourceText(parent, "• $it", 12f) }
+                if (block.items.isEmpty() && block.text.isNotBlank()) {
+                    addResourceText(parent, block.text, 12f)
+                }
+            }
+            LearningContentBlockType.NUMBERED_LIST -> {
+                block.items.forEachIndexed { index, item ->
+                    addResourceText(parent, "${index + 1}. $item", 12f)
+                }
+                if (block.items.isEmpty() && block.text.isNotBlank()) {
+                    addResourceText(parent, block.text, 12f)
+                }
+            }
+            LearningContentBlockType.HEADING ->
+                addResourceText(parent, block.text, 13f, bold = true)
+            LearningContentBlockType.EXAMPLE -> {
+                addResourceText(parent, "Example", 12f, bold = true)
+                if (block.text.isNotBlank()) addResourceText(parent, block.text, 12f)
+                block.items.forEach { addResourceText(parent, "• $it", 12f) }
+            }
+            LearningContentBlockType.IMAGE,
+            LearningContentBlockType.VIDEO -> {
+                val label = if (block.type == LearningContentBlockType.IMAGE) "Image" else "Video"
+                if (block.caption.isNullOrBlank().not()) {
+                    addResourceText(parent, "$label: ${block.caption}", 12f)
+                }
+                block.mediaUrl?.let { addResourceText(parent, "Media: $it", 11f) }
+            }
+            LearningContentBlockType.TABLE -> {
+                if (block.text.isNotBlank()) addResourceText(parent, block.text, 12f)
+                block.items.forEach { addResourceText(parent, it, 12f) }
+            }
+            else -> {
+                if (block.text.isNotBlank()) addResourceText(parent, block.text, 12f)
+                block.items.forEach { addResourceText(parent, "• $it", 12f) }
+            }
+        }
+    }
+
+    private fun addResourceText(
+        parent: LinearLayout,
+        value: String,
+        sizeSp: Float,
+        bold: Boolean = false
+    ) {
+        if (value.isBlank()) return
+        val text = TextView(this).apply {
+            this.text = value
+            textSize = sizeSp
+            setTextColor(themedColor(android.R.attr.textColorPrimary, R.color.text_secondary))
+            if (bold) setTypeface(typeface, Typeface.BOLD)
+            setLineSpacing(dp(2).toFloat(), 1f)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(4) }
+        }
+        parent.addView(text)
+    }
+
+    private fun themedColor(attribute: Int, fallbackResource: Int): Int {
+        val value = TypedValue()
+        return if (theme.resolveAttribute(attribute, value, true)) {
+            if (value.resourceId != 0) ContextCompat.getColor(this, value.resourceId) else value.data
+        } else {
+            ContextCompat.getColor(this, fallbackResource)
+        }
+    }
+
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
 
     private fun saveDraftsForCurrentStrand() {
         for (index in 0 until containerSubstrands.childCount) {

@@ -362,6 +362,7 @@ class StrandDetailActivity : AppCompatActivity() {
                             put("experiences", JSONArray(kicdContent.suggestedExperiences))
                             put("task", kicdContent.digitalTaskPrompt)
                             put("citation", kicdContent.kicdCitation)
+                            put("full_content", kicdContent.fullLessonContentJson)
                         }
                         offlineCache.saveSubstrandKicdContent(sub.id, saveObj.toString())
                         Toast.makeText(

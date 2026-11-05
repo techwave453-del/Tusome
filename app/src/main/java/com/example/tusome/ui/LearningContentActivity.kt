@@ -540,6 +540,21 @@ class LearningContentActivity : AppCompatActivity() {
         }
         details.addView(messageText(resource.optString("summary")), margins(bottom = 8))
         details.addView(messageText("Grade: ${resource.optString("grade_id")} • Language: ${resource.optString("language_code")}"), margins(bottom = 8))
+        val sections = resource.optJSONObject("content")?.optJSONArray("sections") ?: JSONArray()
+        for (sectionIndex in 0 until sections.length()) {
+            val section = sections.optJSONObject(sectionIndex) ?: continue
+            details.addView(titleText(section.optString("title"), 14f), margins(top = 8))
+            val blocks = section.optJSONArray("blocks") ?: JSONArray()
+            for (blockIndex in 0 until blocks.length()) {
+                val block = blocks.optJSONObject(blockIndex) ?: continue
+                val blockText = block.optString("text")
+                if (blockText.isNotBlank()) details.addView(messageText(blockText), margins(top = 3))
+                val items = block.optJSONArray("items") ?: JSONArray()
+                for (itemIndex in 0 until items.length()) {
+                    details.addView(messageText("• ${items.optString(itemIndex)}"), margins(top = 2))
+                }
+            }
+        }
         val feedbackInput = EditText(this).apply {
             hint = "Review feedback (required when requesting changes or rejecting)"
             minLines = 3
@@ -547,10 +562,11 @@ class LearningContentActivity : AppCompatActivity() {
             setText(resource.optString("review_feedback"))
         }
         details.addView(feedbackInput, params())
+        val reviewScroll = ScrollView(this).apply { addView(details) }
 
         AlertDialog.Builder(this)
             .setTitle(resource.optString("title", "Review learning resource"))
-            .setView(details)
+            .setView(reviewScroll)
             .setNegativeButton("Reject") { _, _ ->
                 reviewResource(resourceId, LearningResourceReviewDecision.REJECTED, feedbackInput.text.toString())
             }

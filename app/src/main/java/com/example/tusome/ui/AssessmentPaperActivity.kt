@@ -214,7 +214,6 @@ class AssessmentPaperActivity : AppCompatActivity() {
                 renderScreen()
                 renderQuestions()
                 renderMarkingGuide()
-                AssessmentRepository.syncPendingAttempts(this)
             }
             .show()
     }
@@ -266,6 +265,9 @@ class AssessmentPaperActivity : AppCompatActivity() {
                 startedAtMillis = startedAt,
                 submittedAtMillis = submitted
             )
+            if (submitted != null && userId != "guest") {
+                AssessmentRepository.syncPendingAttempts(applicationContext)
+            }
         }
         updateStatus()
     }

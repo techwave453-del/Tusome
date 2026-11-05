@@ -364,7 +364,7 @@ class LearningContentActivity : AppCompatActivity() {
             result.onSuccess { response ->
                 val rows = response.optJSONArray("resources") ?: JSONArray()
                 if (rows.length() == 0) {
-                    reviewQueueContainer.addView(messageText("There are no resources awaiting review."))
+                    reviewQueueContainer.addView(messageText("There are no resources awaiting review or publication."))
                     return@onSuccess
                 }
                 for (index in 0 until rows.length()) {

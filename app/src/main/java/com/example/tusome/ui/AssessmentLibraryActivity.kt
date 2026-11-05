@@ -146,8 +146,20 @@ class AssessmentLibraryActivity : AppCompatActivity() {
                 AlertDialog.Builder(this)
                     .setTitle("Choose a curriculum sub-strand")
                     .setItems(options.map { it.third }.toTypedArray()) { _, which ->
-                        val (strand, sub) = options[which]
-                        generateForSubStrand(strand.id, sub.id, sub.title)
+                        val (strand, sub, _) = options[which]
+                        if (grade.category == com.example.tusome.data.model.GradeCategory.SENIOR_SECONDARY) {
+                            val pathways = arrayOf("STEM", "Social Sciences", "Arts and Sports", "Core / pathway-neutral")
+                            AlertDialog.Builder(this)
+                                .setTitle("Select senior-school pathway")
+                                .setItems(pathways) { _, pathwayIndex ->
+                                    val pathway = pathways[pathwayIndex].takeUnless { it.startsWith("Core") }.orEmpty()
+                                    generateForSubStrand(strand.id, sub.id, sub.title, pathway)
+                                }
+                                .setNegativeButton("Cancel", null)
+                                .show()
+                        } else {
+                            generateForSubStrand(strand.id, sub.id, sub.title)
+                        }
                     }
                     .setNegativeButton("Cancel", null)
                     .show()
@@ -158,7 +170,7 @@ class AssessmentLibraryActivity : AppCompatActivity() {
         }
     }
 
-    private fun generateForSubStrand(strandId: String, subStrandId: String, subStrandTitle: String) {
+    private fun generateForSubStrand(strandId: String, subStrandId: String, subStrandTitle: String, pathway: String = "") {
         val (questionCount, duration) = when (grade.category) {
             com.example.tusome.data.model.GradeCategory.PRE_PRIMARY -> 5 to 20
             com.example.tusome.data.model.GradeCategory.LOWER_PRIMARY -> 8 to 30
@@ -174,7 +186,8 @@ class AssessmentLibraryActivity : AppCompatActivity() {
             strandId = strandId,
             subStrandId = subStrandId,
             questionCount = questionCount,
-            durationMinutes = duration
+            durationMinutes = duration,
+            pathway = pathway
         ) { result ->
             if (isFinishing || isDestroyed) return@generateAssessmentPaper
             result.onSuccess { response ->

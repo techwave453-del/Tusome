@@ -259,7 +259,7 @@ object LearningResourceRepository {
         val language = languageCode ?: "all"
         val userScope = userId ?: "anonymous"
         val schoolScope = schoolId ?: "global"
-        return "resources_${gradeCode}_${subStrandId}_$language_${userScope}_$schoolScope"
+        return "resources_${gradeCode}_${subStrandId}_${language}_${userScope}_$schoolScope"
     }
 
     /**

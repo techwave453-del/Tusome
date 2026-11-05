@@ -68,7 +68,7 @@ object SbaExamRepository {
                             ExamQuestion(
                                 questionNumber = 2,
                                 scenarioOrPrompt = "The table below shows information about ions T⁺ and Z²⁻:",
-                                totalMarks = 8,
+                                totalMarks = 4,
                                 subQuestions = listOf(
                                     SubQuestion(
                                         label = "(a)",
@@ -200,7 +200,7 @@ object SbaExamRepository {
                             ExamQuestion(
                                 questionNumber = 2,
                                 scenarioOrPrompt = "A farmer in Kitui County wishes to establish a bottle drip irrigation system for growing sukuma wiki during dry seasons.",
-                                totalMarks = 8,
+                                totalMarks = 5,
                                 subQuestions = listOf(
                                     SubQuestion(
                                         label = "(a)",

@@ -146,6 +146,28 @@ object SupabaseAuthRepository {
         }
     }
 
+    /** Calls the server-authorized learning-resource workflow using the signed-in JWT. */
+    fun manageLearningResources(
+        context: Context,
+        payload: JSONObject,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        refreshSessionIfNeeded(context) { refreshed ->
+            val session = refreshed.getOrNull()
+            if (session == null) {
+                onResult(Result.failure(refreshed.exceptionOrNull()
+                    ?: IllegalStateException("Sign in is required to manage learning resources.")))
+                return@refreshSessionIfNeeded
+            }
+            executor.execute {
+                val result = runCatching {
+                    request("/functions/v1/manage-learning-resources", payload, session.accessToken) as JSONObject
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
     fun signOut(context: Context) {
         val appContext = context.applicationContext
         val session = currentSession(appContext)

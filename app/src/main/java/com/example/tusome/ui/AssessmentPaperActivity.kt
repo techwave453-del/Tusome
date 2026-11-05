@@ -1,6 +1,7 @@
 package com.example.tusome.ui
 
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.ViewGroup
@@ -32,11 +33,13 @@ class AssessmentPaperActivity : AppCompatActivity() {
     private lateinit var attemptId: String
     private lateinit var answers: JSONObject
     private lateinit var status: TextView
+    private lateinit var timerStatus: TextView
     private lateinit var questionContainer: LinearLayout
     private val saveExecutor = Executors.newSingleThreadExecutor()
     private val imageExecutor = Executors.newCachedThreadPool()
     private var startedAt = System.currentTimeMillis()
     private var submittedAt: Long? = null
+    private var countDownTimer: CountDownTimer? = null
     private var rendering = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,6 +71,7 @@ class AssessmentPaperActivity : AppCompatActivity() {
 
         renderScreen()
         renderQuestions()
+        startAssessmentTimer()
         if (submittedAt != null) {
             loadMarkingGuide()
             renderPerformanceGrid()
@@ -90,6 +94,13 @@ class AssessmentPaperActivity : AppCompatActivity() {
             setPadding(18, 12, 18, 12)
         }
         root.addView(status)
+
+        timerStatus = TextView(this).apply {
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(18, 4, 18, 10)
+        }
+        root.addView(timerStatus)
 
         val scroll = ScrollView(this)
         questionContainer = LinearLayout(this).apply {
@@ -355,6 +366,40 @@ class AssessmentPaperActivity : AppCompatActivity() {
         }
     }
 
+    private fun startAssessmentTimer() {
+        countDownTimer?.cancel()
+        if (submittedAt != null || !::timerStatus.isInitialized) return
+        val durationMinutes = paper.optInt("duration_minutes", 0)
+        if (durationMinutes <= 0) {
+            timerStatus.text = ""
+            return
+        }
+        val deadline = startedAt + durationMinutes * 60_000L
+        val remaining = (deadline - System.currentTimeMillis()).coerceAtLeast(0L)
+        countDownTimer = object : CountDownTimer(remaining, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                val minutes = millisUntilFinished / 60_000L
+                val seconds = (millisUntilFinished % 60_000L) / 1000L
+                timerStatus.text = "Time remaining: %02d:%02d".format(minutes, seconds)
+            }
+            override fun onFinish() {
+                timerStatus.text = "Time is up. Your answers are being submitted."
+                submitWhenTimeExpires()
+            }
+        }.start()
+        if (remaining == 0L) submitWhenTimeExpires()
+    }
+
+    private fun submitWhenTimeExpires() {
+        if (submittedAt != null) return
+        submittedAt = System.currentTimeMillis()
+        countDownTimer?.cancel()
+        renderScreen()
+        renderQuestions()
+        saveAttempt { loadMarkingGuide() }
+        renderPerformanceGrid()
+    }
+
     private fun submitAssessment() {
         if (submittedAt != null) return
         androidx.appcompat.app.AlertDialog.Builder(this)
@@ -363,6 +408,7 @@ class AssessmentPaperActivity : AppCompatActivity() {
             .setNegativeButton("Continue working", null)
             .setPositiveButton("Submit") { _, _ ->
                 submittedAt = System.currentTimeMillis()
+                countDownTimer?.cancel()
                 renderScreen()
                 renderQuestions()
                 saveAttempt { loadMarkingGuide() }
@@ -482,6 +528,7 @@ class AssessmentPaperActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        countDownTimer?.cancel()
         saveExecutor.shutdown()
         imageExecutor.shutdown()
         super.onDestroy()

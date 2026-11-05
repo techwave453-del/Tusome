@@ -421,6 +421,20 @@ class LearningContentActivity : AppCompatActivity() {
                 }
             }, margins(top = 6))
         }
+        if (!showReview && isCurriculumEditor && status == "published") {
+            card.addView(actionButton("Withdraw from learners").apply {
+                setOnClickListener {
+                    LearningResourceWorkflowRepository.withdraw(this@LearningContentActivity, resource.optString("id")) { result ->
+                        result.onSuccess {
+                            Toast.makeText(this@LearningContentActivity, "Resource withdrawn.", Toast.LENGTH_LONG).show()
+                            loadMyResources()
+                        }.onFailure { error ->
+                            Toast.makeText(this@LearningContentActivity, error.message ?: "Resource could not be withdrawn.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }, margins(top = 6))
+        }
         return card
     }
 

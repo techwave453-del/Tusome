@@ -19,12 +19,17 @@ object LearningResourceWorkflowRepository {
         request: com.example.tusome.data.model.LearningContentGenerationRequest,
         onResult: (Result<JSONObject>) -> Unit
     ) {
+        val outcomes = JSONArray()
+        request.learningOutcomes.forEach { outcome ->
+            if (outcome.isNotBlank()) outcomes.put(outcome.trim())
+        }
         val payload = JSONObject()
             .put("grade_id", request.gradeCode.trim().lowercase())
             .put("learning_area_id", request.learningAreaId.trim())
             .put("strand_id", request.strandId.trim())
             .put("sub_strand_id", request.subStrandId.trim())
             .put("resource_type", request.resourceType.key)
+            .put("learning_outcomes", outcomes)
             .put("language_code", request.languageCode.trim().lowercase())
             .put("estimated_minutes", request.estimatedMinutes ?: 30)
             .put("learner_age_range", request.learnerAgeRange ?: "")

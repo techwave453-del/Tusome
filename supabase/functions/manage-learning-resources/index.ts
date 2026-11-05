@@ -362,6 +362,9 @@ Deno.serve(async (req: Request) => {
     if (!resourceId || !["approved", "rejected", "changes_requested"].includes(decision)) {
       return reply(400, { error: "Choose a resource and a valid review decision." });
     }
+    if (decision !== "approved" && feedback.length < 5) {
+      return reply(400, { error: "Add specific feedback when rejecting a resource or requesting changes." });
+    }
     const { data: resource, error } = await admin.from("learning_resources")
       .select("id,status,version").eq("id", resourceId).maybeSingle();
     if (error || !resource) return reply(404, { error: "Learning resource not found." });

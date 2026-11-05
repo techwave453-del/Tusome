@@ -85,9 +85,14 @@ class StrandDetailActivity : AppCompatActivity() {
 
         val requestedAreaId = intent.getStringExtra("LEARNING_AREA_ID")
         val requestedStrandId = intent.getStringExtra("STRAND_ID")
+        val gradeCode = intent.getStringExtra("GRADE_CODE")
         val requestedGrade = GradeLevel.values().firstOrNull {
-            it.code.equals(intent.getStringExtra("GRADE_CODE"), ignoreCase = true)
-        } ?: GradeLevel.GRADE_4
+            it.code.equals(gradeCode, ignoreCase = true)
+        } ?: run {
+            Toast.makeText(this, "The selected grade was not supplied. Return and select a grade again.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
         selectedGrade = requestedGrade
         val fromSupabase = intent.getBooleanExtra("FROM_SUPABASE", false)
 
@@ -95,6 +100,11 @@ class StrandDetailActivity : AppCompatActivity() {
         btnNextStrand.setOnClickListener { navigateStrand(1) }
 
         if (fromSupabase) {
+            if (requestedAreaId.isNullOrBlank() || requestedStrandId.isNullOrBlank()) {
+                Toast.makeText(this, "The selected learning area and strand were not supplied. Please reopen the selected strand.", Toast.LENGTH_LONG).show()
+                finish()
+                return
+            }
             findViewById<TextView>(R.id.tvDetailTitle).text = "Loading published curriculum…"
             findViewById<TextView>(R.id.tvDetailDesc).text =
                 "Fetching ${requestedGrade.title} content from Supabase."
@@ -111,8 +121,9 @@ class StrandDetailActivity : AppCompatActivity() {
                     ).show()
                     finish()
                 }.onSuccess { strands ->
+                    // Keep navigation scoped to the exact selected learning area and grade.
                     currentStrands = strands.filter { strand ->
-                        requestedAreaId == null || strand.learningAreaId == requestedAreaId
+                        strand.learningAreaId == requestedAreaId
                     }
                     currentStrandIndex = currentStrands.indexOfFirst { it.id == requestedStrandId }
                     if (currentStrandIndex < 0 && requestedStrandId == null && currentStrands.isNotEmpty()) {
@@ -131,10 +142,9 @@ class StrandDetailActivity : AppCompatActivity() {
                 }
             }
         } else {
-            val strandInRequest = if (requestedAreaId != null) {
+            val strandInRequest = if (!requestedAreaId.isNullOrBlank()) {
                 CbcRepository.getStrandsForArea(requestedAreaId)
                     .firstOrNull { it.id == requestedStrandId }
-                    ?: CbcRepository.getStrandsForArea(requestedAreaId).firstOrNull()
             } else {
                 CbcRepository.getLearningAreas(requestedGrade)
                     .flatMap { CbcRepository.getStrandsForArea(it.id) }
@@ -223,7 +233,7 @@ class StrandDetailActivity : AppCompatActivity() {
         btnGenerateAiQuestions.setOnClickListener {
             CbcAiTutorService.generatePracticeQuestions(
                 strandTitle = strand.title,
-                grade = GradeLevel.GRADE_4
+                grade = selectedGrade
             ) { questions ->
                 val formattedQuestions = buildString {
                     append("❓ AI GENERATED PRACTICE QUESTIONS:\n\n")
@@ -273,6 +283,17 @@ class StrandDetailActivity : AppCompatActivity() {
         containerSubstrands.removeAllViews()
         val inflater = LayoutInflater.from(this)
 
+        if (strand.subStrands.isEmpty()) {
+            val emptyState = TextView(this).apply {
+                text = "No published sub-strands or Specific Learning Outcomes are available for this strand yet. The app will not generate lesson content until the KICD curriculum records are published."
+                setTextColor(ContextCompat.getColor(this@StrandDetailActivity, R.color.text_secondary))
+                textSize = 14f
+                setPadding(20, 24, 20, 24)
+            }
+            containerSubstrands.addView(emptyState)
+            return
+        }
+
         strand.subStrands.forEach { sub ->
             val subCard = inflater.inflate(
                 R.layout.item_interactive_substrand,
@@ -294,6 +315,13 @@ class StrandDetailActivity : AppCompatActivity() {
             val btnSaveProgress = subCard.findViewById<Button>(R.id.btnSaveProgress)
 
             tvSubstrandTitle.text = "Sub-strand ${sub.subStrandNumber}: ${sub.title}"
+            val hasPublishedSlos = sub.specificLearningOutcomes.isNotEmpty()
+            btnGenerateSubstrandAi.isEnabled = hasPublishedSlos
+            btnGenerateSubstrandAi.text = if (hasPublishedSlos) "Generate with AI" else "Awaiting published KICD SLOs"
+            if (!hasPublishedSlos) {
+                tvLearningOutcomes.text = "No published Specific Learning Outcomes are linked to this sub-strand yet."
+                tvSubstrandKicdCitation.text = "AI generation is disabled until the verified KICD outcomes are published."
+            }
 
             btnReadFullLesson.setOnClickListener {
                 val intent = Intent(this, LessonReaderActivity::class.java).apply {
@@ -331,6 +359,10 @@ class StrandDetailActivity : AppCompatActivity() {
             }
 
             btnGenerateSubstrandAi.setOnClickListener {
+                if (!hasPublishedSlos) {
+                    Toast.makeText(this, "Publish the verified KICD Specific Learning Outcomes for this sub-strand before generating content.", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
                 btnGenerateSubstrandAi.isEnabled = false
                 btnGenerateSubstrandAi.text = "Generating…"
                 CbcAiTutorService.generateSubStrandKicdContent(

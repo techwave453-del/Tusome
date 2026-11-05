@@ -95,6 +95,7 @@ class AssessmentsFragment : Fragment() {
             setOnClickListener {
                 startActivity(Intent(requireContext(), SbaExamActivity::class.java).apply {
                     putExtra("SUBJECT_ID", area.id)
+                    putExtra("SUBJECT_TITLE", area.title)
                     putExtra("GRADE_CODE", area.gradeLevel.code)
                 })
             }

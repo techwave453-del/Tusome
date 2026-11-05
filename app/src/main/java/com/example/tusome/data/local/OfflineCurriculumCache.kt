@@ -76,6 +76,26 @@ class OfflineCurriculumCache(context: Context) {
         return prefs.getString(key, null)
     }
 
+    // Save AI generated study notes locally for permanent offline access
+    fun saveGeneratedAiStudyNotes(strandId: String, notesText: String) {
+        prefs.edit().putString("ai_notes_$strandId", notesText).apply()
+    }
+
+    // Get saved AI study notes
+    fun getGeneratedAiStudyNotes(strandId: String): String? {
+        return prefs.getString("ai_notes_$strandId", null)
+    }
+
+    // Save AI generated practice questions locally for offline study
+    fun saveGeneratedAiPracticeQuestions(strandId: String, questionsJson: String) {
+        prefs.edit().putString("ai_questions_$strandId", questionsJson).apply()
+    }
+
+    // Get saved AI practice questions
+    fun getGeneratedAiPracticeQuestions(strandId: String): String? {
+        return prefs.getString("ai_questions_$strandId", null)
+    }
+
     // Save AI Tutor Q&A history for offline reading
     fun cacheAiTutorChatHistory(chatJsonString: String) {
         prefs.edit().putString("ai_tutor_chat_history", chatJsonString).apply()

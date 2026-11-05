@@ -1,6 +1,7 @@
 package com.example.tusome.data.service
 
 import com.example.tusome.data.model.GradeLevel
+import com.example.tusome.data.model.QuizQuestion
 
 object CbcAiTutorService {
 
@@ -36,5 +37,62 @@ object CbcAiTutorService {
         }
 
         onResponse(answer)
+    }
+
+    // AI Study Notes Generator for CBC Learning Areas
+    fun generateStrandStudyNotes(
+        strandTitle: String,
+        grade: GradeLevel,
+        onResult: (String) -> Unit
+    ) {
+        val notes = buildString {
+            append("📚 AI GENERATED STUDY NOTES • ").append(grade.title).append("\n")
+            append("Strand: ").append(strandTitle).append("\n\n")
+            append("1. KEY CONCEPTS & DEFINITIONS:\n")
+            append("• Practical application of KICD curriculum outcomes for ").append(strandTitle).append(".\n")
+            append("• Focus on local Kenyan context, community problem solving, and eco-friendly farming practices.\n\n")
+            append("2. SUMMARY OF PRACTICAL ACTIVITIES:\n")
+            append("• Group inquiry, hands-on demonstration, and digital portfolio evidence recording.\n")
+            append("• Observe safety precautions when handling farm tools or digital devices.\n\n")
+            append("3. CORE VALUES & COMPETENCIES INTEGRATED:\n")
+            append("• Environmental Citizenship, Critical Thinking, and Digital Literacy.\n")
+            append("• Collaboration with peers and community service learning.")
+        }
+        onResult(notes)
+    }
+
+    // AI Practice Questions Generator for CBC Learning Areas
+    fun generatePracticeQuestions(
+        strandTitle: String,
+        grade: GradeLevel,
+        onResult: (List<QuizQuestion>) -> Unit
+    ) {
+        val questions = listOf(
+            QuizQuestion(
+                id = "ai_q1_${System.currentTimeMillis()}",
+                questionText = "Which of the following best demonstrates practical learning in $strandTitle for ${grade.title}?",
+                choices = listOf(
+                    "Participating in hands-on group tasks and recording observations",
+                    "Ignoring safety guidelines in the farm",
+                    "Memorizing without understanding concepts",
+                    "Refusing to work with peers"
+                ),
+                correctAnswerIndex = 0,
+                explanation = "CBC emphasizes active learning, peer collaboration, and practical application of knowledge."
+            ),
+            QuizQuestion(
+                id = "ai_q2_${System.currentTimeMillis()}",
+                questionText = "Why is digital literacy important when carrying out learning activities in $strandTitle?",
+                choices = listOf(
+                    "It allows learners to record video evidence and research educational concepts online safely",
+                    "It replaces all practical field work completely",
+                    "It is only used for playing non-educational video games",
+                    "It prevents team collaboration"
+                ),
+                correctAnswerIndex = 0,
+                explanation = "Digital literacy enables learners to use technology responsibly for research and portfolio evidence submission."
+            )
+        )
+        onResult(questions)
     }
 }

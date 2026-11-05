@@ -3,6 +3,7 @@ package com.example.tusome.ui
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -14,12 +15,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import com.example.tusome.R
 import com.example.tusome.data.local.ActivityProgressManager
+import com.example.tusome.data.local.OfflineCurriculumCache
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.PerformanceLevel
 import com.example.tusome.data.model.Strand
 import com.example.tusome.data.repository.CbcRepository
 import com.example.tusome.data.repository.QuizRepository
 import com.example.tusome.data.repository.SupabaseCurriculumRepository
+import com.example.tusome.data.service.CbcAiTutorService
 import com.example.tusome.ui.dialogs.AiTutorBottomSheetDialog
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
@@ -29,6 +32,7 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 class StrandDetailActivity : AppCompatActivity() {
 
     private lateinit var progressManager: ActivityProgressManager
+    private lateinit var offlineCache: OfflineCurriculumCache
     private lateinit var currentStrands: List<Strand>
     private lateinit var containerSubstrands: LinearLayout
     private lateinit var scrollStrandDetail: NestedScrollView
@@ -40,6 +44,12 @@ class StrandDetailActivity : AppCompatActivity() {
     private lateinit var btnTakeStrandQuiz: Button
     private lateinit var tvQuizCardStatus: TextView
     private lateinit var fabAskAiTutor: ExtendedFloatingActionButton
+
+    private lateinit var btnGenerateAiNotes: Button
+    private lateinit var btnGenerateAiQuestions: Button
+    private lateinit var containerAiGeneratedContent: LinearLayout
+    private lateinit var tvAiNotesDisplay: TextView
+
     private var currentStrandIndex: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +57,8 @@ class StrandDetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_strand_detail)
 
         progressManager = ActivityProgressManager(this)
+        offlineCache = OfflineCurriculumCache(this)
+
         containerSubstrands = findViewById(R.id.containerSubstrands)
         scrollStrandDetail = findViewById(R.id.scrollStrandDetail)
         tvStrandPosition = findViewById(R.id.tvStrandPosition)
@@ -57,6 +69,11 @@ class StrandDetailActivity : AppCompatActivity() {
         btnTakeStrandQuiz = findViewById(R.id.btnTakeStrandQuiz)
         tvQuizCardStatus = findViewById(R.id.tvQuizCardStatus)
         fabAskAiTutor = findViewById(R.id.fabAskAiTutor)
+
+        btnGenerateAiNotes = findViewById(R.id.btnGenerateAiNotes)
+        btnGenerateAiQuestions = findViewById(R.id.btnGenerateAiQuestions)
+        containerAiGeneratedContent = findViewById(R.id.containerAiGeneratedContent)
+        tvAiNotesDisplay = findViewById(R.id.tvAiNotesDisplay)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbarDetail)
         setSupportActionBar(toolbar)
@@ -164,9 +181,62 @@ class StrandDetailActivity : AppCompatActivity() {
                 .show(supportFragmentManager, "AiTutor")
         }
 
+        // Setup AI Content Generation & Persistence
+        setupAiContentGenerator(strand)
+
         refreshQuizCardStatus(strand)
         renderSubStrandCards(strand)
         refreshProgressSummary(strand)
+    }
+
+    private fun setupAiContentGenerator(strand: Strand) {
+        // Load saved offline AI study notes if available
+        val savedNotes = offlineCache.getGeneratedAiStudyNotes(strand.id)
+        val savedQuestions = offlineCache.getGeneratedAiPracticeQuestions(strand.id)
+
+        if (!savedNotes.isNullOrBlank()) {
+            tvAiNotesDisplay.text = savedNotes
+            containerAiGeneratedContent.visibility = View.VISIBLE
+        } else if (!savedQuestions.isNullOrBlank()) {
+            tvAiNotesDisplay.text = savedQuestions
+            containerAiGeneratedContent.visibility = View.VISIBLE
+        } else {
+            containerAiGeneratedContent.visibility = View.GONE
+        }
+
+        btnGenerateAiNotes.setOnClickListener {
+            CbcAiTutorService.generateStrandStudyNotes(
+                strandTitle = strand.title,
+                grade = GradeLevel.GRADE_4
+            ) { notes ->
+                tvAiNotesDisplay.text = notes
+                containerAiGeneratedContent.visibility = View.VISIBLE
+                offlineCache.saveGeneratedAiStudyNotes(strand.id, notes)
+                Toast.makeText(this, "AI Study Notes generated & saved locally for offline study!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        btnGenerateAiQuestions.setOnClickListener {
+            CbcAiTutorService.generatePracticeQuestions(
+                strandTitle = strand.title,
+                grade = GradeLevel.GRADE_4
+            ) { questions ->
+                val formattedQuestions = buildString {
+                    append("❓ AI GENERATED PRACTICE QUESTIONS:\n\n")
+                    questions.forEachIndexed { i, q ->
+                        append(i + 1).append(". ").append(q.questionText).append("\n")
+                        q.choices.forEachIndexed { j, c ->
+                            append("   ").append(('A' + j)).append(". ").append(c).append("\n")
+                        }
+                        append("   💡 Correct Answer: ").append(('A' + q.correctAnswerIndex)).append(" (").append(q.explanation).append(")\n\n")
+                    }
+                }
+                tvAiNotesDisplay.text = formattedQuestions
+                containerAiGeneratedContent.visibility = View.VISIBLE
+                offlineCache.saveGeneratedAiPracticeQuestions(strand.id, formattedQuestions)
+                Toast.makeText(this, "AI Practice Questions generated & saved locally for offline study!", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun refreshQuizCardStatus(strand: Strand) {

@@ -391,9 +391,20 @@ class LearningContentActivity : AppCompatActivity() {
         card.addView(messageText("$type • $status • v${resource.optInt("version", 1)}"), margins(top = 4))
         val feedback = resource.optString("review_feedback")
         if (feedback.isNotBlank()) card.addView(messageText("Review feedback: $feedback"), margins(top = 4))
-        val openButton = actionButton(if (showReview) "Review resource" else "View resource").apply {
+        val isApproved = status == "approved"
+        val openButton = actionButton(
+            when {
+                showReview && isApproved -> "Publish approved resource"
+                showReview -> "Review resource"
+                else -> "View resource"
+            }
+        ).apply {
             setOnClickListener {
-                if (showReview) showReviewDialog(resource) else {
+                if (showReview && isApproved) {
+                    publishApprovedResource(resource.optString("id"))
+                } else if (showReview) {
+                    showReviewDialog(resource)
+                } else {
                     currentDraftId = resource.optString("id").takeIf { it.isNotBlank() }
                     renderResourcePreview(resource)
                     statusText.text = "Resource status: $status"
@@ -530,6 +541,17 @@ class LearningContentActivity : AppCompatActivity() {
                 }
             }
             .show()
+    }
+
+    private fun publishApprovedResource(resourceId: String) {
+        LearningResourceWorkflowRepository.publish(this, resourceId) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Resource published.", Toast.LENGTH_LONG).show()
+                loadReviewQueue()
+            }.onFailure { error ->
+                Toast.makeText(this, error.message ?: "Resource could not be published.", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun showReviewDialog(resource: JSONObject) {

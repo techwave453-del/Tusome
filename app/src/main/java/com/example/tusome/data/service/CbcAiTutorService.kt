@@ -1,5 +1,6 @@
 package com.example.tusome.data.service
 
+import com.example.tusome.data.model.GradeCategory
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.QuizQuestion
 
@@ -13,86 +14,185 @@ object CbcAiTutorService {
     ) {
         val query = userQuery.trim().lowercase()
 
+        val categoryPrefix = when (grade.category) {
+            GradeCategory.LOWER_PRIMARY -> "Lower Primary (Grade 1-3) Foundational Stage"
+            GradeCategory.UPPER_PRIMARY -> "Upper Primary (Grade 4-6) Inquiry Stage"
+            GradeCategory.JUNIOR_SECONDARY -> "Junior Secondary (Grade 7-9) Pre-Vocational & Exploration Stage"
+            else -> "${grade.title} KICD Curriculum Level"
+        }
+
         val answer = when {
             query.contains("compost") || query.contains("manure") ->
-                "Great question! In ${grade.title} Agriculture, a compost heap is built by layering organic materials: dry grass (carbon), fresh green leaves/kitchen peels (nitrogen), and ash/topsoil. Keep it moist, and in 6 to 8 weeks, it turns into rich soil manure!"
+                "[$categoryPrefix • KICD Agriculture]\nIn ${grade.title}, building a compost heap involves layering nitrogen-rich green waste (kitchen peels) and carbon-rich dry waste (grass/leaves) with wood ash and topsoil. Keep it moist for 6–8 weeks to decompose into organic manure!"
 
             query.contains("drip") || query.contains("irrigation") || query.contains("water") ->
-                "Water conservation is key in Kenya! Drip irrigation uses plastic bottles with small pinholes to release water droplet by droplet directly to crop roots (like sukuma wiki). This reduces evaporation by over 50%!"
+                "[$categoryPrefix • KICD Conservation]\nWater conservation is vital in Kenya! Drip irrigation uses plastic bottles with small pinholes near plant root zones (like sukuma wiki/spinach) to reduce evaporation by over 50%!"
 
             query.contains("place value") || query.contains("number") || query.contains("digits") ->
-                "In ${grade.title} Mathematics, place value shows what a digit is worth based on its position. For example, in 7,842:\n• 7 is in the Thousands place (7,000)\n• 8 is in the Hundreds place (800)\n• 4 is in the Tens place (40)\n• 2 is in the Ones place (2)!"
+                "[$categoryPrefix • KICD Mathematics]\nPlace value defines a digit's value by its position. For example, in ${if (grade.category == GradeCategory.LOWER_PRIMARY) "342" else "47,842"}:\n• Thousands/Hundreds: Shows total groups of 100/1,000\n• Tens & Ones: Represents smaller units!"
 
             query.contains("kiswahili") || query.contains("kilimo") || query.contains("lishe") ->
-                "Jambo! Katika Somo la Kilimo na Lishe (${grade.title}), tunajifunza kuhusu kuhifadhi udongo na maji. Drip irrigation kwa Kiswahili ni 'Unyunyiziaji wa Matone'."
+                "[$categoryPrefix • KICD Kiswahili & Kilimo]\nJambo! Katika Somo la Kilimo na Lishe (${grade.title}), tunajifunza kuhusu kuhifadhi udongo, kutengeneza samadi na umwagiliaji wa matone."
 
             query.contains("erosion") || query.contains("soil") ->
-                "Soil erosion happens when rain or wind washes away topsoil. In CBC Agriculture, we prevent soil erosion by planting grass strips, building check dams, and mulching garden beds!"
+                "[$categoryPrefix • KICD Environmental Conservation]\nSoil erosion is the washing away of topsoil by rain or wind. In KICD curriculum, we prevent it by planting grass strips, building check dams, mulching, and terracing steep land!"
 
             query.contains("competency") || query.contains("cbc") ->
-                "The 7 Kenya CBC Core Competencies are:\n1. Communication & Collaboration\n2. Critical Thinking & Problem Solving\n3. Creativity & Imagination\n4. Citizenship\n5. Digital Literacy\n6. Learning to Learn\n7. Self-Efficacy!"
+                "KICD 7 Core Competencies for ${grade.title}:\n1. Communication & Collaboration\n2. Critical Thinking & Problem Solving\n3. Creativity & Imagination\n4. Citizenship & Kenya Values\n5. Digital Literacy\n6. Learning to Learn\n7. Self-Efficacy!"
 
             else ->
-                "Hello! I am your Tusome AI Learning Assistant for ${grade.title}. I can help you with Agriculture, Mathematics, Science & Tech, English, and Kiswahili. What concept would you like to explore today?"
+                "Hello! I am your Tusome AI Learning Assistant for $categoryPrefix (${grade.title}). I provide guidance strictly aligned with KICD curriculum designs. What concept would you like to explore?"
         }
 
         onResponse(answer)
     }
 
-    // AI Study Notes Generator for CBC Learning Areas
+    // AI Study Notes Generator strictly following KICD Curriculum Level Guidelines
     fun generateStrandStudyNotes(
         strandTitle: String,
         grade: GradeLevel,
         onResult: (String) -> Unit
     ) {
-        val notes = buildString {
-            append("📚 AI GENERATED STUDY NOTES • ").append(grade.title).append("\n")
-            append("Strand: ").append(strandTitle).append("\n\n")
-            append("1. KEY CONCEPTS & DEFINITIONS:\n")
-            append("• Practical application of KICD curriculum outcomes for ").append(strandTitle).append(".\n")
-            append("• Focus on local Kenyan context, community problem solving, and eco-friendly farming practices.\n\n")
-            append("2. SUMMARY OF PRACTICAL ACTIVITIES:\n")
-            append("• Group inquiry, hands-on demonstration, and digital portfolio evidence recording.\n")
-            append("• Observe safety precautions when handling farm tools or digital devices.\n\n")
-            append("3. CORE VALUES & COMPETENCIES INTEGRATED:\n")
-            append("• Environmental Citizenship, Critical Thinking, and Digital Literacy.\n")
-            append("• Collaboration with peers and community service learning.")
+        val categoryText = when (grade.category) {
+            GradeCategory.LOWER_PRIMARY -> "KICD LOWER PRIMARY LEVEL (Grade 1 - 3)"
+            GradeCategory.UPPER_PRIMARY -> "KICD UPPER PRIMARY LEVEL (Grade 4 - 6)"
+            GradeCategory.JUNIOR_SECONDARY -> "KICD JUNIOR SECONDARY LEVEL (Grade 7 - 9)"
+            else -> "KICD CURRICULUM LEVEL (${grade.title})"
         }
+
+        val notes = buildString {
+            append("📚 KICD CURRICULUM AI STUDY NOTES\n")
+            append("Level: ").append(categoryText).append(" • ").append(grade.title).append("\n")
+            append("Strand: ").append(strandTitle).append("\n\n")
+
+            when (grade.category) {
+                GradeCategory.LOWER_PRIMARY -> {
+                    append("1. FOUNDATIONAL CONCEPTS & OBSERVATION:\n")
+                    append("• Identify items in the immediate school and home environment related to ").append(strandTitle).append(".\n")
+                    append("• Develop foundational vocabulary through rhymes, pictures, and simple hands-on demonstration.\n\n")
+                    append("2. PRACTICAL GUIDED ACTIVITIES:\n")
+                    append("• Collect and sort local natural materials in small collaborative learning groups.\n")
+                    append("• Practice personal safety, cleanliness, and care for living organisms.\n\n")
+                    append("3. INTEGRATED KENYA VALUES:\n")
+                    append("• Love, Respect, Sharing, and Care for the Environment.")
+                }
+
+                GradeCategory.JUNIOR_SECONDARY -> {
+                    append("1. ADVANCED CONCEPTS & TECHNICAL SKILLS:\n")
+                    append("• Analyze scientific, mathematical, or pre-technical principles governing ").append(strandTitle).append(".\n")
+                    append("• Perform detailed problem-solving, data recording, and technical analysis.\n\n")
+                    append("2. PRE-VOCATIONAL & COMMUNITY SERVICE PROJECTS:\n")
+                    append("• Design sustainable community solutions and apply safety standards when using tools/equipment.\n")
+                    append("• Present project findings through digital presentations and self-assessment rubrics.\n\n")
+                    append("3. CORE COMPETENCIES & CITIZENSHIP:\n")
+                    append("• Innovation, Self-Reliance, Social Justice, and National Values.")
+                }
+
+                else -> {
+                    append("1. SPECIFIC LEARNING OUTCOMES (SLO):\n")
+                    append("• Explain core principles of ").append(strandTitle).append(" in the Kenyan context.\n")
+                    append("• Construct practical models (e.g., container gardens, check dams, place value charts).\n\n")
+                    append("2. INQUIRY & EXPERIENTIAL LEARNING:\n")
+                    append("• Conduct guided field walks around the school compound to observe real-world challenges.\n")
+                    append("• Record digital evidence (photos/reflections) in learner CBC portfolios.\n\n")
+                    append("3. CORE COMPETENCIES & VALUES:\n")
+                    append("• Environmental Stewardship, Critical Thinking, Digital Literacy, and Integrity.")
+                }
+            }
+        }
+
         onResult(notes)
     }
 
-    // AI Practice Questions Generator for CBC Learning Areas
+    // AI Practice Questions Generator strictly following KICD Curriculum Level
     fun generatePracticeQuestions(
         strandTitle: String,
         grade: GradeLevel,
         onResult: (List<QuizQuestion>) -> Unit
     ) {
-        val questions = listOf(
-            QuizQuestion(
-                id = "ai_q1_${System.currentTimeMillis()}",
-                questionText = "Which of the following best demonstrates practical learning in $strandTitle for ${grade.title}?",
-                choices = listOf(
-                    "Participating in hands-on group tasks and recording observations",
-                    "Ignoring safety guidelines in the farm",
-                    "Memorizing without understanding concepts",
-                    "Refusing to work with peers"
+        val questions = when (grade.category) {
+            GradeCategory.LOWER_PRIMARY -> listOf(
+                QuizQuestion(
+                    id = "kicd_lp_q1_${System.currentTimeMillis()}",
+                    questionText = "When doing practical activities in $strandTitle (${grade.title}), why should we wash our hands with soap afterwards?",
+                    choices = listOf(
+                        "To maintain hygiene and prevent the spread of germs",
+                        "To make our hands wet only",
+                        "To waste water",
+                        "Because the teacher said so without reason"
+                    ),
+                    correctAnswerIndex = 0,
+                    explanation = "KICD Lower Primary hygiene guidelines emphasize washing hands with clean running water and soap."
                 ),
-                correctAnswerIndex = 0,
-                explanation = "CBC emphasizes active learning, peer collaboration, and practical application of knowledge."
-            ),
-            QuizQuestion(
-                id = "ai_q2_${System.currentTimeMillis()}",
-                questionText = "Why is digital literacy important when carrying out learning activities in $strandTitle?",
-                choices = listOf(
-                    "It allows learners to record video evidence and research educational concepts online safely",
-                    "It replaces all practical field work completely",
-                    "It is only used for playing non-educational video games",
-                    "It prevents team collaboration"
-                ),
-                correctAnswerIndex = 0,
-                explanation = "Digital literacy enables learners to use technology responsibly for research and portfolio evidence submission."
+                QuizQuestion(
+                    id = "kicd_lp_q2_${System.currentTimeMillis()}",
+                    questionText = "Which of these local natural materials can we collect during our $strandTitle field walk?",
+                    choices = listOf(
+                        "Dry leaves, twigs, and small stones",
+                        "Sharp broken glass bottles",
+                        "Used rusty razor blades",
+                        "Plastic waste"
+                    ),
+                    correctAnswerIndex = 0,
+                    explanation = "In KICD foundational learning, safe natural materials like dry leaves and twigs are used for group tasks."
+                )
             )
-        )
+
+            GradeCategory.JUNIOR_SECONDARY -> listOf(
+                QuizQuestion(
+                    id = "kicd_jss_q1_${System.currentTimeMillis()}",
+                    questionText = "In KICD Junior Secondary (${grade.title}) $strandTitle, what is the primary purpose of applying design thinking principles?",
+                    choices = listOf(
+                        "To identify community challenges, design innovative prototypes, and evaluate practical solutions",
+                        "To avoid using technical tools",
+                        "To eliminate mathematical calculations",
+                        "To memorize theories without practical execution"
+                    ),
+                    correctAnswerIndex = 0,
+                    explanation = "JSS Pre-Technical and Integrated Science curriculum emphasizes design thinking and practical innovation."
+                ),
+                QuizQuestion(
+                    id = "kicd_jss_q2_${System.currentTimeMillis()}",
+                    questionText = "Which safety protocol is mandatory when conducting practical technical tasks in $strandTitle?",
+                    choices = listOf(
+                        "Wearing appropriate protective gear (gloves/goggles) and inspecting tools before use",
+                        "Operating equipment without teacher supervision",
+                        "Leaving sharp tools scattered on the floor",
+                        "Ignoring equipment load limits"
+                    ),
+                    correctAnswerIndex = 0,
+                    explanation = "Safety standards in JSS require personal protective equipment (PPE) and tool inspection."
+                )
+            )
+
+            else -> listOf(
+                QuizQuestion(
+                    id = "kicd_up_q1_${System.currentTimeMillis()}",
+                    questionText = "In KICD ${grade.title} curriculum for $strandTitle, how does container gardening help families living in urban areas?",
+                    choices = listOf(
+                        "It allows families to grow fresh indigenous vegetables in recycled sacks or plastic tins",
+                        "It requires buying expensive tractors",
+                        "It stops plants from receiving rainwater",
+                        "It works only in forest reserves"
+                    ),
+                    correctAnswerIndex = 0,
+                    explanation = "Container gardening uses small spaces and recycled sacks/tins to grow fresh vegetables like sukuma wiki."
+                ),
+                QuizQuestion(
+                    id = "kicd_up_q2_${System.currentTimeMillis()}",
+                    questionText = "How do we record evidence for our CBC digital portfolio in $strandTitle?",
+                    choices = listOf(
+                        "By taking photographs/videos of our completed project and writing brief reflection notes",
+                        "By deleting all our school work",
+                        "By copying directly without doing the task",
+                        "By refusing to upload task evidence"
+                    ),
+                    correctAnswerIndex = 0,
+                    explanation = "Digital literacy in CBC involves capturing project photos/videos and uploading learner reflections."
+                )
+            )
+        }
+
         onResult(questions)
     }
 }

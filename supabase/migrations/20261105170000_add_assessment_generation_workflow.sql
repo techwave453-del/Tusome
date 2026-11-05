@@ -29,6 +29,12 @@ on conflict do nothing;
 alter table public.assessment_papers
   add column if not exists school_id uuid references public.schools(id) on delete cascade;
 
+alter table public.assessment_papers
+  drop constraint if exists assessment_papers_content_status_check;
+alter table public.assessment_papers
+  add constraint assessment_papers_content_status_check
+  check (content_status in ('draft','in_review','approved','published','archived'));
+
 create table if not exists public.assessment_generation_jobs (
   id uuid primary key default gen_random_uuid(),
   requested_by uuid references auth.users(id) on delete set null,
@@ -67,7 +73,7 @@ create policy "Learners and authorised staff read assessments"
         )
       )
     )
-    or (created_by = (select auth.uid()) and (select private.has_permission('assessments.create', null)))
+    or (created_by = (select auth.uid()) and (select private.has_permission('assessments.create', school_id)))
     or (select private.has_permission('assessments.review', null))
   );
 

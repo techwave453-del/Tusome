@@ -1,15 +1,21 @@
 package com.example.tusome.ui
 
-import android.graphics.Typeface
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.os.CountDownTimer
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tusome.R
-import com.example.tusome.data.local.OfflineCurriculumCache
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.SbaExamPaper
+import com.example.tusome.data.repository.SbaExamAttempt
+import com.example.tusome.data.repository.SbaExamAttemptRepository
 import com.example.tusome.data.repository.SbaExamRepository
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
@@ -20,37 +26,53 @@ class SbaExamActivity : AppCompatActivity() {
 
     private lateinit var examPaper: SbaExamPaper
     private lateinit var containerExamContent: LinearLayout
-    private lateinit var offlineCache: OfflineCurriculumCache
+    private lateinit var attempt: SbaExamAttempt
+    private lateinit var tvExamTimeMarks: TextView
     private var showingMarkingScheme = false
+    private var timer: CountDownTimer? = null
+    private var rendering = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sba_exam)
 
-        offlineCache = OfflineCurriculumCache(this)
         containerExamContent = findViewById(R.id.containerExamContent)
+        tvExamTimeMarks = findViewById(R.id.tvExamTimeMarks)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbarSba)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { finish() }
 
-        val subjectId = intent.getStringExtra("SUBJECT_ID") ?: "chemistry"
-        val gradeCode = intent.getStringExtra("GRADE_CODE") ?: "G10"
+        val subjectId = intent.getStringExtra("SUBJECT_ID")
+        val gradeCode = intent.getStringExtra("GRADE_CODE")
         val grade = GradeLevel.values().firstOrNull {
             it.code.equals(gradeCode, ignoreCase = true)
-        } ?: GradeLevel.GRADE_4
+        }
+        if (subjectId.isNullOrBlank() || grade == null) {
+            showUnavailable("The selected grade or learning area is invalid.")
+            return
+        }
 
-        examPaper = SbaExamRepository.getSbaExamPaper(subjectId, grade)
+        examPaper = SbaExamRepository.getSbaExamPaper(subjectId, grade) ?: run {
+            showUnavailable("A sample practice paper is not currently available for this learning area and grade.")
+            return
+        }
+        attempt = SbaExamAttemptRepository.loadOrCreate(this, examPaper)
 
         findViewById<TextView>(R.id.tvExamHeaderTitle).text = examPaper.title
-        findViewById<TextView>(R.id.tvExamSubject).text = "${examPaper.gradeLevel.title.uppercase()} – ${examPaper.subjectTitle} ASSESSMENT"
-        findViewById<TextView>(R.id.tvExamTimeMarks).text = "Time: ${examPaper.timeAllowedMinutes / 60} Hours • Total: ${examPaper.totalMarks} Marks"
+        findViewById<TextView>(R.id.tvExamSubject).text =
+            "${examPaper.gradeLevel.title.uppercase()} – ${examPaper.subjectTitle}"
         findViewById<TextView>(R.id.tvExamTerm).text = examPaper.termAndYear
 
-        val tabLayout = findViewById<TabLayout>(R.id.tabLayoutSba)
-        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        val tabs = findViewById<TabLayout>(R.id.tabLayoutSba)
+        tabs.getTabAt(1)?.view?.isEnabled = attempt.isSubmitted
+        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
+                if (tab?.position == 1 && !attempt.isSubmitted) {
+                    tabs.getTabAt(0)?.select()
+                    return
+                }
                 showingMarkingScheme = tab?.position == 1
                 renderExamView()
             }
@@ -59,111 +81,189 @@ class SbaExamActivity : AppCompatActivity() {
         })
 
         renderExamView()
+        if (!attempt.isSubmitted) startTimer()
+    }
+
+    private fun showUnavailable(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Practice paper unavailable")
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+            .show()
+    }
+
+    private fun answerKey(questionNumber: Int, label: String) = "${questionNumber}_${label}"
+
+    private fun saveAnswer(key: String, value: String) {
+        if (attempt.isSubmitted) return
+        attempt = attempt.copy(answers = attempt.answers + (key to value))
+        SbaExamAttemptRepository.save(this, examPaper, attempt)
+    }
+
+    private fun startTimer() {
+        val remaining = (attempt.deadlineAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
+        if (remaining == 0L) {
+            submitAttempt()
+            return
+        }
+        timer?.cancel()
+        timer = object : CountDownTimer(remaining, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                val hours = millisUntilFinished / 3_600_000L
+                val minutes = (millisUntilFinished % 3_600_000L) / 60_000L
+                val seconds = (millisUntilFinished % 60_000L) / 1000L
+                tvExamTimeMarks.text = "Time remaining: %02d:%02d:%02d • Total: %d marks".format(
+                    hours, minutes, seconds, examPaper.totalMarks
+                )
+            }
+            override fun onFinish() {
+                tvExamTimeMarks.text = "Time is up"
+                submitAttempt()
+            }
+        }.start()
     }
 
     private fun renderExamView() {
+        if (!::examPaper.isInitialized || !::attempt.isInitialized) return
+        rendering = true
         containerExamContent.removeAllViews()
-        val textColorPrimary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorOnSurface)
-        val textColorSecondary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorOnSurfaceVariant)
-        val primaryColor = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorPrimary)
+        val textPrimary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorOnSurface)
+        val textSecondary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorOnSurfaceVariant)
+        val primary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorPrimary)
+
+        val notice = TextView(this).apply {
+            text = if (attempt.isSubmitted) {
+                "Submitted • Your written responses are saved on this device and are pending teacher review."
+            } else {
+                "Sample practice paper • Your answers are saved automatically on this device. Submit when you are finished."
+            }
+            setTextColor(textSecondary)
+            textSize = 13f
+            setPadding(0, 0, 0, 12)
+        }
+        containerExamContent.addView(notice)
 
         examPaper.sections.forEach { section ->
-            // Section Header
-            val sectionHeader = TextView(this).apply {
+            containerExamContent.addView(TextView(this).apply {
                 text = section.sectionTitle
-                setTextColor(primaryColor)
+                setTextColor(primary)
                 textSize = 16f
-                setTypeface(null, Typeface.BOLD)
+                setTypeface(null, android.graphics.Typeface.BOLD)
                 setPadding(0, 16, 0, 4)
-            }
-            containerExamContent.addView(sectionHeader)
-
-            val sectionInstructions = TextView(this).apply {
+            })
+            containerExamContent.addView(TextView(this).apply {
                 text = section.instructions
-                setTextColor(textColorSecondary)
+                setTextColor(textSecondary)
                 textSize = 12f
                 setPadding(0, 0, 0, 12)
-            }
-            containerExamContent.addView(sectionInstructions)
+            })
 
-            // Render Questions / Marking Scheme
             section.questions.forEach { question ->
                 val card = MaterialCardView(this).apply {
                     setCardBackgroundColor(MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorSurface))
                     radius = 16f
-                    cardElevation = 2f
+                    cardElevation = 1f
                     strokeWidth = 1
                     setStrokeColor(MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorOutline))
-
-                    val layout = LinearLayout(context).apply {
-                        orientation = LinearLayout.VERTICAL
-                        setPadding(20, 16, 20, 16)
-
-                        // Question Prompt/Scenario
-                        val tvPrompt = TextView(context).apply {
-                            text = "Question ${question.questionNumber}. ${question.scenarioOrPrompt}"
-                            setTextColor(textColorPrimary)
-                            textSize = 14f
-                            setTypeface(null, Typeface.BOLD)
-                        }
-                        addView(tvPrompt)
-
-                        // Sub-questions or Marking Scheme
-                        question.subQuestions.forEach { sub ->
-                            val subLayout = LinearLayout(context).apply {
-                                orientation = LinearLayout.VERTICAL
-                                setPadding(0, 10, 0, 10)
-
-                                if (!showingMarkingScheme) {
-                                    // Assessment Question Mode
-                                    val tvSubQuestion = TextView(context).apply {
-                                        text = "${sub.label} ${sub.questionText} (${sub.allocatedMarks} marks)"
-                                        setTextColor(textColorPrimary)
-                                        textSize = 13f
-                                    }
-                                    addView(tvSubQuestion)
-                                } else {
-                                    // Marking Scheme Mode
-                                    val tvSubLabel = TextView(context).apply {
-                                        text = "${sub.label} ${sub.questionText} [${sub.allocatedMarks} Marks]"
-                                        setTextColor(primaryColor)
-                                        textSize = 13f
-                                        setTypeface(null, Typeface.BOLD)
-                                    }
-                                    addView(tvSubLabel)
-
-                                    val tvAnswer = TextView(context).apply {
-                                        text = "✅ Marking Scheme Answer:\n${sub.markingSchemeAnswer}"
-                                        setTextColor(textColorPrimary)
-                                        textSize = 12f
-                                        setPadding(0, 4, 0, 2)
-                                    }
-                                    addView(tvAnswer)
-
-                                    val tvBreakdown = TextView(context).apply {
-                                        text = "📍 Mark Allocation: ${sub.markBreakdown}"
-                                        setTextColor(textColorSecondary)
-                                        textSize = 11f
-                                        setTypeface(null, Typeface.ITALIC)
-                                    }
-                                    addView(tvBreakdown)
-                                }
-                            }
-                            addView(subLayout)
-                        }
-                    }
-                    addView(layout)
                 }
+                val content = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(20, 16, 20, 16)
+                }
+                content.addView(TextView(this).apply {
+                    text = "Question ${question.questionNumber}. ${question.scenarioOrPrompt}"
+                    setTextColor(textPrimary)
+                    textSize = 14f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                })
 
-                val layoutParams = LinearLayout.LayoutParams(
+                question.subQuestions.forEach { sub ->
+                    val key = answerKey(question.questionNumber, sub.label)
+                    content.addView(TextView(this).apply {
+                        text = "${sub.label} ${sub.questionText} (${sub.allocatedMarks} marks)"
+                        setTextColor(primary)
+                        textSize = 13f
+                        setPadding(0, 12, 0, 6)
+                    })
+                    if (showingMarkingScheme && attempt.isSubmitted) {
+                        content.addView(TextView(this).apply {
+                            text = "Suggested answer:\n${sub.markingSchemeAnswer}\n\nMarking guidance: ${sub.markBreakdown}"
+                            setTextColor(textPrimary)
+                            textSize = 12f
+                        })
+                    } else {
+                        val answer = EditText(this).apply {
+                            hint = "Write your answer here"
+                            minLines = 3
+                            gravity = android.view.Gravity.TOP or android.view.Gravity.START
+                            setText(attempt.answers[key].orEmpty())
+                            isEnabled = !attempt.isSubmitted
+                            textSize = 14f
+                            setPadding(12, 10, 12, 10)
+                        }
+                        if (!attempt.isSubmitted) {
+                            answer.addTextChangedListener(object : TextWatcher {
+                                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                                    if (!rendering) saveAnswer(key, s?.toString().orEmpty())
+                                }
+                                override fun afterTextChanged(s: Editable?) = Unit
+                            })
+                        }
+                        content.addView(answer)
+                    }
+                }
+                card.addView(content)
+                val params = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 8, 0, 16)
-                }
-                card.layoutParams = layoutParams
+                ).apply { setMargins(0, 8, 0, 16) }
+                card.layoutParams = params
                 containerExamContent.addView(card)
             }
         }
+
+        if (!attempt.isSubmitted && !showingMarkingScheme) {
+            containerExamContent.addView(Button(this).apply {
+                text = "Submit assessment"
+                isAllCaps = false
+                setOnClickListener {
+                    AlertDialog.Builder(this@SbaExamActivity)
+                        .setTitle("Submit practice assessment?")
+                        .setMessage("After submission you will not be able to change your answers on this attempt. Your responses will be marked as pending teacher review.")
+                        .setNegativeButton("Continue answering", null)
+                        .setPositiveButton("Submit") { _, _ -> submitAttempt() }
+                        .show()
+                }
+            })
+        }
+        rendering = false
+    }
+
+    private fun submitAttempt() {
+        if (!::attempt.isInitialized || attempt.isSubmitted) return
+        timer?.cancel()
+        attempt = attempt.copy(submittedAtMillis = System.currentTimeMillis())
+        SbaExamAttemptRepository.save(this, examPaper, attempt)
+        val tabs = findViewById<TabLayout>(R.id.tabLayoutSba)
+        tabs.getTabAt(1)?.view?.isEnabled = true
+        renderExamView()
+        AlertDialog.Builder(this)
+            .setTitle("Assessment submitted")
+            .setMessage("Your answers have been saved on this device. This sample assessment does not automatically award marks; it is pending teacher review.")
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    override fun onPause() {
+        if (::attempt.isInitialized && !attempt.isSubmitted) {
+            SbaExamAttemptRepository.save(this, examPaper, attempt)
+        }
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        timer?.cancel()
+        super.onDestroy()
     }
 }

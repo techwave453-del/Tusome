@@ -34,6 +34,40 @@ object LearningResourceWorkflowRepository {
         SupabaseAuthRepository.generateLearningResource(context, payload, onResult)
     }
 
+    fun listMyResources(
+        context: Context,
+        onResult: (Result<JSONObject>) -> Unit
+    ) = sendListAction(context, "list_my_resources", onResult)
+
+    fun listReviewQueue(
+        context: Context,
+        onResult: (Result<JSONObject>) -> Unit
+    ) = sendListAction(context, "list_review_queue", onResult)
+
+    fun getResource(
+        context: Context,
+        resourceId: String,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        if (resourceId.isBlank()) {
+            onResult(Result.failure(IllegalArgumentException("A resource ID is required.")))
+            return
+        }
+        val payload = JSONObject()
+            .put("action", "get_resource")
+            .put("resource_id", resourceId)
+        SupabaseAuthRepository.manageLearningResources(context, payload, onResult)
+    }
+
+    private fun sendListAction(
+        context: Context,
+        action: String,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        val payload = JSONObject().put("action", action)
+        SupabaseAuthRepository.manageLearningResources(context, payload, onResult)
+    }
+
     fun createDraft(
         context: Context,
         draft: LearningResourceDraft,

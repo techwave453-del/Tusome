@@ -7,21 +7,26 @@ object SbaExamRepository {
     fun getSbaExamPaper(
         subjectId: String,
         grade: GradeLevel = GradeLevel.GRADE_4
-    ): SbaExamPaper {
+    ): SbaExamPaper? {
+        if (grade != GradeLevel.GRADE_10) return null
+        val supportedSubject = subjectId.contains("chemistry", ignoreCase = true) ||
+            subjectId.contains("math", ignoreCase = true) ||
+            subjectId.contains("agriculture", ignoreCase = true)
+        if (!supportedSubject) return null
         val gradeTitle = if (grade.code.equals("G10", ignoreCase = true)) "GRADE 10" else grade.title.uppercase()
 
         return when {
             subjectId.contains("chemistry", ignoreCase = true) -> SbaExamPaper(
                 id = "sba_chem_$gradeTitle",
-                title = "THE 47 COUNTIES C1 SCHOOLS' JOINT NATIONAL SBA ASSESSMENT",
+                title = "SAMPLE PRACTICE ASSESSMENT",
                 subjectTitle = "CHEMISTRY",
                 gradeLevel = grade,
-                termAndYear = "KCBE SENIOR SCHOOL ASSESSMENT 2026",
+                termAndYear = "Grade 10 • Sample practice paper",
                 timeAllowedMinutes = 120,
-                totalMarks = 80,
+                totalMarks = 10,
                 sections = listOf(
                     ExamSection(
-                        sectionTitle = "SECTION A (30 MARKS)",
+                        sectionTitle = "SECTION A",
                         instructions = "Answer ALL questions directly.",
                         questions = listOf(
                             ExamQuestion(
@@ -55,7 +60,7 @@ object SbaExamRepository {
                         )
                     ),
                     ExamSection(
-                        sectionTitle = "SECTION B (50 MARKS)",
+                        sectionTitle = "SECTION B",
                         instructions = "Answer ALL structured questions.",
                         questions = listOf(
                             ExamQuestion(
@@ -86,15 +91,15 @@ object SbaExamRepository {
 
             subjectId.contains("math", ignoreCase = true) -> SbaExamPaper(
                 id = "sba_mth_$gradeTitle",
-                title = "THE 47 COUNTIES C1 SCHOOLS' JOINT NATIONAL SBA ASSESSMENT",
+                title = "SAMPLE PRACTICE ASSESSMENT",
                 subjectTitle = "CORE MATHEMATICS",
                 gradeLevel = grade,
-                termAndYear = "KCBE SENIOR SCHOOL ASSESSMENT 2026",
+                termAndYear = "Grade 10 • Sample practice paper",
                 timeAllowedMinutes = 120,
                 totalMarks = 80,
                 sections = listOf(
                     ExamSection(
-                        sectionTitle = "SECTION A (30 MARKS)",
+                        sectionTitle = "SECTION A",
                         instructions = "Answer ALL questions directly.",
                         questions = listOf(
                             ExamQuestion(
@@ -114,7 +119,7 @@ object SbaExamRepository {
                         )
                     ),
                     ExamSection(
-                        sectionTitle = "SECTION B (50 MARKS)",
+                        sectionTitle = "SECTION B",
                         instructions = "Answer ALL questions.",
                         questions = listOf(
                             ExamQuestion(
@@ -143,17 +148,17 @@ object SbaExamRepository {
                 )
             )
 
-            else -> SbaExamPaper(
+            subjectId.contains("agriculture", ignoreCase = true) -> SbaExamPaper(
                 id = "sba_agri_$gradeTitle",
-                title = "THE 47 COUNTIES C1 SCHOOLS' JOINT NATIONAL SBA ASSESSMENT",
+                title = "SAMPLE PRACTICE ASSESSMENT",
                 subjectTitle = "AGRICULTURE & NUTRITION",
                 gradeLevel = grade,
-                termAndYear = "KCBE SENIOR SCHOOL ASSESSMENT 2026",
+                termAndYear = "Grade 10 • Sample practice paper",
                 timeAllowedMinutes = 120,
-                totalMarks = 80,
+                totalMarks = 14,
                 sections = listOf(
                     ExamSection(
-                        sectionTitle = "SECTION A (30 MARKS)",
+                        sectionTitle = "SECTION A",
                         instructions = "Answer ALL questions in this section directly.",
                         questions = listOf(
                             ExamQuestion(
@@ -187,7 +192,7 @@ object SbaExamRepository {
                         )
                     ),
                     ExamSection(
-                        sectionTitle = "SECTION B (50 MARKS)",
+                        sectionTitle = "SECTION B",
                         instructions = "Answer ALL structured questions.",
                         questions = listOf(
                             ExamQuestion(
@@ -215,6 +220,7 @@ object SbaExamRepository {
                     )
                 )
             )
+            else -> null
         }
     }
 }

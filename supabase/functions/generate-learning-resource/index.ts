@@ -121,7 +121,13 @@ Deno.serve(async (req: Request) => {
   const localContext = boundedText(body.local_context, 1200);
   const additionalInstructions = boundedText(body.additional_instructions, 2000);
   const requestedMinutes = body.estimated_minutes == null ? 30 : Number(body.estimated_minutes);
+  const requestedOutcomes = Array.isArray(body.learning_outcomes)
+    ? body.learning_outcomes.map((value) => boundedText(value, 1000)).filter(Boolean)
+    : [];
 
+  if (requestedOutcomes.length > 30) {
+    return reply(400, { error: "Select no more than 30 official learning outcomes." });
+  }
   if (!gradeId || !learningAreaId || !strandId || !subStrandId ||
     !RESOURCE_TYPES.has(resourceType) ||
     !/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/.test(languageCode) ||
@@ -212,6 +218,12 @@ Deno.serve(async (req: Request) => {
   if (officialOutcomes.length === 0) {
     return reply(409, { error: "This sub-strand has no published learning outcomes yet. Add and approve its CBC outcomes before generating resources." });
   }
+  const selectedOutcomes = requestedOutcomes.length > 0
+    ? [...new Set(requestedOutcomes)]
+    : officialOutcomes;
+  if (selectedOutcomes.some((outcome) => !officialOutcomes.includes(outcome))) {
+    return reply(400, { error: "Only learning outcomes published for the selected CBC sub-strand can be used." });
+  }
 
   const requestPayload = {
     grade_id: gradeId,
@@ -219,6 +231,7 @@ Deno.serve(async (req: Request) => {
     strand_id: strandId,
     sub_strand_id: subStrandId,
     resource_type: resourceType,
+    learning_outcomes: selectedOutcomes,
     language_code: languageCode,
     estimated_minutes: requestedMinutes,
     difficulty,
@@ -306,7 +319,7 @@ Use 3–8 well-structured sections for substantial resources and fewer for short
       strand_description: strand.description ?? "",
       sub_strand: subStrand.title,
       sub_strand_description: subStrand.description ?? "",
-      official_published_learning_outcomes: officialOutcomes,
+      official_published_learning_outcomes: selectedOutcomes,
       published_inquiry_questions: (questions ?? []).map((row) => row.question_text).filter(Boolean),
       published_learning_activities: (activities ?? []).map((row) => ({
         activity: row.activity_text,
@@ -325,7 +338,7 @@ Use 3–8 well-structured sections for substantial resources and fewer for short
       local_context: localContext || "Use familiar Kenyan home, school and community contexts where relevant.",
       additional_instructions: additionalInstructions,
       official_curriculum_context: curriculumContext,
-      learning_outcomes_must_be_preserved_exactly: officialOutcomes,
+      learning_outcomes_must_be_preserved_exactly: selectedOutcomes,
     };
 
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -380,7 +393,7 @@ Use 3–8 well-structured sections for substantial resources and fewer for short
         source: "ai_generated",
         version: 1,
         estimated_minutes: requestedMinutes,
-        learning_outcomes: officialOutcomes,
+        learning_outcomes: selectedOutcomes,
         content,
         created_by: actorId,
       })
@@ -397,7 +410,7 @@ Use 3–8 well-structured sections for substantial resources and fewer for short
       content,
       title,
       summary,
-      learning_outcomes: officialOutcomes,
+      learning_outcomes: selectedOutcomes,
       changed_by: actorId,
       change_summary: "Initial AI-generated draft",
     });

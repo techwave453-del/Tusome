@@ -130,7 +130,6 @@ class SbaExamActivity : AppCompatActivity() {
         containerExamContent.removeAllViews()
         val textPrimary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorOnSurface)
         val textSecondary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorOnSurfaceVariant)
-        val primary = MaterialColors.getColor(containerExamContent, com.google.android.material.R.attr.colorPrimary)
 
         val notice = TextView(this).apply {
             text = if (attempt.isSubmitted) {
@@ -147,7 +146,7 @@ class SbaExamActivity : AppCompatActivity() {
         examPaper.sections.forEach { section ->
             containerExamContent.addView(TextView(this).apply {
                 text = section.sectionTitle
-                setTextColor(primary)
+                setTextColor(textPrimary)
                 textSize = 16f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 setPadding(0, 16, 0, 4)

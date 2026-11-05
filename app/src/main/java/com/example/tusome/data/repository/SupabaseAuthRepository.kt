@@ -124,6 +124,30 @@ object SupabaseAuthRepository {
         }
     }
 
+    /** Invokes a Supabase Edge Function with the refreshed signed-in user session. */
+    fun invokeEdgeFunction(
+        context: Context,
+        functionName: String,
+        payload: JSONObject,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        require(functionName.matches(Regex("[a-z0-9-]{3,80}"))) { "Invalid function name." }
+        refreshSessionIfNeeded(context) { refreshed ->
+            val session = refreshed.getOrNull()
+            if (session == null) {
+                onResult(Result.failure(refreshed.exceptionOrNull()
+                    ?: IllegalStateException("Sign in is required to generate curriculum content.")))
+                return@refreshSessionIfNeeded
+            }
+            executor.execute {
+                val result = runCatching {
+                    request("/functions/v1/$functionName", payload, session.accessToken) as JSONObject
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
     /** Calls the server-authorized school/user management function using the signed-in JWT. */
     fun manageSchoolUsers(
         context: Context,

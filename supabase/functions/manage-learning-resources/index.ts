@@ -12,6 +12,10 @@ const RESOURCE_TYPES = new Set([
   "lesson_notes", "worked_example", "learner_activity", "worksheet", "quiz",
   "assessment", "marking_scheme", "revision_notes", "teacher_guide", "project",
 ]);
+const CONTENT_BLOCK_TYPES = new Set([
+  "paragraph", "heading", "bullet_list", "numbered_list", "example",
+  "instruction", "reflection", "image", "video", "table", "callout",
+]);
 
 function reply(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
@@ -39,7 +43,8 @@ function validContent(value: unknown): value is { sections: Array<Record<string,
     for (const block of blocks) {
       if (!block || typeof block !== "object" || Array.isArray(block)) return false;
       const item = block as Record<string, unknown>;
-      if (typeof item.type !== "string" || typeof item.text !== "string") return false;
+      if (typeof item.type !== "string" || !CONTENT_BLOCK_TYPES.has(item.type) ||
+        typeof item.text !== "string") return false;
       if (item.text.length > 20000) return false;
       if (item.items !== undefined &&
         (!Array.isArray(item.items) || item.items.length > 100 ||

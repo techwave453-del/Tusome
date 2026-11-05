@@ -37,7 +37,6 @@ data class LearningResourceFetchResult(
 object LearningResourceRepository {
     private const val BASE_URL = "https://wkwnoflielrotknvoflz.supabase.co"
     private const val PUBLISHABLE_KEY = "sb_publishable_jZsmwIcIMdu3Eq97AfU3xQ_929Bxo4J"
-    private const val CACHE_MAX_AGE_MILLIS = 30L * 24L * 60L * 60L * 1000L
 
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -98,9 +97,6 @@ object LearningResourceRepository {
                     val cached = readCache(appContext, cacheKey)
                         ?: throw networkError
                     val savedAt = cacheFile(appContext, cacheKey).lastModified()
-                    if (savedAt > 0L && System.currentTimeMillis() - savedAt > CACHE_MAX_AGE_MILLIS) {
-                        // Old content remains useful offline, but callers can identify its age.
-                    }
                     LearningResourceFetchResult(
                         resources = parseResources(cached),
                         fromCache = true,

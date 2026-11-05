@@ -96,6 +96,41 @@ object LearningResourceWorkflowRepository {
         SupabaseAuthRepository.manageLearningResources(context, payload, onResult)
     }
 
+    fun updateDraft(
+        context: Context,
+        resourceId: String,
+        title: String,
+        summary: String,
+        sections: List<com.example.tusome.data.model.LearningResourceSection>,
+        changeSummary: String = "Draft updated",
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        if (resourceId.isBlank() || title.trim().length !in 2..180 || sections.isEmpty()) {
+            onResult(Result.failure(IllegalArgumentException("A resource ID, valid title and at least one section are required.")))
+            return
+        }
+        val contentSections = JSONArray()
+        sections.forEach { section ->
+            val blocks = JSONArray()
+            section.blocks.forEach { block -> blocks.put(blockToJson(block)) }
+            contentSections.put(
+                JSONObject()
+                    .put("id", section.id)
+                    .put("title", section.title)
+                    .put("description", section.description)
+                    .put("blocks", blocks)
+            )
+        }
+        val payload = JSONObject()
+            .put("action", "update_draft")
+            .put("resource_id", resourceId)
+            .put("title", title.trim())
+            .put("summary", summary.trim())
+            .put("content", JSONObject().put("sections", contentSections))
+            .put("change_summary", changeSummary.trim())
+        SupabaseAuthRepository.manageLearningResources(context, payload, onResult)
+    }
+
     fun submitForReview(
         context: Context,
         resourceId: String,

@@ -71,7 +71,7 @@ class AssessmentPaperActivity : AppCompatActivity() {
         renderScreen()
         renderQuestions()
         if (submittedAt != null) {
-            renderMarkingGuide()
+            loadMarkingGuide()
             renderPerformanceGrid()
         }
     }
@@ -368,18 +368,35 @@ class AssessmentPaperActivity : AppCompatActivity() {
             .setNegativeButton("Continue working", null)
             .setPositiveButton("Submit") { _, _ ->
                 submittedAt = System.currentTimeMillis()
-                saveAttempt()
                 renderScreen()
                 renderQuestions()
-                renderMarkingGuide()
+                saveAttempt { loadMarkingGuide() }
                 renderPerformanceGrid()
             }
             .show()
     }
 
-    private fun renderMarkingGuide() {
-        val marking = paper.optJSONArray("marking_payload") ?: JSONArray()
+    private fun loadMarkingGuide() {
         addHeading("Marking guide")
+        addMessage("Verifying your submitted attempt before loading the marking guide…")
+        AssessmentRepository.syncPendingAttempts(this) {
+            AssessmentRepository.fetchMarkingGuide(
+                this,
+                paperId,
+                paper.optInt("version", 1)
+            ) { result ->
+                if (isFinishing || isDestroyed) return@fetchMarkingGuide
+                result.onSuccess(::renderMarkingGuide).onFailure { error ->
+                    addMessage(
+                        error.message
+                            ?: "The marking guide will be available after this submitted attempt syncs while online."
+                    )
+                }
+            }
+        }
+    }
+
+    private fun renderMarkingGuide(marking: JSONArray) {
         if (marking.length() == 0) {
             addMessage("The marking guide has not been published for this assessment yet.")
             return
@@ -390,7 +407,7 @@ class AssessmentPaperActivity : AppCompatActivity() {
             val notes = item.optString("marking_notes", item.optString("rubric"))
             if (answer.isBlank() && notes.isBlank()) continue
             addMessage(buildString {
-                append(item.optString("question_id", "Question ${index + 1}"))
+                append(item.optString("question_id", "Question \${index + 1}"))
                 if (answer.isNotBlank()) append("\nSuggested answer: ").append(answer)
                 if (notes.isNotBlank()) append("\nMarking guidance: ").append(notes)
             })
@@ -431,7 +448,7 @@ class AssessmentPaperActivity : AppCompatActivity() {
         })
     }
 
-    private fun saveAttempt() {
+    private fun saveAttempt(afterSaved: (() -> Unit)? = null) {
         val submitted = submittedAt
         saveExecutor.execute {
             AssessmentRepository.saveAttemptLocally(
@@ -445,7 +462,11 @@ class AssessmentPaperActivity : AppCompatActivity() {
                 submittedAtMillis = submitted
             )
             if (submitted != null && userId != "guest") {
-                AssessmentRepository.syncPendingAttempts(applicationContext)
+                AssessmentRepository.syncPendingAttempts(applicationContext) {
+                    afterSaved?.invoke()
+                }
+            } else if (afterSaved != null) {
+                runOnUiThread { afterSaved.invoke() }
             }
         }
         updateStatus()

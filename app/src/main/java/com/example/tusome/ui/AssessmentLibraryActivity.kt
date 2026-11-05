@@ -44,7 +44,7 @@ class AssessmentLibraryActivity : AppCompatActivity() {
         val toolbar = MaterialToolbar(this).apply {
             title = areaTitle
             subtitle = grade.title
-            setNavigationIcon(com.google.android.material.R.drawable.material_ic_arrow_back)
+            setNavigationIcon(android.R.drawable.ic_media_previous)
             setNavigationOnClickListener { finish() }
         }
         root.addView(toolbar, LinearLayout.LayoutParams(
@@ -102,6 +102,10 @@ class AssessmentLibraryActivity : AppCompatActivity() {
             .replaceFirstChar { it.uppercase() }
         val duration = paper.optInt("duration_minutes")
         val marks = paper.optDouble("total_marks")
+        val term = paper.optInt("term_number")
+        val trial = paper.optInt("trial_number")
+        val pathway = paper.optString("pathway")
+        val year = paper.optInt("academic_year")
 
         val card = MaterialCardView(this).apply {
             radius = 18f
@@ -125,6 +129,10 @@ class AssessmentLibraryActivity : AppCompatActivity() {
                 append(type)
                 if (duration > 0) append(" • ").append(duration).append(" min")
                 if (marks > 0) append(" • ").append(marks.toInt()).append(" marks")
+                if (term in 1..3) append(" • Term ").append(term)
+                if (trial > 0) append(" • Trial ").append(trial)
+                if (year > 0) append(" • ").append(year)
+                if (pathway.isNotBlank()) append(" • ").append(pathway)
                 append(" • v").append(version)
             }
             textSize = 12f

@@ -53,6 +53,7 @@ class StrandDetailActivity : AppCompatActivity() {
     private lateinit var tvAiNotesDisplay: TextView
 
     private var currentStrandIndex: Int = 0
+    private var selectedGrade: GradeLevel = GradeLevel.GRADE_4
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,6 +88,7 @@ class StrandDetailActivity : AppCompatActivity() {
         val requestedGrade = GradeLevel.values().firstOrNull {
             it.code.equals(intent.getStringExtra("GRADE_CODE"), ignoreCase = true)
         } ?: GradeLevel.GRADE_4
+        selectedGrade = requestedGrade
         val fromSupabase = intent.getBooleanExtra("FROM_SUPABASE", false)
 
         btnPreviousStrand.setOnClickListener { navigateStrand(-1) }
@@ -134,7 +136,7 @@ class StrandDetailActivity : AppCompatActivity() {
                     .firstOrNull { it.id == requestedStrandId }
                     ?: CbcRepository.getStrandsForArea(requestedAreaId).firstOrNull()
             } else {
-                CbcRepository.getLearningAreas(GradeLevel.GRADE_4)
+                CbcRepository.getLearningAreas(requestedGrade)
                     .flatMap { CbcRepository.getStrandsForArea(it.id) }
                     .firstOrNull { it.id == requestedStrandId }
             }
@@ -209,7 +211,7 @@ class StrandDetailActivity : AppCompatActivity() {
         btnGenerateAiNotes.setOnClickListener {
             CbcAiTutorService.generateStrandStudyNotes(
                 strandTitle = strand.title,
-                grade = GradeLevel.GRADE_4
+                grade = selectedGrade
             ) { notes ->
                 tvAiNotesDisplay.text = notes
                 containerAiGeneratedContent.visibility = View.VISIBLE
@@ -298,7 +300,7 @@ class StrandDetailActivity : AppCompatActivity() {
                     putExtra("SUBSTRAND_ID", sub.id)
                     putExtra("SUBSTRAND_TITLE", sub.title)
                     putExtra("STRAND_ID", strand.id)
-                    putExtra("GRADE_CODE", "G4")
+                    putExtra("GRADE_CODE", selectedGrade.code)
                 }
                 startActivity(intent)
             }

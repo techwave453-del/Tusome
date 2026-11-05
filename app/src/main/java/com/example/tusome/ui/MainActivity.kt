@@ -49,6 +49,8 @@ class MainActivity : AppCompatActivity() {
         val roles = SupabaseAuthRepository.currentSession(this)?.roles.orEmpty()
         navigationDrawer.menu.findItem(R.id.drawer_admin).isVisible =
             roles.any { it == "platform_admin" || it == "school_admin" }
+        navigationDrawer.menu.findItem(R.id.drawer_learning_content).isVisible =
+            roles.any { it == "teacher" || it == "curriculum_editor" || it == "platform_admin" }
 
         toolbar.navigationIcon = getDrawable(R.drawable.ic_menu)
         toolbar.navigationContentDescription = getString(R.string.open_navigation_menu)
@@ -88,6 +90,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.drawer_competencies -> selectBottomDestination(R.id.navigation_competencies)
                 R.id.drawer_profile -> selectBottomDestination(R.id.navigation_profile)
                 R.id.drawer_admin -> startActivity(android.content.Intent(this, AdminActivity::class.java))
+                R.id.drawer_learning_content -> startActivity(android.content.Intent(this, LearningContentActivity::class.java))
                 R.id.drawer_about -> showAboutDialog()
             }
             drawerLayout.closeDrawer(GravityCompat.START)

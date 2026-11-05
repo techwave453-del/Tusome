@@ -97,7 +97,7 @@ Deno.serve(async (req: Request) => {
     if (!canReview) return reply(403, { error: "Only curriculum editors and platform administrators can review assessments." });
     if (paper.content_status !== "in_review") return reply(409, { error: "Only papers in the review queue can receive a review decision." });
     const decision = action === "approve" ? "approved" : action === "reject" ? "rejected" : "changes_requested";
-    const nextStatus = action === "approve" ? "in_review" : "draft";
+    const nextStatus = action === "approve" ? "approved" : "draft";
     const update = action === "approve"
       ? { content_status: nextStatus, reviewed_by: actorId, reviewed_at: new Date().toISOString() }
       : { content_status: nextStatus, reviewed_by: null, reviewed_at: null };
@@ -112,7 +112,7 @@ Deno.serve(async (req: Request) => {
 
   if (action === "publish") {
     if (!canPublish) return reply(403, { error: "Only curriculum editors and platform administrators can publish assessments." });
-    if (paper.content_status !== "in_review" || !paper.reviewed_by || !paper.reviewed_at) {
+    if (paper.content_status !== "approved" || !paper.reviewed_by || !paper.reviewed_at) {
       return reply(409, { error: "This paper must be approved by a reviewer before publication." });
     }
     const { error } = await admin.from("assessment_papers").update({

@@ -149,7 +149,7 @@ drop policy if exists "Anyone reads published global learning resources" on publ
 create policy "Anyone reads published global learning resources"
 on public.learning_resources
 for select to anon
-using (status = 'published' and school_id is null);
+using (status = 'published' and school_id is null and resource_type not in ('marking_scheme', 'teacher_guide'));
 
 drop policy if exists "Signed in learners read published shared learning resources" on public.learning_resources;
 create policy "Signed in learners read published shared learning resources"
@@ -157,6 +157,7 @@ on public.learning_resources
 for select to authenticated
 using (
   status = 'published'
+  and resource_type not in ('marking_scheme', 'teacher_guide')
   and (
     school_id is null
     or exists (

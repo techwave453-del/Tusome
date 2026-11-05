@@ -49,6 +49,11 @@
             android:exported="false"
             android:parentActivityName=".ui.StrandDetailActivity" />
 
+        <activity
+            android:name=".ui.SbaExamActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+
     </application>
 
 </manifest>

@@ -68,13 +68,9 @@ object LearningResourceRepository {
         SupabaseAuthRepository.refreshSessionIfNeeded(appContext) { refreshed ->
             val session = refreshed.getOrNull()
                 ?: SupabaseAuthRepository.currentSession(appContext)
-            val accessToken = if (
-                session != null && session.expiresAtMillis > System.currentTimeMillis()
-            ) {
-                session.accessToken
-            } else {
-                PUBLISHABLE_KEY
-            }
+            val accessToken = session?.takeIf {
+                it.expiresAtMillis > System.currentTimeMillis()
+            }?.accessToken
 
             executor.execute {
                 val result = runCatching {
@@ -114,7 +110,7 @@ object LearningResourceRepository {
         strandId: String,
         subStrandId: String,
         languageCode: String?,
-        accessToken: String
+        accessToken: String?
     ): String {
         val filters = buildList {
             add("select=id,grade_id,learning_area_id,strand_id,sub_strand_id,resource_type,title,summary,language_code,status,source,version,estimated_minutes,learning_outcomes,content,created_at,updated_at,published_at")
@@ -132,7 +128,9 @@ object LearningResourceRepository {
             connectTimeout = 10000
             readTimeout = 15000
             setRequestProperty("apikey", PUBLISHABLE_KEY)
-            setRequestProperty("Authorization", "Bearer $accessToken")
+            if (accessToken != null) {
+                setRequestProperty("Authorization", "Bearer $accessToken")
+            }
             setRequestProperty("Accept", "application/json")
         }
 

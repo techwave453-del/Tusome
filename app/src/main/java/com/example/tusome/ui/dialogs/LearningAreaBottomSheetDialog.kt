@@ -79,7 +79,7 @@ class LearningAreaBottomSheetDialog : BottomSheetDialogFragment() {
 
         val search = view.findViewById<EditText>(R.id.etDialogSearch)
         rvStrands = view.findViewById(R.id.rvDialogStrands)
-        tvStatus = view.findViewById(R.id.tvDialogCurriculumStatus)
+        tvStatus = view.findViewById(R.id.tvDialogSourceTag)
         rvStrands?.layoutManager = LinearLayoutManager(requireContext())
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit

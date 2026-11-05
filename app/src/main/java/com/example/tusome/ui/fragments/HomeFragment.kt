@@ -230,7 +230,8 @@ class HomeFragment : Fragment() {
                             "Curriculum details could not be loaded right now. If you are offline, reconnect and try again."
                         },
                         areaId = area.id,
-                        iconResId = area.iconResId
+                        iconResId = area.iconResId,
+                        gradeCode = requestedGrade.code
                     ).show(childFragmentManager, "LearningAreaOverview")
                 }
             } else if (CbcRepository.getStrandsForArea(area.id, area.gradeLevel).isNotEmpty()) {

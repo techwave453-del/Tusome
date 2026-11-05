@@ -25,9 +25,14 @@ class LearningResourceTest {
     fun onlyPublishedResourcesAreAvailableToLearners() {
         val draft = resource(status = LearningResourceStatus.DRAFT)
         val published = resource(status = LearningResourceStatus.PUBLISHED)
+        val teacherOnly = resource(
+            status = LearningResourceStatus.PUBLISHED,
+            type = LearningResourceType.MARKING_SCHEME
+        )
 
         assertFalse(draft.isAvailableToLearners)
         assertTrue(published.isAvailableToLearners)
+        assertFalse(teacherOnly.isAvailableToLearners)
     }
 
     @Test
@@ -63,6 +68,7 @@ class LearningResourceTest {
 
     private fun resource(
         status: LearningResourceStatus = LearningResourceStatus.DRAFT,
+        type: LearningResourceType = LearningResourceType.LESSON_NOTES,
         sections: List<LearningResourceSection> = listOf(
             LearningResourceSection(
                 id = "section-1",
@@ -83,7 +89,7 @@ class LearningResourceTest {
         learningAreaId = "learning-area-1",
         strandId = "strand-1",
         subStrandId = "sub-strand-1",
-        type = LearningResourceType.LESSON_NOTES,
+        type = type,
         title = "Sample lesson",
         summary = "A short sample lesson.",
         languageCode = "en",

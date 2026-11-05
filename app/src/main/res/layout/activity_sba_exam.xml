@@ -16,7 +16,7 @@
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_arrow_back"
             app:navigationIconTint="?attr/colorOnSurface"
-            app:title="KCBE Joint National Assessment"
+            app:title="SBA Practice Assessment"
             app:titleTextColor="?attr/colorOnSurface" />
 
         <com.google.android.material.tabs.TabLayout
@@ -30,12 +30,12 @@
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📄 Assessment Paper" />
+                android:text="Answer Paper" />
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✅ Official Marking Scheme" />
+                android:text="Marking Guide" />
 
         </com.google.android.material.tabs.TabLayout>
 
@@ -72,7 +72,7 @@
                         android:id="@+id/tvExamHeaderTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="THE 47 COUNTIES C1 SCHOOLS' JOINT NATIONAL SBA ASSESSMENT"
+                        android:text="SAMPLE PRACTICE' JOINT NATIONAL SBA ASSESSMENT"
                         android:textColor="?attr/colorOnPrimaryContainer"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -98,7 +98,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Time: 2 Hours • Total: 80 Marks"
+                            android:text="Time remaining • Total marks"
                             android:textColor="?attr/colorOnPrimaryContainer"
                             android:textSize="12sp" />
 
@@ -109,7 +109,7 @@
                             android:background="@drawable/bg_chip_selected"
                             android:paddingHorizontal="10dp"
                             android:paddingVertical="4dp"
-                            android:text="TERM 3 ASSESSMENT"
+                            android:text="SAMPLE PAPER"
                             android:textColor="?attr/colorOnPrimary"
                             android:textSize="11sp"
                             android:textStyle="bold" />

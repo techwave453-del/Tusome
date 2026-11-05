@@ -271,6 +271,59 @@ Deno.serve(async (req: Request) => {
     return reply(201, { resource });
   }
 
+  if (action === "update_draft") {
+    const resourceId = String(body.resource_id ?? "");
+    const title = cleanText(body.title, 180, true);
+    const summary = cleanText(body.summary ?? "", 1200) ?? "";
+    const content = body.content;
+    if (!resourceId || !title || !validContent(content)) {
+      return reply(400, { error: "A resource ID, valid title and structured content are required." });
+    }
+    const { data: resource, error } = await admin.from("learning_resources")
+      .select("id,status,version,created_by,school_id,learning_outcomes")
+      .eq("id", resourceId).maybeSingle();
+    if (error || !resource) return reply(404, { error: "Learning resource not found." });
+    const isOwner = resource.created_by === actorId;
+    const isSchoolTeacher = !!resource.school_id && teacherSchoolIds.has(resource.school_id);
+    if (!isGlobalEditor && !(isOwner && isSchoolTeacher)) {
+      return reply(403, { error: "You cannot edit this learning resource." });
+    }
+    if (!["draft", "rejected"].includes(resource.status)) {
+      return reply(409, { error: "Only draft or rejected resources can be edited." });
+    }
+    const nextVersion = Number(resource.version) + 1;
+    const { error: versionError } = await admin.from("learning_resource_versions").insert({
+      resource_id: resourceId,
+      version: nextVersion,
+      content,
+      title,
+      summary,
+      learning_outcomes: resource.learning_outcomes ?? [],
+      changed_by: actorId,
+      change_summary: cleanText(body.change_summary ?? "Draft updated", 500) ?? "Draft updated",
+    });
+    if (versionError) return reply(500, { error: "The new resource version could not be saved." });
+
+    const { data, error: updateError } = await admin.from("learning_resources")
+      .update({
+        title,
+        summary,
+        content,
+        version: nextVersion,
+        status: "draft",
+        review_feedback: "",
+      })
+      .eq("id", resourceId)
+      .select("*")
+      .single();
+    if (updateError) {
+      await admin.from("learning_resource_versions").delete()
+        .eq("resource_id", resourceId).eq("version", nextVersion);
+      return reply(500, { error: "The resource could not be updated; the new version was rolled back." });
+    }
+    return reply(200, { resource: data });
+  }
+
   if (action === "submit_for_review") {
     const resourceId = String(body.resource_id ?? "");
     if (!resourceId) return reply(400, { error: "A resource ID is required." });

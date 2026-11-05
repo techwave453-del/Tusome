@@ -44,6 +44,11 @@ class AssessmentsFragment : Fragment() {
         view?.let { loadRubricsAndSummary(it) }
     }
 
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden) view?.let { loadSbaPracticePapers(it) }
+    }
+
     private fun selectedGrade(): GradeLevel {
         val code = requireContext()
             .getSharedPreferences("tusome_curriculum", Context.MODE_PRIVATE)

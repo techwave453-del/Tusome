@@ -85,16 +85,18 @@ class StrandDetailActivity : AppCompatActivity() {
 
         val requestedAreaId = intent.getStringExtra("LEARNING_AREA_ID")
         val requestedStrandId = intent.getStringExtra("STRAND_ID")
+        val fromSupabase = intent.getBooleanExtra("FROM_SUPABASE", false)
         val gradeCode = intent.getStringExtra("GRADE_CODE")
         val requestedGrade = GradeLevel.values().firstOrNull {
             it.code.equals(gradeCode, ignoreCase = true)
-        } ?: run {
+        } ?: if (fromSupabase) {
             Toast.makeText(this, "The selected grade was not supplied. Return and select a grade again.", Toast.LENGTH_LONG).show()
             finish()
             return
+        } else {
+            GradeLevel.GRADE_4
         }
         selectedGrade = requestedGrade
-        val fromSupabase = intent.getBooleanExtra("FROM_SUPABASE", false)
 
         btnPreviousStrand.setOnClickListener { navigateStrand(-1) }
         btnNextStrand.setOnClickListener { navigateStrand(1) }

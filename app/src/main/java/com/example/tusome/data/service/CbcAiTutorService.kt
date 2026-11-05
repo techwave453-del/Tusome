@@ -12,7 +12,8 @@ data class KicdSubstrandContent(
     val keyInquiryQuestions: List<String>,
     val suggestedExperiences: List<String>,
     val digitalTaskPrompt: String,
-    val kicdCitation: String
+    val kicdCitation: String,
+    val fullLessonContentJson: String = ""
 )
 
 object CbcAiTutorService {
@@ -123,7 +124,8 @@ object CbcAiTutorService {
                             }
                         )
                     },
-                    kicdCitation = "AI-generated draft for ${grade.title} • $strandTitle → $subStrandTitle. Based on published Tusome curriculum records; pending curriculum review."
+                    kicdCitation = "AI-generated draft for ${grade.title} • $strandTitle → $subStrandTitle. Based on published Tusome curriculum records; pending curriculum review.",
+                    fullLessonContentJson = content.toString()
                 )
             })
         }

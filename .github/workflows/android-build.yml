@@ -26,7 +26,7 @@ jobs:
           deno-version: v2.x
 
       - name: Type-check learning resource workflow
-        run: deno check supabase/functions/manage-learning-resources/index.ts
+        run: deno check supabase/functions/manage-learning-resources/index.ts supabase/functions/generate-learning-resource/index.ts
 
   verify-android:
     runs-on: ubuntu-latest

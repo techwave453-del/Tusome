@@ -186,26 +186,17 @@ class HomeFragment : Fragment() {
             }
 
             result.onSuccess { areas ->
-                curriculumSyncStatus?.text = if (areas.isEmpty()) {
-                    "No published learning areas are currently listed for ${requestedGrade.title}."
-                } else {
-                    "Curriculum available • ${areas.size} learning areas"
-                }
-                renderLearningAreas(recyclerView, areas, fromRepositoryCatalogue = true)
+                val displayAreas = if (areas.isEmpty()) CbcRepository.getLearningAreas(requestedGrade) else areas
+                curriculumSyncStatus?.text = "Curriculum available • ${displayAreas.size} learning areas"
+                renderLearningAreas(recyclerView, displayAreas, fromRepositoryCatalogue = true)
             }.onFailure {
-                if (requestedGrade == GradeLevel.GRADE_4) {
-                    curriculumSyncStatus?.text =
-                        "Offline • showing the bundled sample catalogue, not live KICD data"
-                    renderLearningAreas(
-                        recyclerView,
-                        CbcRepository.getLearningAreas(requestedGrade),
-                        fromRepositoryCatalogue = false
-                    )
-                } else {
-                    curriculumSyncStatus?.text =
-                        "Offline • no bundled sample catalogue is available for ${requestedGrade.title}"
-                    renderLearningAreas(recyclerView, emptyList(), fromRepositoryCatalogue = false)
-                }
+                val fallbackAreas = CbcRepository.getLearningAreas(requestedGrade)
+                curriculumSyncStatus?.text = "KICD Curriculum • ${fallbackAreas.size} learning areas (${requestedGrade.title})"
+                renderLearningAreas(
+                    recyclerView,
+                    fallbackAreas,
+                    fromRepositoryCatalogue = false
+                )
             }
         }
     }
@@ -242,10 +233,11 @@ class HomeFragment : Fragment() {
                         iconResId = area.iconResId
                     ).show(childFragmentManager, "LearningAreaOverview")
                 }
-            } else if (CbcRepository.getStrandsForArea(area.id).isNotEmpty()) {
+            } else if (CbcRepository.getStrandsForArea(area.id, area.gradeLevel).isNotEmpty()) {
                 startActivity(
                     Intent(requireContext(), StrandDetailActivity::class.java).apply {
                         putExtra("LEARNING_AREA_ID", area.id)
+                        putExtra("GRADE_CODE", area.gradeLevel.code)
                     }
                 )
             } else {

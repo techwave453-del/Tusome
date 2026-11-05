@@ -20,6 +20,74 @@ object CbcRepository {
 
     fun getLearningAreas(grade: GradeLevel): List<LearningArea> {
         return when (grade.category) {
+            GradeCategory.PRE_PRIMARY -> listOf(
+                LearningArea(
+                    id = "pp_lang",
+                    title = "Language Activities",
+                    kiswahiliTitle = "Shughuli za Lugha",
+                    code = "LANG${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 3,
+                    subStrandsCount = 9,
+                    progressPercent = 85,
+                    iconResId = R.drawable.ic_book,
+                    bgColorHex = "#E1F5FE",
+                    iconColorHex = "#0288D1"
+                ),
+                LearningArea(
+                    id = "pp_math",
+                    title = "Mathematical Activities",
+                    kiswahiliTitle = "Shughuli za Hisabati",
+                    code = "MATH${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 3,
+                    subStrandsCount = 9,
+                    progressPercent = 80,
+                    iconResId = R.drawable.ic_award,
+                    bgColorHex = "#E8F5E9",
+                    iconColorHex = "#2E7D32"
+                ),
+                LearningArea(
+                    id = "pp_env",
+                    title = "Environmental Activities",
+                    kiswahiliTitle = "Shughuli za Mazingira",
+                    code = "ENV${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 3,
+                    subStrandsCount = 8,
+                    progressPercent = 90,
+                    iconResId = R.drawable.ic_leaf,
+                    bgColorHex = "#F1F8E9",
+                    iconColorHex = "#558B2F"
+                ),
+                LearningArea(
+                    id = "pp_creative",
+                    title = "Psychomotor & Creative Activities",
+                    kiswahiliTitle = "Ubunifu na Michezo",
+                    code = "CREA${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 4,
+                    subStrandsCount = 10,
+                    progressPercent = 88,
+                    iconResId = R.drawable.ic_star,
+                    bgColorHex = "#F3E5F5",
+                    iconColorHex = "#7B1FA2"
+                ),
+                LearningArea(
+                    id = "pp_re",
+                    title = "Religious Education Activities",
+                    kiswahiliTitle = "Elimu ya Dini",
+                    code = "RE${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 3,
+                    subStrandsCount = 7,
+                    progressPercent = 92,
+                    iconResId = R.drawable.ic_school,
+                    bgColorHex = "#E0F2F1",
+                    iconColorHex = "#00695C"
+                )
+            )
+
             GradeCategory.LOWER_PRIMARY -> listOf(
                 LearningArea(
                     id = "env_act",
@@ -72,6 +140,19 @@ object CbcRepository {
                     iconResId = R.drawable.ic_school,
                     bgColorHex = "#E0F2F1",
                     iconColorHex = "#00695C"
+                ),
+                LearningArea(
+                    id = "hygiene_nutr",
+                    title = "Hygiene & Nutrition Activities",
+                    kiswahiliTitle = "Shughuli za Afya na Lishe",
+                    code = "HYG${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 4,
+                    subStrandsCount = 11,
+                    progressPercent = 85,
+                    iconResId = R.drawable.ic_psychology,
+                    bgColorHex = "#FFF3E0",
+                    iconColorHex = "#EF6C00"
                 )
             )
 
@@ -211,19 +292,58 @@ object CbcRepository {
                 )
             )
 
-            else -> listOf(
+            GradeCategory.SENIOR_SECONDARY -> listOf(
                 LearningArea(
-                    id = "general_area",
-                    title = "General Learning Area",
-                    kiswahiliTitle = "Eneo la Kujifunza",
-                    code = "GEN${grade.code}",
+                    id = "adv_math",
+                    title = "Advanced Mathematics (STEM)",
+                    kiswahiliTitle = "Hisabati ya Kiwango cha Juu",
+                    code = "MTH${grade.code}",
                     gradeLevel = grade,
-                    strandsCount = 3,
-                    subStrandsCount = 9,
-                    progressPercent = 50,
-                    iconResId = R.drawable.ic_book,
+                    strandsCount = 6,
+                    subStrandsCount = 22,
+                    progressPercent = 70,
+                    iconResId = R.drawable.ic_award,
                     bgColorHex = "#E8F5E9",
                     iconColorHex = "#2E7D32"
+                ),
+                LearningArea(
+                    id = "chem_phys",
+                    title = "Physical Sciences (Chemistry & Physics)",
+                    kiswahiliTitle = "Sayansi za Umbo na Kemikali",
+                    code = "PHY${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 6,
+                    subStrandsCount = 20,
+                    progressPercent = 65,
+                    iconResId = R.drawable.ic_psychology,
+                    bgColorHex = "#FFF3E0",
+                    iconColorHex = "#EF6C00"
+                ),
+                LearningArea(
+                    id = "biology_agri",
+                    title = "Biological & Agricultural Sciences",
+                    kiswahiliTitle = "Sayansi za Viumbe na Kilimo",
+                    code = "BIO${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 5,
+                    subStrandsCount = 18,
+                    progressPercent = 75,
+                    iconResId = R.drawable.ic_leaf,
+                    bgColorHex = "#F1F8E9",
+                    iconColorHex = "#558B2F"
+                ),
+                LearningArea(
+                    id = "lit_fasihi",
+                    title = "Literature in English & Fasihi ya Kiswahili",
+                    kiswahiliTitle = "Fasihi na Lugha za Sekondari",
+                    code = "LIT${grade.code}",
+                    gradeLevel = grade,
+                    strandsCount = 5,
+                    subStrandsCount = 16,
+                    progressPercent = 88,
+                    iconResId = R.drawable.ic_book,
+                    bgColorHex = "#E1F5FE",
+                    iconColorHex = "#0288D1"
                 )
             )
         }

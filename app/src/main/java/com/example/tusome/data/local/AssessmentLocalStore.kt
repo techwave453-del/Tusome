@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -56,11 +57,49 @@ class AssessmentLocalStore(context: Context) :
             ON learner_assessment_attempts_local(user_id, sync_state, updated_at)
             """.trimIndent()
         )
+        createMarkingGuideTable(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Additive schema changes must preserve cached papers and unsynchronised learner work.
+        if (oldVersion < 2) createMarkingGuideTable(db)
     }
+
+    private fun createMarkingGuideTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS cached_assessment_marking_guides (
+                paper_id TEXT NOT NULL,
+                paper_version INTEGER NOT NULL,
+                marking_json TEXT NOT NULL,
+                cached_at INTEGER NOT NULL,
+                PRIMARY KEY (paper_id, paper_version)
+            )
+            """.trimIndent()
+        )
+    }
+
+    fun cacheMarkingGuide(paperId: String, paperVersion: Int, markingJson: String) {
+        require(paperId.isNotBlank() && paperVersion > 0)
+        JSONArray(markingJson)
+        val values = ContentValues().apply {
+            put("paper_id", paperId)
+            put("paper_version", paperVersion)
+            put("marking_json", markingJson)
+            put("cached_at", System.currentTimeMillis())
+        }
+        writableDatabase.insertWithOnConflict(
+            "cached_assessment_marking_guides", null, values, SQLiteDatabase.CONFLICT_REPLACE
+        )
+    }
+
+    fun getCachedMarkingGuide(paperId: String, paperVersion: Int): String? =
+        readableDatabase.query(
+            "cached_assessment_marking_guides",
+            arrayOf("marking_json"),
+            "paper_id = ? AND paper_version = ?",
+            arrayOf(paperId, paperVersion.toString()),
+            null, null, null, "1"
+        ).use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
 
     fun cachePaper(
         paperId: String,
@@ -218,6 +257,6 @@ class AssessmentLocalStore(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "tusome_assessments.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
     }
 }

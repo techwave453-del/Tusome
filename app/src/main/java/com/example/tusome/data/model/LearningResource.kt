@@ -1,0 +1,160 @@
+package com.example.tusome.data.model
+
+/**
+ * A supplementary learning resource attached to an existing CBC curriculum node.
+ *
+ * Official curriculum records remain the source of truth. AI-generated resources are
+ * separate records and must pass teacher/admin review before they can be published.
+ */
+enum class LearningResourceType(val key: String, val displayName: String) {
+    LESSON_NOTES("lesson_notes", "Lesson notes"),
+    WORKED_EXAMPLE("worked_example", "Worked examples"),
+    LEARNER_ACTIVITY("learner_activity", "Learner activities"),
+    WORKSHEET("worksheet", "Worksheets"),
+    QUIZ("quiz", "Quizzes"),
+    ASSESSMENT("assessment", "Assessments"),
+    MARKING_SCHEME("marking_scheme", "Marking schemes"),
+    REVISION_NOTES("revision_notes", "Revision notes"),
+    TEACHER_GUIDE("teacher_guide", "Teacher guides"),
+    PROJECT("project", "Projects");
+
+    companion object {
+        fun fromKey(key: String): LearningResourceType? =
+            entries.firstOrNull { it.key.equals(key, ignoreCase = true) }
+    }
+}
+
+enum class LearningResourceStatus(val key: String) {
+    DRAFT("draft"),
+    PENDING_REVIEW("pending_review"),
+    APPROVED("approved"),
+    PUBLISHED("published"),
+    REJECTED("rejected"),
+    WITHDRAWN("withdrawn");
+
+    companion object {
+        fun fromKey(key: String): LearningResourceStatus? =
+            entries.firstOrNull { it.key.equals(key, ignoreCase = true) }
+    }
+}
+
+enum class LearningResourceSource(val key: String) {
+    AI_GENERATED("ai_generated"),
+    TEACHER_CREATED("teacher_created"),
+    IMPORTED("imported");
+
+    companion object {
+        fun fromKey(key: String): LearningResourceSource? =
+            entries.firstOrNull { it.key.equals(key, ignoreCase = true) }
+    }
+}
+
+enum class LearningContentBlockType(val key: String) {
+    PARAGRAPH("paragraph"),
+    HEADING("heading"),
+    BULLET_LIST("bullet_list"),
+    NUMBERED_LIST("numbered_list"),
+    EXAMPLE("example"),
+    INSTRUCTION("instruction"),
+    REFLECTION("reflection"),
+    IMAGE("image"),
+    VIDEO("video"),
+    TABLE("table"),
+    CALLOUT("callout");
+
+    companion object {
+        fun fromKey(key: String): LearningContentBlockType? =
+            entries.firstOrNull { it.key.equals(key, ignoreCase = true) }
+    }
+}
+
+/**
+ * Structured, versioned content for one grade and one existing curriculum node.
+ *
+ * curriculumNodeId should point to the canonical sub-strand (or another explicitly
+ * supported curriculum node); it must not be an AI-invented curriculum identifier.
+ */
+data class LearningResource(
+    val id: String,
+    val curriculumNodeId: String,
+    val gradeCode: String,
+    val learningAreaId: String,
+    val strandId: String,
+    val subStrandId: String,
+    val type: LearningResourceType,
+    val title: String,
+    val summary: String,
+    val languageCode: String,
+    val status: LearningResourceStatus,
+    val source: LearningResourceSource,
+    val version: Int,
+    val estimatedMinutes: Int?,
+    val learningOutcomes: List<String>,
+    val sections: List<LearningResourceSection>,
+    val createdAt: String?,
+    val updatedAt: String?,
+    val publishedAt: String? = null
+) {
+    val isAvailableToLearners: Boolean
+        get() = status == LearningResourceStatus.PUBLISHED
+
+    val hasUsableContent: Boolean
+        get() = title.isNotBlank() && sections.any { section ->
+            section.blocks.any { block ->
+                block.text.isNotBlank() || block.items.any(String::isNotBlank) ||
+                    !block.mediaUrl.isNullOrBlank()
+            }
+        }
+}
+
+/** A named part of a lesson, worksheet, guide, or other learning resource. */
+data class LearningResourceSection(
+    val id: String,
+    val title: String,
+    val description: String = "",
+    val blocks: List<LearningContentBlock>
+)
+
+/**
+ * A renderable content unit. Keep the content structured rather than storing a whole
+ * generated lesson as one opaque Markdown string.
+ */
+data class LearningContentBlock(
+    val id: String,
+    val type: LearningContentBlockType,
+    val text: String = "",
+    val items: List<String> = emptyList(),
+    val mediaUrl: String? = null,
+    val caption: String? = null
+)
+
+/**
+ * Input contract for a server-side generation request.
+ *
+ * This is only a request model: the Android app must never call an AI provider directly
+ * or contain provider secret keys. The backend validates the curriculum references and
+ * stores generated output as DRAFT until an authorised reviewer approves it.
+ */
+data class LearningContentGenerationRequest(
+    val gradeCode: String,
+    val learningAreaId: String,
+    val strandId: String,
+    val subStrandId: String,
+    val resourceType: LearningResourceType,
+    val languageCode: String,
+    val learningOutcomes: List<String>,
+    val learnerAgeRange: String? = null,
+    val estimatedMinutes: Int? = null,
+    val difficulty: String? = null,
+    val localContext: String? = null,
+    val additionalInstructions: String? = null
+)
+
+/** Audit information for a human content-review decision. */
+data class LearningResourceReview(
+    val resourceId: String,
+    val reviewerId: String,
+    val decision: LearningResourceStatus,
+    val feedback: String,
+    val reviewedAt: String?
+)

@@ -112,8 +112,16 @@ object CbcAiTutorService {
                     specificLearningOutcomes = outcomes,
                     keyInquiryQuestions = questions,
                     suggestedExperiences = activities,
-                    digitalTaskPrompt = digitalTask.ifBlank {
-                        "Complete the practical learning activity for $subStrandTitle and record evidence in your portfolio."
+                    digitalTaskPrompt = buildString {
+                        append("Suggested learning experiences:\\n")
+                        activities.forEachIndexed { index, activity ->
+                            append(index + 1).append(". ").append(activity).append("\\n")
+                        }
+                        append("\\nPortfolio task: ").append(
+                            digitalTask.ifBlank {
+                                "Record evidence of your learning about $subStrandTitle in your portfolio."
+                            }
+                        )
                     },
                     kicdCitation = "AI-generated draft for ${grade.title} • $strandTitle → $subStrandTitle. Based on published Tusome curriculum records; pending curriculum review."
                 )

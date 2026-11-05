@@ -116,7 +116,10 @@ create policy "Curriculum reviewers update assessment drafts"
     or (select private.has_permission('curriculum.publish', null))
   )
   with check (
-    (select private.has_permission('curriculum.review', null))
+    (
+      (select private.has_permission('curriculum.review', null))
+      and content_status <> 'published'
+    )
     or (
       (select private.has_permission('curriculum.publish', null))
       and content_status = 'published'

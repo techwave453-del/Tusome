@@ -121,6 +121,41 @@ Deno.serve(async (req: Request) => {
   const canCreateGlobalDraft = isGlobalEditor;
   const canReview = isGlobalEditor;
 
+  if (action === "list_my_resources") {
+    const { data, error } = await admin.from("learning_resources")
+      .select("*")
+      .eq("created_by", actorId)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) return reply(500, { error: "Unable to load your learning-resource drafts." });
+    return reply(200, { resources: data ?? [] });
+  }
+
+  if (action === "list_review_queue") {
+    if (!canReview) return reply(403, { error: "Only curriculum editors can view the review queue." });
+    const { data, error } = await admin.from("learning_resources")
+      .select("*")
+      .eq("status", "pending_review")
+      .order("created_at", { ascending: true })
+      .limit(100);
+    if (error) return reply(500, { error: "Unable to load the learning-resource review queue." });
+    return reply(200, { resources: data ?? [] });
+  }
+
+  if (action === "get_resource") {
+    const resourceId = String(body.resource_id ?? "");
+    if (!resourceId) return reply(400, { error: "A resource ID is required." });
+    const { data: resource, error } = await admin.from("learning_resources")
+      .select("*").eq("id", resourceId).maybeSingle();
+    if (error || !resource) return reply(404, { error: "Learning resource not found." });
+    const isOwner = resource.created_by === actorId;
+    const isSameSchoolTeacher = !!resource.school_id && teacherSchoolIds.has(resource.school_id);
+    if (!isGlobalEditor && !(isOwner && (!resource.school_id || isSameSchoolTeacher))) {
+      return reply(403, { error: "You cannot view this learning resource." });
+    }
+    return reply(200, { resource });
+  }
+
   if (action === "create_draft") {
     if (!canCreateGlobalDraft && !canCreateSchoolDraft) {
       return reply(403, { error: "Only an authorised teacher or curriculum editor can create learning resources." });

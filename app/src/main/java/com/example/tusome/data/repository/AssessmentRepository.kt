@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 object AssessmentRepository {
     private const val BASE_URL = "https://wkwnoflielrotknvoflz.supabase.co"
     private const val PUBLISHABLE_KEY = "sb_publishable_jZsmwIcIMdu3Eq97AfU3xQ_929Bxo4J"
-    private const val PAPERS_PATH = "/rest/v1/assessment_papers"
+    private const val PAPERS_PATH = "/rest/v1/published_assessment_papers"
     private const val ATTEMPTS_PATH = "/rest/v1/learner_assessment_attempts"
 
     private val executor = Executors.newSingleThreadExecutor()
@@ -52,7 +52,7 @@ object AssessmentRepository {
                     val query = buildString {
                         append("?select=id,paper_code,grade_id,learning_area_id,strand_id,sub_strand_id,")
                         append("assessment_type,title,description,instructions,duration_minutes,total_marks,")
-                        append("question_payload,marking_payload,sections_payload,performance_level_grid,learner_detail_fields,")
+                        append("question_payload,sections_payload,performance_level_grid,learner_detail_fields,")
                         append("paper_metadata,competency_tags,coverage_map,source_reference,term_number,trial_number,")
                         append("paper_number,pathway,academic_year,version,content_status,published_at")
                         append("&grade_id=eq.").append(encode(gradeId))
@@ -108,6 +108,36 @@ object AssessmentRepository {
             .put("difficulty", "age_appropriate")
             .put("local_context", "Use familiar Kenyan home, school and community contexts.")
         callFunction(context, "generate-assessment-paper", payload, onResult)
+    }
+
+    fun fetchMarkingGuide(
+        context: Context,
+        paperId: String,
+        paperVersion: Int,
+        onResult: (Result<JSONArray>) -> Unit
+    ) {
+        val store = AssessmentLocalStore(context)
+        val cached = store.getCachedMarkingGuide(paperId, paperVersion)
+        if (!cached.isNullOrBlank()) {
+            val parsed = runCatching { JSONArray(cached) }
+            if (parsed.isSuccess) {
+                onResult(Result.success(parsed.getOrThrow()))
+                return
+            }
+        }
+        callFunction(
+            context,
+            "get-assessment-marking-guide",
+            JSONObject().put("paper_id", paperId)
+        ) { result ->
+            result.onSuccess { response ->
+                val guide = response.optJSONArray("marking_guide") ?: JSONArray()
+                runCatching { store.cacheMarkingGuide(paperId, paperVersion, guide.toString()) }
+                onResult(Result.success(guide))
+            }.onFailure { error ->
+                onResult(Result.failure(error))
+            }
+        }
     }
 
     fun manageAssessmentPaper(

@@ -201,6 +201,20 @@ Deno.serve(async (req: Request) => {
       return reply(400, { error: "The grade, learning area, strand and sub-strand do not match." });
     }
 
+    const { data: publishedOutcomes, error: outcomesError } = await admin.from("learning_outcomes")
+      .select("outcome_text")
+      .eq("sub_strand_id", subStrandId)
+      .eq("is_published", true);
+    if (outcomesError) return reply(500, { error: "Unable to validate official learning outcomes." });
+    const officialOutcomes = (publishedOutcomes ?? []).map((row) => row.outcome_text).filter(Boolean);
+    if (officialOutcomes.length === 0) {
+      return reply(409, { error: "This sub-strand has no published learning outcomes yet." });
+    }
+    const selectedOutcomes = outcomes.length > 0 ? [...new Set(outcomes)] : officialOutcomes;
+    if (selectedOutcomes.some((outcome) => !officialOutcomes.includes(outcome))) {
+      return reply(400, { error: "Only published outcomes for this CBC sub-strand can be attached to the resource." });
+    }
+
     const requestedSchoolId = body.school_id ? String(body.school_id) : null;
     const schoolId = isGlobalEditor ? requestedSchoolId : profileSchoolId;
     if (schoolId && schoolId !== profileSchoolId && !isPlatformAdmin) {
@@ -229,7 +243,7 @@ Deno.serve(async (req: Request) => {
       source: body.source === "teacher_created" ? "teacher_created" : "ai_generated",
       version: 1,
       estimated_minutes: minutes,
-      learning_outcomes: outcomes,
+      learning_outcomes: selectedOutcomes,
       content,
       created_by: actorId,
     };
@@ -246,7 +260,7 @@ Deno.serve(async (req: Request) => {
       content,
       title,
       summary,
-      learning_outcomes: outcomes,
+      learning_outcomes: selectedOutcomes,
       changed_by: actorId,
       change_summary: "Initial draft",
     });

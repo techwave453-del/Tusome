@@ -229,7 +229,7 @@ object LearningResourceRepository {
                     updatedAt = row.optString("updated_at").takeIf { it.isNotBlank() && it != "null" },
                     publishedAt = row.optString("published_at").takeIf { it.isNotBlank() && it != "null" }
                 )
-                if (resource.hasUsableContent) add(resource)
+                if (resource.hasUsableContent && resource.isAvailableToLearners) add(resource)
             }
         }
     }

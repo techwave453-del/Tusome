@@ -51,7 +51,7 @@ object LearningResourceRepository {
         learningAreaId: String,
         strandId: String,
         subStrandId: String,
-        languageCode: String? = "en",
+        languageCode: String? = null,
         onResult: (Result<LearningResourceFetchResult>) -> Unit
     ) {
         val appContext = context.applicationContext

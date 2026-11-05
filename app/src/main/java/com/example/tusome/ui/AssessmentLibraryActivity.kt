@@ -1,6 +1,7 @@
 package com.example.tusome.ui
 
 import android.content.Intent
+import androidx.appcompat.app.AlertDialog
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.LinearLayout
@@ -9,6 +10,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.repository.AssessmentRepository
+import com.example.tusome.data.repository.SupabaseAuthRepository
+import com.example.tusome.data.repository.SupabaseCurriculumRepository
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.button.MaterialButton
@@ -21,6 +24,7 @@ class AssessmentLibraryActivity : AppCompatActivity() {
     private lateinit var grade: GradeLevel
     private lateinit var areaId: String
     private lateinit var areaTitle: String
+    private var canGenerate = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +61,22 @@ class AssessmentLibraryActivity : AppCompatActivity() {
             textSize = 14f
             setPadding(20, 16, 20, 12)
         }
+        val session = SupabaseAuthRepository.currentSession(this)
+        canGenerate = session?.roles?.any {
+            it.equals("teacher", true) ||
+                it.equals("curriculum_editor", true) ||
+                it.equals("platform_admin", true)
+        } == true
+        if (canGenerate) {
+            root.addView(MaterialButton(this).apply {
+                text = "Generate assessment from CBC outcomes"
+                isAllCaps = false
+                setOnClickListener { chooseSubStrandForGeneration() }
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(16, 4, 16, 4) })
+        }
         root.addView(status)
 
         val scroll = ScrollView(this)
@@ -89,6 +109,67 @@ class AssessmentLibraryActivity : AppCompatActivity() {
             }.onFailure { error ->
                 status.text = "Assessments could not be loaded."
                 addMessage(error.message ?: "Connect to the internet once to download assessments for this learning area.")
+            }
+        }
+    }
+
+    private fun chooseSubStrandForGeneration() {
+        status.text = "Loading published CBC strands…"
+        SupabaseCurriculumRepository.initialize(this)
+        SupabaseCurriculumRepository.fetchStrands(grade) { result ->
+            if (isFinishing || isDestroyed) return@fetchStrands
+            result.onSuccess { strands ->
+                val options = strands.filter { it.learningAreaId == areaId }
+                    .flatMap { strand ->
+                        strand.subStrands.map { sub -> Triple(strand, sub, "${strand.title} • ${sub.title}") }
+                    }
+                if (options.isEmpty()) {
+                    status.text = "No published sub-strands are available for assessment generation in this learning area."
+                    return@fetchStrands
+                }
+                AlertDialog.Builder(this)
+                    .setTitle("Choose a curriculum sub-strand")
+                    .setItems(options.map { it.third }.toTypedArray()) { _, which ->
+                        val (strand, sub) = options[which]
+                        generateForSubStrand(strand.id, sub.id, sub.title)
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+                status.text = "Choose a published assessment, or generate a new draft from a CBC sub-strand."
+            }.onFailure { error ->
+                status.text = "Could not load curriculum strands: ${error.message.orEmpty()}"
+            }
+        }
+    }
+
+    private fun generateForSubStrand(strandId: String, subStrandId: String, subStrandTitle: String) {
+        val (questionCount, duration) = when (grade.category) {
+            com.example.tusome.data.model.GradeCategory.PRE_PRIMARY -> 5 to 20
+            com.example.tusome.data.model.GradeCategory.LOWER_PRIMARY -> 8 to 30
+            com.example.tusome.data.model.GradeCategory.UPPER_PRIMARY -> 12 to 45
+            com.example.tusome.data.model.GradeCategory.JUNIOR_SECONDARY -> 15 to 60
+            com.example.tusome.data.model.GradeCategory.SENIOR_SECONDARY -> 20 to 90
+        }
+        status.text = "Generating an original ${grade.title} assessment for ${subStrandTitle}…"
+        AssessmentRepository.generateAssessmentPaper(
+            context = this,
+            gradeId = grade.code.lowercase(),
+            learningAreaId = areaId,
+            strandId = strandId,
+            subStrandId = subStrandId,
+            questionCount = questionCount,
+            durationMinutes = duration
+        ) { result ->
+            if (isFinishing || isDestroyed) return@generateAssessmentPaper
+            result.onSuccess { response ->
+                val paper = response.optJSONObject("paper")
+                status.text = response.optString("message")
+                    .ifBlank { "Assessment generated and saved as a draft for review." }
+                if (paper != null) {
+                    addMessage("${paper.optString("title")} • ${paper.optDouble("total_marks").toInt()} marks. It is a draft and will not appear to learners until a curriculum editor approves and publishes it.")
+                }
+            }.onFailure { error ->
+                status.text = "Assessment generation failed: ${error.message.orEmpty()}"
             }
         }
     }

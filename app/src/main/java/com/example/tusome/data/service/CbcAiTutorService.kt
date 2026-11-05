@@ -1,5 +1,8 @@
 package com.example.tusome.data.service
 
+import android.content.Context
+import com.example.tusome.data.repository.SupabaseAuthRepository
+import org.json.JSONObject
 import com.example.tusome.data.model.GradeCategory
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.QuizQuestion
@@ -55,31 +58,60 @@ object CbcAiTutorService {
         onResponse(answer)
     }
 
-    // AI Generator for Sub-strand content strictly using KICD Curriculum Designs as source
+    // Generates a sub-strand-specific lesson pack from the published curriculum records on the server.
+    // The server validates the full grade → learning area → strand → sub-strand path and stores a reviewable draft.
     fun generateSubStrandKicdContent(
+        context: Context,
+        learningAreaId: String,
+        strandId: String,
+        subStrandId: String,
         subStrandTitle: String,
         strandTitle: String,
         grade: GradeLevel,
-        onResult: (KicdSubstrandContent) -> Unit
+        onResult: (Result<KicdSubstrandContent>) -> Unit
     ) {
-        val content = KicdSubstrandContent(
-            specificLearningOutcomes = listOf(
-                "Identify key principles of $subStrandTitle according to KICD ${grade.title} curriculum design.",
-                "Demonstrate practical hands-on application of $subStrandTitle in the local school environment.",
-                "Appreciate the contribution of $subStrandTitle towards sustainable development in Kenya."
-            ),
-            keyInquiryQuestions = listOf(
-                "How does understanding $subStrandTitle help solve real-world problems in our community?",
-                "What safety and environmental precautions must be observed during $subStrandTitle tasks?"
-            ),
-            suggestedExperiences = listOf(
-                "In collaborative learning groups, learners explore $subStrandTitle using locally available resources.",
-                "Learners demonstrate practical skills and share peer feedback according to KICD rubric criteria."
-            ),
-            digitalTaskPrompt = "Record a 1-minute video demonstration or photo collage showing your practical work in $subStrandTitle and upload to your CBC portfolio.",
-            kicdCitation = "Source: KICD Official Curriculum Design for ${grade.title} (${grade.category.displayName})"
-        )
-        onResult(content)
+        val payload = JSONObject()
+            .put("grade_id", grade.code.lowercase())
+            .put("learning_area_id", learningAreaId)
+            .put("strand_id", strandId)
+            .put("sub_strand_id", subStrandId)
+            .put("language", "en")
+
+        SupabaseAuthRepository.invokeEdgeFunction(
+            context = context,
+            functionName = "generate-substrand-content",
+            payload = payload
+        ) { result ->
+            onResult(result.mapCatching { response ->
+                val content = response.optJSONObject("content")
+                    ?: throw IllegalStateException("The server returned no lesson content.")
+                fun strings(key: String): List<String> {
+                    val array = content.optJSONArray(key) ?: org.json.JSONArray()
+                    return buildList {
+                        for (index in 0 until array.length()) {
+                            array.optString(index).takeIf { it.isNotBlank() }?.let(::add)
+                        }
+                    }
+                }
+                val outcomes = strings("outcomes")
+                val questions = strings("inquiry_questions")
+                val activities = strings("learning_activities")
+                val activityText = activities.joinToString("\\n") { it }
+                val digitalTask = content.optString("digital_task")
+                if (outcomes.isEmpty() || questions.isEmpty() || activities.isEmpty()) {
+                    throw IllegalStateException("The generated lesson pack is incomplete.")
+                }
+                KicdSubstrandContent(
+                    specificLearningOutcomes = outcomes,
+                    keyInquiryQuestions = questions,
+                    suggestedExperiences = activities,
+                    digitalTaskPrompt = digitalTask.ifBlank {
+                        "Complete the practical learning activity for $subStrandTitle and record evidence in your portfolio."
+                    },
+                    kicdCitation = "AI-generated draft for $grade.title • $strandTitle → $subStrandTitle. Based on published Tusome curriculum records; pending curriculum review."
+                )
+            })
+        }
     }
 
     // AI Study Notes Generator strictly following KICD Curriculum Level Guidelines

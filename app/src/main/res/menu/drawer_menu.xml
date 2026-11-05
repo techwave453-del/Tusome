@@ -18,6 +18,10 @@
             android:icon="@drawable/ic_psychology"
             android:title="@string/nav_competencies" />
         <item
+            android:id="@+id/drawer_ai_tutor"
+            android:icon="@drawable/ic_psychology"
+            android:title="Ask Tusome AI Tutor" />
+        <item
             android:id="@+id/drawer_admin"
             android:icon="@drawable/ic_person"
             android:title="@string/drawer_admin" />

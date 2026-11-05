@@ -1,8 +1,8 @@
 package com.example.tusome.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -18,10 +18,13 @@ import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.PerformanceLevel
 import com.example.tusome.data.model.Strand
 import com.example.tusome.data.repository.CbcRepository
+import com.example.tusome.data.repository.QuizRepository
 import com.example.tusome.data.repository.SupabaseCurriculumRepository
+import com.example.tusome.ui.dialogs.AiTutorBottomSheetDialog
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 
 class StrandDetailActivity : AppCompatActivity() {
 
@@ -34,6 +37,9 @@ class StrandDetailActivity : AppCompatActivity() {
     private lateinit var progressStrand: ProgressBar
     private lateinit var btnPreviousStrand: Button
     private lateinit var btnNextStrand: Button
+    private lateinit var btnTakeStrandQuiz: Button
+    private lateinit var tvQuizCardStatus: TextView
+    private lateinit var fabAskAiTutor: ExtendedFloatingActionButton
     private var currentStrandIndex: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +54,9 @@ class StrandDetailActivity : AppCompatActivity() {
         progressStrand = findViewById(R.id.progressStrand)
         btnPreviousStrand = findViewById(R.id.btnPreviousStrand)
         btnNextStrand = findViewById(R.id.btnNextStrand)
+        btnTakeStrandQuiz = findViewById(R.id.btnTakeStrandQuiz)
+        tvQuizCardStatus = findViewById(R.id.tvQuizCardStatus)
+        fabAskAiTutor = findViewById(R.id.fabAskAiTutor)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbarDetail)
         setSupportActionBar(toolbar)
@@ -124,6 +133,13 @@ class StrandDetailActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (::currentStrands.isInitialized && currentStrandIndex in currentStrands.indices) {
+            refreshQuizCardStatus(currentStrands[currentStrandIndex])
+        }
+    }
+
     private fun displayStrand(strand: Strand) {
         findViewById<TextView>(R.id.tvDetailStrandNumber).text = "Strand ${strand.strandNumber}"
         findViewById<TextView>(R.id.tvDetailTitle).text = strand.title
@@ -136,15 +152,36 @@ class StrandDetailActivity : AppCompatActivity() {
         btnPreviousStrand.alpha = if (btnPreviousStrand.isEnabled) 1f else 0.45f
         btnNextStrand.alpha = if (btnNextStrand.isEnabled) 1f else 0.45f
 
+        btnTakeStrandQuiz.setOnClickListener {
+            val intent = Intent(this, QuizActivity::class.java).apply {
+                putExtra("STRAND_ID", strand.id)
+            }
+            startActivity(intent)
+        }
+
+        fabAskAiTutor.setOnClickListener {
+            AiTutorBottomSheetDialog.newInstance("Can you explain ${strand.title}?")
+                .show(supportFragmentManager, "AiTutor")
+        }
+
+        refreshQuizCardStatus(strand)
         renderSubStrandCards(strand)
         refreshProgressSummary(strand)
+    }
+
+    private fun refreshQuizCardStatus(strand: Strand) {
+        val quizResult = QuizRepository.getQuizResultForStrand(this, strand.id)
+        if (quizResult != null) {
+            tvQuizCardStatus.text = "Latest Score: ${quizResult.score}/${quizResult.totalQuestions} (${quizResult.percentage}%) • Level: ${quizResult.performanceLevel.code}"
+        } else {
+            tvQuizCardStatus.text = "Test your understanding of this strand"
+        }
     }
 
     private fun navigateStrand(direction: Int) {
         val targetIndex = currentStrandIndex + direction
         if (targetIndex !in currentStrands.indices) return
 
-        // Save reflections and self-evaluations before leaving this strand.
         saveDraftsForCurrentStrand()
         currentStrandIndex = targetIndex
         displayStrand(currentStrands[currentStrandIndex])

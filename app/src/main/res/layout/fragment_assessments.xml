@@ -178,7 +178,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SBA Practice Assessments"
+                android:text="Assessments &amp; Practice Papers"
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="17sp"
                 android:textStyle="bold" />
@@ -188,7 +188,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Practice papers are linked to the selected curriculum grade."
+                android:text="Choose any published learning area. Available assessments are saved on this device for offline use."
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="12sp" />
 

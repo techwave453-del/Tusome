@@ -312,6 +312,10 @@ Deno.serve(async (req: Request) => {
         version: nextVersion,
         status: "draft",
         review_feedback: "",
+        reviewed_by: null,
+        reviewed_at: null,
+        published_by: null,
+        published_at: null,
       })
       .eq("id", resourceId)
       .select("*")
@@ -339,7 +343,12 @@ Deno.serve(async (req: Request) => {
       return reply(409, { error: "Only draft or rejected resources can be submitted for review." });
     }
     const { data, error: updateError } = await admin.from("learning_resources")
-      .update({ status: "pending_review", review_feedback: "" })
+      .update({
+        status: "pending_review",
+        review_feedback: "",
+        reviewed_by: null,
+        reviewed_at: null,
+      })
       .eq("id", resourceId).select("id,status,updated_at").single();
     if (updateError) return reply(500, { error: "The resource could not be submitted for review." });
     return reply(200, { resource: data });

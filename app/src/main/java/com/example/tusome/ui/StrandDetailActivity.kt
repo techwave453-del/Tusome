@@ -331,25 +331,45 @@ class StrandDetailActivity : AppCompatActivity() {
             }
 
             btnGenerateSubstrandAi.setOnClickListener {
+                btnGenerateSubstrandAi.isEnabled = false
+                btnGenerateSubstrandAi.text = "Generating…"
                 CbcAiTutorService.generateSubStrandKicdContent(
+                    context = this,
+                    learningAreaId = strand.learningAreaId,
+                    strandId = strand.id,
+                    subStrandId = sub.id,
                     subStrandTitle = sub.title,
                     strandTitle = strand.title,
-                    grade = GradeLevel.GRADE_4
-                ) { kicdContent ->
-                    tvLearningOutcomes.text = kicdContent.specificLearningOutcomes.joinToString("\n") { "• $it" }
-                    tvInquiryQuestions.text = kicdContent.keyInquiryQuestions.joinToString("\n") { "• $it" }
-                    tvDigitalTaskPrompt.text = kicdContent.digitalTaskPrompt
-                    tvSubstrandKicdCitation.text = kicdContent.kicdCitation
+                    grade = selectedGrade
+                ) { result ->
+                    btnGenerateSubstrandAi.isEnabled = true
+                    btnGenerateSubstrandAi.text = "Generate with AI"
+                    result.onFailure { error ->
+                        Toast.makeText(
+                            this,
+                            error.message ?: "Unable to generate this sub-strand lesson. Check your connection and sign-in.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }.onSuccess { kicdContent ->
+                        tvLearningOutcomes.text = kicdContent.specificLearningOutcomes.joinToString("\n") { "• $it" }
+                        tvInquiryQuestions.text = kicdContent.keyInquiryQuestions.joinToString("\n") { "• $it" }
+                        tvDigitalTaskPrompt.text = kicdContent.digitalTaskPrompt
+                        tvSubstrandKicdCitation.text = kicdContent.kicdCitation
 
-                    val saveObj = JSONObject().apply {
-                        put("outcomes", JSONArray(kicdContent.specificLearningOutcomes))
-                        put("questions", JSONArray(kicdContent.keyInquiryQuestions))
-                        put("experiences", JSONArray(kicdContent.suggestedExperiences))
-                        put("task", kicdContent.digitalTaskPrompt)
-                        put("citation", kicdContent.kicdCitation)
+                        val saveObj = JSONObject().apply {
+                            put("outcomes", JSONArray(kicdContent.specificLearningOutcomes))
+                            put("questions", JSONArray(kicdContent.keyInquiryQuestions))
+                            put("experiences", JSONArray(kicdContent.suggestedExperiences))
+                            put("task", kicdContent.digitalTaskPrompt)
+                            put("citation", kicdContent.kicdCitation)
+                        }
+                        offlineCache.saveSubstrandKicdContent(sub.id, saveObj.toString())
+                        Toast.makeText(
+                            this,
+                            "AI lesson draft generated from this sub-strand and saved offline.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                    offlineCache.saveSubstrandKicdContent(sub.id, saveObj.toString())
-                    Toast.makeText(this, "KICD Sub-strand content generated & saved locally for offline study!", Toast.LENGTH_SHORT).show()
                 }
             }
 

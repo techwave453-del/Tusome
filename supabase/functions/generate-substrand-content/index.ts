@@ -101,6 +101,17 @@ Deno.serve(async (req: Request) => {
     ["teacher", "curriculum_editor", "platform_admin"].includes(r.role_key));
   if (!permitted) return reply(403, { error: "Only teachers and curriculum administrators can generate lesson content." });
 
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recentGenerations, error: limitError } = await admin
+    .from("ai_substrand_content")
+    .select("id", { count: "exact", head: true })
+    .eq("generated_by", auth.user.id)
+    .gte("created_at", oneHourAgo);
+  if (limitError) return reply(500, { error: "Unable to check your content-generation limit." });
+  if ((recentGenerations ?? 0) >= 5) {
+    return reply(429, { error: "You have reached the limit of five generated sub-strand lesson drafts per hour. Try again later." });
+  }
+
   const [gradeQ, areaQ, strandQ, subQ, outcomesQ, inquiriesQ, activitiesQ] = await Promise.all([
     admin.from("curriculum_grades").select("id,name").eq("id", gradeId).maybeSingle(),
     admin.from("learning_areas").select("id,name,kiswahili_name").eq("id", areaId).maybeSingle(),

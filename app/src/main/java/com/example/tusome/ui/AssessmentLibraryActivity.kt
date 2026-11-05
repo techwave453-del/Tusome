@@ -25,6 +25,7 @@ class AssessmentLibraryActivity : AppCompatActivity() {
     private lateinit var areaId: String
     private lateinit var areaTitle: String
     private var canGenerate = false
+    private var canReview = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +68,21 @@ class AssessmentLibraryActivity : AppCompatActivity() {
                 it.equals("curriculum_editor", true) ||
                 it.equals("platform_admin", true)
         } == true
+        canReview = session?.roles?.any {
+            it.equals("curriculum_editor", true) || it.equals("platform_admin", true)
+        } == true
+        if (canReview) {
+            root.addView(MaterialButton(this).apply {
+                text = "Review generated assessments"
+                isAllCaps = false
+                setOnClickListener {
+                    startActivity(Intent(this@AssessmentLibraryActivity, AssessmentReviewActivity::class.java))
+                }
+            }, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(16, 4, 16, 4) })
+        }
         if (canGenerate) {
             root.addView(MaterialButton(this).apply {
                 text = "Generate assessment from CBC outcomes"
@@ -166,9 +182,29 @@ class AssessmentLibraryActivity : AppCompatActivity() {
                 status.text = response.optString("message")
                     .ifBlank { "Assessment generated and saved as a draft for review." }
                 if (paper != null) {
-                    addMessage("${paper.optString("title")} • ${paper.optDouble("total_marks").toInt()} marks. It is a draft and will not appear to learners until a curriculum editor approves and publishes it.")
-                }
-            }.onFailure { error ->
+                    addMessage(paper.optString("title") + " • " + paper.optDouble("total_marks").toInt() + " marks. It is a draft and will not appear to learners until a curriculum editor approves and publishes it.")
+                    content.addView(MaterialButton(this).apply {
+                        text = "Submit this draft for review"
+                        isAllCaps = false
+                        setOnClickListener {
+                            isEnabled = false
+                            AssessmentRepository.manageAssessmentPaper(
+                                this@AssessmentLibraryActivity,
+                                "submit_for_review",
+                                paper.optString("id")
+                            ) { submission ->
+                                isEnabled = true
+                                submission.onSuccess {
+                                    status.text = "Assessment submitted to the curriculum-editor review queue."
+                                    text = "Submitted for review"
+                                    isEnabled = false
+                                }.onFailure { error ->
+                                    status.text = "Could not submit assessment: " + error.message.orEmpty()
+                                }
+                            }
+                        }
+                    })
+                }            }.onFailure { error ->
                 status.text = "Assessment generation failed: ${error.message.orEmpty()}"
             }
         }

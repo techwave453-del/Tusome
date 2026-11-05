@@ -181,7 +181,7 @@ class SbaExamActivity : AppCompatActivity() {
                     val key = answerKey(question.questionNumber, sub.label)
                     content.addView(TextView(this).apply {
                         text = "${sub.label} ${sub.questionText} (${sub.allocatedMarks} marks)"
-                        setTextColor(primary)
+                        setTextColor(textPrimary)
                         textSize = 13f
                         setPadding(0, 12, 0, 6)
                     })

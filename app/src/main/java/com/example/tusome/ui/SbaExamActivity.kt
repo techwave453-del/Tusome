@@ -54,7 +54,8 @@ class SbaExamActivity : AppCompatActivity() {
             return
         }
 
-        examPaper = SbaExamRepository.getSbaExamPaper(subjectId, grade) ?: run {
+        val subjectTitle = intent.getStringExtra("SUBJECT_TITLE").orEmpty()
+        examPaper = SbaExamRepository.getSbaExamPaper(subjectId, grade, subjectTitle) ?: run {
             showUnavailable("A sample practice paper is not currently available for this learning area and grade.")
             return
         }

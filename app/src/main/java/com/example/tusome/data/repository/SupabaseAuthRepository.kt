@@ -273,11 +273,16 @@ object SupabaseAuthRepository {
         )
     }
 
-    private fun request(path: String, payload: JSONObject?, accessToken: String?): Any {
+    private fun request(
+        path: String,
+        payload: JSONObject?,
+        accessToken: String?,
+        readTimeoutMillis: Int = 12000
+    ): Any {
         val connection = (URL(BASE_URL + path).openConnection() as HttpURLConnection).apply {
             requestMethod = if (payload == null) "GET" else "POST"
             connectTimeout = 12000
-            readTimeout = 12000
+            readTimeout = readTimeoutMillis
             setRequestProperty("apikey", PUBLISHABLE_KEY)
             setRequestProperty("Accept", "application/json")
             if (accessToken != null) {

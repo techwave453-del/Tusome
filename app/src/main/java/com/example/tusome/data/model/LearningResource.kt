@@ -101,7 +101,7 @@ data class LearningResource(
     val hasUsableContent: Boolean
         get() = title.isNotBlank() && sections.any { section ->
             section.blocks.any { block ->
-                block.text.isNotBlank() || block.items.any(String::isNotBlank) ||
+                block.text.isNotBlank() || block.items.any { it.isNotBlank() } ||
                     !block.mediaUrl.isNullOrBlank()
             }
         }

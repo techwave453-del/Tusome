@@ -86,6 +86,97 @@ object AssessmentRepository {
         }
     }
 
+    fun generateAssessmentPaper(
+        context: Context,
+        gradeId: String,
+        learningAreaId: String,
+        strandId: String,
+        subStrandId: String,
+        questionCount: Int,
+        durationMinutes: Int,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        val payload = JSONObject()
+            .put("grade_id", gradeId)
+            .put("learning_area_id", learningAreaId)
+            .put("strand_id", strandId)
+            .put("sub_strand_id", subStrandId)
+            .put("assessment_type", "practice")
+            .put("language_code", "en")
+            .put("question_count", questionCount)
+            .put("duration_minutes", durationMinutes)
+            .put("difficulty", "age_appropriate")
+            .put("local_context", "Use familiar Kenyan home, school and community contexts.")
+        callFunction(context, "generate-assessment-paper", payload, onResult)
+    }
+
+    fun manageAssessmentPaper(
+        context: Context,
+        action: String,
+        paperId: String? = null,
+        feedback: String = "",
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        val payload = JSONObject().put("action", action).put("feedback", feedback)
+        if (!paperId.isNullOrBlank()) payload.put("paper_id", paperId)
+        callFunction(context, "manage-assessment-papers", payload, onResult)
+    }
+
+    private fun callFunction(
+        context: Context,
+        functionName: String,
+        payload: JSONObject,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        val appContext = context.applicationContext
+        SupabaseAuthRepository.refreshSessionIfNeeded(appContext) { sessionResult ->
+            val session = sessionResult.getOrNull()
+            if (session == null) {
+                mainHandler.post {
+                    onResult(Result.failure(sessionResult.exceptionOrNull()
+                        ?: IllegalStateException("Sign in is required to manage assessments.")))
+                }
+                return@refreshSessionIfNeeded
+            }
+            executor.execute {
+                val result = runCatching {
+                    val connection = (URL("$BASE_URL/functions/v1/$functionName").openConnection()
+                        as HttpURLConnection).apply {
+                        requestMethod = "POST"
+                        connectTimeout = 15000
+                        readTimeout = 100000
+                        doOutput = true
+                        setRequestProperty("apikey", PUBLISHABLE_KEY)
+                        setRequestProperty("Authorization", "Bearer ${session.accessToken}")
+                        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        setRequestProperty("Accept", "application/json")
+                    }
+                    try {
+                        connection.outputStream.use {
+                            it.write(payload.toString().toByteArray(Charsets.UTF_8))
+                        }
+                        val status = connection.responseCode
+                        val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+                        val body = stream?.let { input ->
+                            BufferedReader(InputStreamReader(input, Charsets.UTF_8)).use { it.readText() }
+                        }.orEmpty()
+                        val response = runCatching { JSONObject(body) }.getOrElse {
+                            throw IllegalStateException("Assessment service returned an invalid response.")
+                        }
+                        if (status !in 200..299) {
+                            throw IllegalStateException(response.optString("error")
+                                .ifBlank { "Assessment service failed (HTTP $status)." })
+                        }
+                        response
+                    } finally {
+                        connection.disconnect()
+                    }
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
     fun getCachedPaper(context: Context, paperId: String, version: Int? = null): JSONObject? {
         val json = AssessmentLocalStore(context).getCachedPaper(paperId, version) ?: return null
         return runCatching { JSONObject(json) }.getOrNull()

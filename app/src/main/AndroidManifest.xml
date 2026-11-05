@@ -54,6 +54,17 @@
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />
 
+        <activity
+            android:name=".ui.AssessmentLibraryActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <activity
+            android:name=".ui.AssessmentPaperActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.AssessmentLibraryActivity"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>

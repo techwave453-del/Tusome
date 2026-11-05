@@ -108,19 +108,42 @@ Deno.serve(async (req: Request) => {
     const userIds = (profiles ?? []).map((profile) => profile.user_id);
     if (userIds.length === 0) return reply(200, { users: [] });
 
-    const [{ data: roleRows, error: rolesError }, { data: authUsers, error: authUsersError }, { data: schools, error: schoolsError }] =
+    const [{ data: roleRows, error: rolesError }, { data: schools, error: schoolsError }] =
       await Promise.all([
         admin.from("user_role_assignments")
           .select("id,user_id,role_key,school_id")
           .in("user_id", userIds),
-        admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
         admin.from("schools").select("id,name"),
       ]);
-    if (rolesError || authUsersError || schoolsError) {
+    if (rolesError || schoolsError) {
       return reply(500, { error: "Unable to assemble the user directory." });
     }
 
-    const emailById = new Map((authUsers?.users ?? []).map((user) => [user.id, user.email ?? ""]));
+    // Auth Admin listUsers is paginated. Fetch until every profile in this
+    // directory has an email match, rather than silently returning blank
+    // emails for users beyond the first 1,000 auth accounts.
+    const pendingUserIds = new Set(userIds);
+    const emailById = new Map<string, string>();
+    const pageSize = 1000;
+    let page = 1;
+    while (pendingUserIds.size > 0) {
+      const { data: authPage, error: authUsersError } = await admin.auth.admin.listUsers({
+        page,
+        perPage: pageSize,
+      });
+      if (authUsersError) {
+        return reply(500, { error: "Unable to assemble the user directory." });
+      }
+      const authUsers = authPage?.users ?? [];
+      for (const user of authUsers) {
+        if (pendingUserIds.has(user.id)) {
+          emailById.set(user.id, user.email ?? "");
+          pendingUserIds.delete(user.id);
+        }
+      }
+      if (authUsers.length < pageSize) break;
+      page += 1;
+    }
     const schoolNameById = new Map((schools ?? []).map((school) => [school.id, school.name]));
     const rolesByUser = new Map<string, Array<{ id: string; role_key: string; school_id: string | null }>>();
     for (const row of roleRows ?? []) {

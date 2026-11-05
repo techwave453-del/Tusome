@@ -4,15 +4,15 @@
     android:id="@+id/cardLearningArea"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="6dp"
-    android:layout_marginVertical="5dp"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="6dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="@color/surface_white"
-    app:cardCornerRadius="18dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="20dp"
     app:cardElevation="1dp"
-    app:rippleColor="@color/primary_container_green"
-    app:strokeColor="#E7EDE3"
+    app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -20,38 +20,55 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="15dp">
+        android:padding="12dp">
 
         <FrameLayout
             android:id="@+id/frameIconContainer"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_chip_unselected">
+            android:layout_width="92dp"
+            android:layout_height="104dp"
+            android:background="@drawable/bg_learning_area_art"
+            android:clipToOutline="true">
 
             <ImageView
                 android:id="@+id/ivSubjectIcon"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_gravity="center"
-                android:contentDescription="Learning area icon"
-                android:src="@drawable/ic_leaf"
-                app:tint="@color/primary_green" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/illustration_learning_area_general" />
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="13dp"
+            android:layout_marginStart="14dp"
             android:layout_weight="1"
             android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvGradeBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_chip_unselected"
+                android:paddingHorizontal="9dp"
+                android:paddingVertical="4dp"
+                android:text="GRADE 4 • CBC"
+                android:textAllCaps="true"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvSubjectTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:text="Agriculture &amp; Nutrition"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -59,28 +76,30 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:text="Kilimo na Lishe"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/tvStrandsCount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:text="Explore strands and learning outcomes"
-                android:textColor="@color/primary_green"
-                android:textSize="12sp" />
+                android:layout_marginTop="9dp"
+                android:text="Explore learning strands"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:layout_marginStart="8dp"
-            android:contentDescription="Open learning area"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@null"
             android:src="@drawable/ic_chevron_right"
-            app:tint="@color/accent_orange" />
+            app:tint="?attr/colorPrimary" />
 
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>

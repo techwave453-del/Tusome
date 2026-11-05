@@ -5,9 +5,11 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
     android:layout_marginVertical="6dp"
-    app:cardBackgroundColor="@color/surface_white"
+    app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="16dp"
-    app:cardElevation="2dp">
+    app:cardElevation="2dp"
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,7 +35,7 @@
                     android:layout_gravity="center"
                     android:contentDescription="Competency icon"
                     android:src="@drawable/ic_psychology"
-                    app:tint="@color/primary_green" />
+                    app:tint="?attr/colorPrimary" />
 
             </FrameLayout>
 
@@ -49,7 +51,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Communication &amp; Collaboration"
-                    android:textColor="@color/text_primary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -58,7 +60,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Mawasiliano na Ushirikiano"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp" />
 
             </LinearLayout>
@@ -68,7 +70,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="88%"
-                android:textColor="@color/primary_green"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -80,8 +82,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:progress="88"
-            app:indicatorColor="@color/primary_green"
-            app:trackColor="@color/primary_container_green"
+            app:indicatorColor="?attr/colorPrimary"
+            app:trackColor="?attr/colorPrimaryContainer"
             app:trackCornerRadius="4dp" />
 
         <TextView
@@ -90,7 +92,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Expressing ideas clearly through oral, written, and artistic mediums while working in teams."
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
 
     </LinearLayout>

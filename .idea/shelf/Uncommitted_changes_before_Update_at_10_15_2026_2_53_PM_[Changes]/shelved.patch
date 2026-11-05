@@ -1,0 +1,283 @@
+Index: app/src/main/res/layout/item_substrand_content.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/item_substrand_content.xml b/app/src/main/res/layout/item_substrand_content.xml
+new file mode 100644
+--- /dev/null	(date 1792065062206)
++++ b/app/src/main/res/layout/item_substrand_content.xml	(date 1792065062206)
+@@ -0,0 +1,120 @@
++<?xml version="1.0" encoding="utf-8"?>
++<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    android:id="@+id/cardSubstrandContent"
++    android:layout_width="match_parent"
++    android:layout_height="wrap_content"
++    android:layout_marginHorizontal="4dp"
++    android:layout_marginVertical="7dp"
++    app:cardBackgroundColor="@color/surface_white"
++    app:cardCornerRadius="16dp"
++    app:cardElevation="1dp"
++    app:strokeColor="@color/surface_variant"
++    app:strokeWidth="1dp">
++
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="vertical"
++        android:padding="16dp">
++
++        <TextView
++            android:id="@+id/tvRubricSubstrand"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:text="Sub-strand 1.1: Soil Erosion"
++            android:textColor="@color/primary_green_dark"
++            android:textSize="16sp"
++            android:textStyle="bold" />
++
++        <TextView
++            android:id="@+id/tvSectionOutcomesLabel"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="14dp"
++            android:text="What you will learn"
++            android:textColor="@color/text_primary"
++            android:textSize="14sp"
++            android:textStyle="bold" />
++
++        <TextView
++            android:id="@+id/tvRubricCriteria"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="5dp"
++            android:lineSpacingExtra="3dp"
++            android:text="• Identify soil erosion"
++            android:textColor="@color/text_secondary"
++            android:textSize="14sp" />
++
++        <TextView
++            android:id="@+id/tvSectionInquiryLabel"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="14dp"
++            android:text="Think about it"
++            android:textColor="@color/text_primary"
++            android:textSize="14sp"
++            android:textStyle="bold" />
++
++        <TextView
++            android:id="@+id/tvKeyInquiryQuestions"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="5dp"
++            android:lineSpacingExtra="3dp"
++            android:text="• How can we protect the soil?"
++            android:textColor="@color/text_secondary"
++            android:textSize="14sp" />
++
++        <TextView
++            android:id="@+id/tvSectionExperiencesLabel"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="14dp"
++            android:text="Try this activity"
++            android:textColor="@color/text_primary"
++            android:textSize="14sp"
++            android:textStyle="bold" />
++
++        <TextView
++            android:id="@+id/tvSuggestedExperiences"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="5dp"
++            android:lineSpacingExtra="3dp"
++            android:text="• Observe the school environment"
++            android:textColor="@color/text_secondary"
++            android:textSize="14sp" />
++
++        <LinearLayout
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="14dp"
++            android:background="@color/surface_variant"
++            android:orientation="vertical"
++            android:padding="12dp">
++
++            <TextView
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:text="Digital learning task"
++                android:textColor="@color/primary_green_dark"
++                android:textSize="13sp"
++                android:textStyle="bold" />
++
++            <TextView
++                android:id="@+id/tvTeacherRemark"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:layout_marginTop="5dp"
++                android:lineSpacingExtra="3dp"
++                android:text="Record a short demonstration of what you learned."
++                android:textColor="@color/text_primary"
++                android:textSize="13sp" />
++
++        </LinearLayout>
++
++    </LinearLayout>
++
++</com.google.android.material.card.MaterialCardView>
+Index: app/src/main/res/layout/item_rubric.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<com.google.android.material.card.MaterialCardView xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\r\n    android:id=\"@+id/cardRubric\"\r\n    android:layout_width=\"match_parent\"\r\n    android:layout_height=\"wrap_content\"\r\n    android:layout_marginHorizontal=\"12dp\"\r\n    android:layout_marginVertical=\"6dp\"\r\n    app:cardBackgroundColor=\"@color/surface_white\"\r\n    app:cardCornerRadius=\"16dp\"\r\n    app:cardElevation=\"2dp\"\r\n    app:strokeColor=\"@color/surface_variant\"\r\n    app:strokeWidth=\"1dp\">\r\n\r\n    <LinearLayout\r\n        android:layout_width=\"match_parent\"\r\n        android:layout_height=\"wrap_content\"\r\n        android:orientation=\"vertical\"\r\n        android:padding=\"16dp\">\r\n\r\n        <LinearLayout\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"wrap_content\"\r\n            android:gravity=\"center_vertical\"\r\n            android:orientation=\"horizontal\">\r\n\r\n            <TextView\r\n                android:id=\"@+id/tvRubricSubstrand\"\r\n                android:layout_width=\"0dp\"\r\n                android:layout_height=\"wrap_content\"\r\n                android:layout_weight=\"1\"\r\n                android:text=\"Sub-strand 1.1: Soil Erosion\"\r\n                android:textColor=\"@color/primary_green_dark\"\r\n                android:textSize=\"15sp\"\r\n                android:textStyle=\"bold\" />\r\n\r\n            <TextView\r\n                android:id=\"@+id/tvPerformanceLevelBadge\"\r\n                android:layout_width=\"wrap_content\"\r\n                android:layout_height=\"wrap_content\"\r\n                android:layout_marginStart=\"8dp\"\r\n                android:background=\"@drawable/bg_badge_ee\"\r\n                android:paddingHorizontal=\"10dp\"\r\n                android:paddingVertical=\"4dp\"\r\n                android:text=\"EE - Exceeds\"\r\n                android:textColor=\"@color/rubric_ee\"\r\n                android:textSize=\"12sp\"\r\n                android:textStyle=\"bold\" />\r\n\r\n        </LinearLayout>\r\n\r\n        <TextView\r\n            android:id=\"@+id/tvRubricCriteria\"\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"wrap_content\"\r\n            android:layout_marginTop=\"8dp\"\r\n            android:text=\"Criteria: Ability to identify soil erosion and construct effective erosion barriers.\"\r\n            android:textColor=\"@color/text_secondary\"\r\n            android:textSize=\"13sp\" />\r\n\r\n        <TextView\r\n            android:id=\"@+id/tvKeyInquiryQuestions\"\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"wrap_content\"\r\n            android:layout_marginTop=\"6dp\"\r\n            android:text=\"Key Inquiry Questions\"\r\n            android:textColor=\"@color/text_secondary\"\r\n            android:textSize=\"12sp\" />\r\n\r\n        <TextView\r\n            android:id=\"@+id/tvSuggestedExperiences\"\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"wrap_content\"\r\n            android:layout_marginTop=\"6dp\"\r\n            android:text=\"Suggested Experiences\"\r\n            android:textColor=\"@color/text_secondary\"\r\n            android:textSize=\"12sp\" />\r\n\r\n        <LinearLayout\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"wrap_content\"\r\n            android:layout_marginTop=\"10dp\"\r\n            android:background=\"@color/surface_variant\"\r\n            android:orientation=\"vertical\"\r\n            android:padding=\"10dp\">\r\n\r\n            <TextView\r\n                android:layout_width=\"wrap_content\"\r\n                android:layout_height=\"wrap_content\"\r\n                android:text=\"Teacher Remarks / Digital Task:\"\r\n                android:textColor=\"@color/primary_green_dark\"\r\n                android:textSize=\"11sp\"\r\n                android:textStyle=\"bold\" />\r\n\r\n            <TextView\r\n                android:id=\"@+id/tvTeacherRemark\"\r\n                android:layout_width=\"match_parent\"\r\n                android:layout_height=\"wrap_content\"\r\n                android:layout_marginTop=\"2dp\"\r\n                android:text=\"Amani demonstrated exemplary leadership during the practical exercise!\"\r\n                android:textColor=\"@color/text_primary\"\r\n                android:textSize=\"12sp\"\r\n                android:textStyle=\"italic\" />\r\n\r\n        </LinearLayout>\r\n\r\n    </LinearLayout>\r\n\r\n</com.google.android.material.card.MaterialCardView>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/item_rubric.xml b/app/src/main/res/layout/item_rubric.xml
+--- a/app/src/main/res/layout/item_rubric.xml	(revision 3357d6f401ffc3f339e46b92cc1f9b9aa2362163)
++++ b/app/src/main/res/layout/item_rubric.xml	(date 1792065077359)
+@@ -4,11 +4,11 @@
+     android:id="@+id/cardRubric"
+     android:layout_width="match_parent"
+     android:layout_height="wrap_content"
+-    android:layout_marginHorizontal="12dp"
+-    android:layout_marginVertical="6dp"
++    android:layout_marginHorizontal="4dp"
++    android:layout_marginVertical="7dp"
+     app:cardBackgroundColor="@color/surface_white"
+     app:cardCornerRadius="16dp"
+-    app:cardElevation="2dp"
++    app:cardElevation="1dp"
+     app:strokeColor="@color/surface_variant"
+     app:strokeWidth="1dp">
+ 
+@@ -18,92 +18,47 @@
+         android:orientation="vertical"
+         android:padding="16dp">
+ 
+-        <LinearLayout
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:gravity="center_vertical"
+-            android:orientation="horizontal">
+-
+-            <TextView
+-                android:id="@+id/tvRubricSubstrand"
+-                android:layout_width="0dp"
+-                android:layout_height="wrap_content"
+-                android:layout_weight="1"
+-                android:text="Sub-strand 1.1: Soil Erosion"
+-                android:textColor="@color/primary_green_dark"
+-                android:textSize="15sp"
+-                android:textStyle="bold" />
++        <TextView
++            android:id="@+id/tvRubricSubstrand"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:text="Assessment rubric"
++            android:textColor="@color/primary_green_dark"
++            android:textSize="16sp"
++            android:textStyle="bold" />
+ 
+-            <TextView
+-                android:id="@+id/tvPerformanceLevelBadge"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:layout_marginStart="8dp"
+-                android:background="@drawable/bg_badge_ee"
+-                android:paddingHorizontal="10dp"
+-                android:paddingVertical="4dp"
+-                android:text="EE - Exceeds"
+-                android:textColor="@color/rubric_ee"
+-                android:textSize="12sp"
+-                android:textStyle="bold" />
++        <TextView
++            android:id="@+id/tvPerformanceLevelBadge"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="8dp"
++            android:background="@drawable/bg_badge_me"
++            android:paddingHorizontal="10dp"
++            android:paddingVertical="5dp"
++            android:text="ME - Meets Expectations"
++            android:textColor="@color/rubric_me"
++            android:textSize="12sp"
++            android:textStyle="bold" />
+ 
+-        </LinearLayout>
+-
+         <TextView
+             android:id="@+id/tvRubricCriteria"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+-            android:layout_marginTop="8dp"
+-            android:text="Criteria: Ability to identify soil erosion and construct effective erosion barriers."
+-            android:textColor="@color/text_secondary"
+-            android:textSize="13sp" />
+-
+-        <TextView
+-            android:id="@+id/tvKeyInquiryQuestions"
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="6dp"
+-            android:text="Key Inquiry Questions"
+-            android:textColor="@color/text_secondary"
+-            android:textSize="12sp" />
+-
+-        <TextView
+-            android:id="@+id/tvSuggestedExperiences"
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="6dp"
+-            android:text="Suggested Experiences"
+-            android:textColor="@color/text_secondary"
+-            android:textSize="12sp" />
+-
+-        <LinearLayout
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="10dp"
+-            android:background="@color/surface_variant"
+-            android:orientation="vertical"
+-            android:padding="10dp">
++            android:layout_marginTop="12dp"
++            android:text="Assessment criteria"
++            android:textColor="@color/text_primary"
++            android:textSize="14sp" />
+ 
+-            <TextView
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:text="Teacher Remarks / Digital Task:"
+-                android:textColor="@color/primary_green_dark"
+-                android:textSize="11sp"
+-                android:textStyle="bold" />
+-
+-            <TextView
+-                android:id="@+id/tvTeacherRemark"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:layout_marginTop="2dp"
+-                android:text="Amani demonstrated exemplary leadership during the practical exercise!"
+-                android:textColor="@color/text_primary"
+-                android:textSize="12sp"
+-                android:textStyle="italic" />
+-
+-        </LinearLayout>
++        <TextView
++            android:id="@+id/tvTeacherRemark"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="10dp"
++            android:lineSpacingExtra="3dp"
++            android:text="Teacher feedback"
++            android:textColor="@color/text_secondary"
++            android:textSize="13sp" />
+ 
+     </LinearLayout>
+ 
+-</com.google.android.material.card.MaterialCardView>
+\ No newline at end of file
++</com.google.android.material.card.MaterialCardView>

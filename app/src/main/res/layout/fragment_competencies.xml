@@ -2,13 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_app"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary_green_dark"
+        android:background="?attr/colorPrimaryContainer"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:paddingBottom="16dp">
@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="7 Kenya CBC Core Competencies"
-            android:textColor="@color/surface_white"
+            android:textColor="?attr/colorOnPrimaryContainer"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Competency-based growth tracker across all learning areas"
-            android:textColor="#C8E6C9"
+            android:textColor="?attr/colorOnPrimaryContainer"
             android:textSize="12sp" />
 
     </LinearLayout>

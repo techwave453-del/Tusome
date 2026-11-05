@@ -3,21 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_app">
+    android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary_green_dark">
+        android:background="?attr/colorSurface">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbarDetail"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="@color/surface_white"
+            app:navigationIconTint="?attr/colorOnSurface"
             app:title="Strand Details"
-            app:titleTextColor="@color/surface_white" />
+            app:titleTextColor="?attr/colorOnSurface" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -27,7 +27,7 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:fillViewport="false"
-        android:paddingBottom="24dp"
+        android:paddingBottom="80dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
@@ -36,13 +36,14 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Title Header Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface_white"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
-                app:strokeColor="@color/surface_variant"
+                app:strokeColor="?attr/colorOutline"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -59,7 +60,7 @@
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
                         android:text="Strand 1"
-                        android:textColor="@color/surface_white"
+                        android:textColor="?attr/colorOnPrimary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -69,7 +70,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Conserving Our Environment"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
@@ -80,8 +81,152 @@
                         android:layout_marginTop="6dp"
                         android:lineSpacingExtra="2dp"
                         android:text="Methods of soil conservation, water retention techniques, and kitchen garden preparation in school."
-                        android:textColor="@color/text_secondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="14sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Quiz Launcher Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardQuizLauncher"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📝 CBC Knowledge Check Quiz"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvQuizCardStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Test your understanding of this strand"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTakeStrandQuiz"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="?attr/colorPrimary"
+                        android:text="Take Quiz"
+                        android:textColor="?attr/colorOnPrimary"
+                        app:cornerRadius="12dp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ✨ AI Content & Practice Question Generator Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardAiContentGenerator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeColor="?attr/colorPrimary"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="✨ AI Study Notes &amp; Practice Questions"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Generate extra learning notes and practice questions. Automatically saved locally for offline study."
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnGenerateAiNotes"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:text="Generate Notes"
+                            android:textColor="?attr/colorPrimary"
+                            app:cornerRadius="12dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnGenerateAiQuestions"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:backgroundTint="?attr/colorPrimary"
+                            android:text="Generate Practice"
+                            android:textColor="?attr/colorOnPrimary"
+                            app:cornerRadius="12dp" />
+
+                    </LinearLayout>
+
+                    <!-- Container for Displaying Generated AI Notes / Practice -->
+                    <LinearLayout
+                        android:id="@+id/containerAiGeneratedContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="?attr/colorSecondaryContainer"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/tvAiNotesDisplay"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -91,7 +236,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                app:cardBackgroundColor="@color/primary_container_green"
+                app:cardBackgroundColor="?attr/colorSecondaryContainer"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp">
 
@@ -106,7 +251,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Strand 1 of 2"
-                        android:textColor="@color/primary_green_dark"
+                        android:textColor="?attr/colorOnSecondaryContainer"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
@@ -116,7 +261,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="0 of 2 activities completed"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="?attr/colorOnSecondaryContainer"
                         android:textSize="13sp" />
 
                     <ProgressBar
@@ -127,8 +272,8 @@
                         android:layout_marginTop="8dp"
                         android:max="100"
                         android:progress="0"
-                        android:progressBackgroundTint="@color/surface_white"
-                        android:progressTint="@color/primary_green"
+                        android:progressBackgroundTint="?attr/colorSurface"
+                        android:progressTint="?attr/colorPrimary"
                         android:indeterminate="false" />
 
                     <LinearLayout
@@ -148,8 +293,8 @@
                             android:minHeight="44dp"
                             android:text="Previous"
                             android:textAllCaps="false"
-                            android:textColor="@color/primary_green_dark"
-                            app:strokeColor="@color/primary_green" />
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            app:strokeColor="?attr/colorPrimary" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnNextStrand"
@@ -158,14 +303,14 @@
                             android:layout_marginStart="6dp"
                             android:layout_weight="1"
                             android:minHeight="44dp"
-                            android:backgroundTint="@color/primary_green"
+                            android:backgroundTint="?attr/colorPrimary"
                             android:text="Next strand"
                             android:textAllCaps="false"
-                            android:textColor="@color/surface_white"
+                            android:textColor="?attr/colorOnPrimary"
                             app:cornerRadius="12dp"
                             app:icon="@drawable/ic_chevron_right"
                             app:iconGravity="textEnd"
-                            app:iconTint="@color/surface_white" />
+                            app:iconTint="?attr/colorOnPrimary" />
 
                     </LinearLayout>
                 </LinearLayout>
@@ -178,7 +323,7 @@
                 android:layout_marginTop="20dp"
                 android:layout_marginBottom="4dp"
                 android:text="Explore the sub-strands"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -188,7 +333,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:text="Learning outcomes, questions and activities"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp" />
 
             <LinearLayout
@@ -201,5 +346,18 @@
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Floating Action Button for AI Tutor -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabAskAiTutor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:text="Ask AI Tutor"
+        android:textColor="?attr/colorOnPrimary"
+        app:backgroundTint="?attr/colorPrimary"
+        app:icon="@drawable/ic_psychology"
+        app:iconTint="?attr/colorOnPrimary" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

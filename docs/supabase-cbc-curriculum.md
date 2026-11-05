@@ -21,9 +21,21 @@ Row Level Security is enabled on all ten tables. The Android app can read publis
 
 ## Current content coverage
 
-The grade and learning-area catalogue is seeded for PP1–Grade 12, using the KICD regular curriculum index and grade-specific subject catalogues. Detailed content currently loaded and published is the Grade 4 Agriculture and Nutrition design: 4 strands, 13 sub-strands, 39 paraphrased learning outcomes, 13 inquiry prompts and 13 suggested learning activities. Assessment rubric rows are present but intentionally unpublished pending teacher review.
+The grade and learning-area catalogue is seeded for PP1–Grade 12, using the KICD regular curriculum index and grade-specific subject catalogues. Detailed Grade 4 Agriculture and Nutrition content remains available: 4 strands, 13 sub-strands and 39 paraphrased learning outcomes. Additional published starter packs have now been added for Grades 1, 2, 3, 5, 6, 7, 8 and 9. Current published counts are:
 
-**This is not yet a complete, verified strand-by-strand curriculum for every subject and grade.** Subject names and grade/pathway availability should be checked against each current KICD design before publishing additional detailed content. Do not represent catalogue entries as complete lesson content.
+| Grade | Strands | Sub-strands | Learning outcomes |
+|---|---:|---:|---:|
+| Grade 1 | 4 | 8 | 16 |
+| Grade 2 | 4 | 8 | 16 |
+| Grade 3 | 4 | 8 | 16 |
+| Grade 4 | 4 | 13 | 39 |
+| Grade 5 | 6 | 12 | 24 |
+| Grade 6 | 6 | 12 | 24 |
+| Grade 7 | 5 | 10 | 20 |
+| Grade 8 | 5 | 10 | 20 |
+| Grade 9 | 5 | 10 | 20 |
+
+The new packs include age-banded starter topics, learning outcomes, inquiry prompts and suggested practical activities across the learning areas available for each grade. They are paraphrased learning-practice material and are **not a complete or independently verified reproduction of KICD curriculum designs**. A curriculum editor should validate each grade/learning-area pack against the current KICD design before relying on it for formal teaching or assessment. PP1, PP2 and Grades 10–12 still need their own detailed, pathway-aware packs. Assessment rubric rows remain unpublished pending teacher review. Do not represent catalogue entries as complete lesson content.
 
 ## Source references
 

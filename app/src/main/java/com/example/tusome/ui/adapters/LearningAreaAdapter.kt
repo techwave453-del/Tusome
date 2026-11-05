@@ -1,6 +1,5 @@
 package com.example.tusome.ui.adapters
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,8 +15,8 @@ class LearningAreaAdapter(
 ) : RecyclerView.Adapter<LearningAreaAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val frameIconContainer: View = view.findViewById(R.id.frameIconContainer)
         val ivSubjectIcon: ImageView = view.findViewById(R.id.ivSubjectIcon)
+        val tvGradeBadge: TextView = view.findViewById(R.id.tvGradeBadge)
         val tvSubjectTitle: TextView = view.findViewById(R.id.tvSubjectTitle)
         val tvSubjectKiswahili: TextView = view.findViewById(R.id.tvSubjectKiswahili)
         val tvStrandsCount: TextView = view.findViewById(R.id.tvStrandsCount)
@@ -31,19 +30,40 @@ class LearningAreaAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
+        holder.tvGradeBadge.text = "${item.gradeLevel.title} • CBC"
         holder.tvSubjectTitle.text = item.title
         holder.tvSubjectKiswahili.text = item.kiswahiliTitle
-        holder.tvStrandsCount.text = holder.itemView.context.getString(R.string.explore_learning_area)
-        holder.ivSubjectIcon.setImageResource(item.iconResId)
-
-        try {
-            holder.frameIconContainer.setBackgroundColor(Color.parseColor(item.bgColorHex))
-            holder.ivSubjectIcon.setColorFilter(Color.parseColor(item.iconColorHex))
-        } catch (_: Exception) {
+        holder.tvSubjectKiswahili.visibility =
+            if (item.kiswahiliTitle.isBlank()) View.GONE else View.VISIBLE
+        holder.tvStrandsCount.text = if (item.strandsCount > 0) {
+            "${item.strandsCount} strands • ${item.subStrandsCount} sub-strands"
+        } else {
+            "Explore available curriculum"
         }
+        holder.ivSubjectIcon.setImageResource(illustrationFor(item.title))
+        holder.ivSubjectIcon.contentDescription = null
+        holder.itemView.contentDescription =
+            "${item.title}. ${item.kiswahiliTitle}. ${holder.tvStrandsCount.text}. Open learning area."
 
         holder.itemView.setOnClickListener {
             onItemClick(item)
+        }
+    }
+
+    private fun illustrationFor(title: String): Int {
+        val name = title.lowercase()
+        return when {
+            listOf("agriculture", "nutrition", "environment", "nature", "livestock").any(name::contains) ->
+                R.drawable.illustration_learning_area_agriculture
+            listOf("mathematics", "math", "numeracy").any(name::contains) ->
+                R.drawable.illustration_learning_area_math
+            listOf("english", "kiswahili", "language", "literacy", "communication").any(name::contains) ->
+                R.drawable.illustration_learning_area_language
+            listOf("science", "technology", "integrated science", "computer", "digital").any(name::contains) ->
+                R.drawable.illustration_learning_area_science
+            listOf("creative", "arts", "music", "sport", "physical", "health", "movement").any(name::contains) ->
+                R.drawable.illustration_learning_area_creative
+            else -> R.drawable.illustration_learning_area_general
         }
     }
 

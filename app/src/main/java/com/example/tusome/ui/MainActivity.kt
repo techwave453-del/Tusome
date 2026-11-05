@@ -1,5 +1,6 @@
 package com.example.tusome.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -9,6 +10,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.example.tusome.R
 import com.example.tusome.data.repository.SupabaseAuthRepository
+import com.example.tusome.ui.dialogs.AiTutorBottomSheetDialog
 import com.example.tusome.ui.fragments.AssessmentsFragment
 import com.example.tusome.ui.fragments.CompetenciesFragment
 import com.example.tusome.ui.fragments.HomeFragment
@@ -28,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (SupabaseAuthRepository.currentSession(this) == null) {
-            startActivity(android.content.Intent(this, AuthActivity::class.java))
+            startActivity(Intent(this, AuthActivity::class.java))
             finish()
             return
         }
@@ -86,8 +88,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.drawer_strands -> selectBottomDestination(R.id.navigation_strands)
                 R.id.drawer_assessments -> selectBottomDestination(R.id.navigation_assessments)
                 R.id.drawer_competencies -> selectBottomDestination(R.id.navigation_competencies)
+                R.id.drawer_ai_tutor -> AiTutorBottomSheetDialog().show(supportFragmentManager, "AiTutor")
                 R.id.drawer_profile -> selectBottomDestination(R.id.navigation_profile)
-                R.id.drawer_admin -> startActivity(android.content.Intent(this, AdminActivity::class.java))
+                R.id.drawer_admin -> startActivity(Intent(this, AdminActivity::class.java))
                 R.id.drawer_about -> showAboutDialog()
             }
             drawerLayout.closeDrawer(GravityCompat.START)

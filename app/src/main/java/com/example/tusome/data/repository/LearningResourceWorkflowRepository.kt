@@ -13,6 +13,26 @@ import org.json.JSONObject
  */
 object LearningResourceWorkflowRepository {
 
+    /** Generates a CBC-aligned resource on the server and saves it as a reviewable draft. */
+    fun generateDraft(
+        context: Context,
+        request: com.example.tusome.data.model.LearningContentGenerationRequest,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        val payload = JSONObject()
+            .put("grade_id", request.gradeCode.trim().lowercase())
+            .put("learning_area_id", request.learningAreaId.trim())
+            .put("strand_id", request.strandId.trim())
+            .put("sub_strand_id", request.subStrandId.trim())
+            .put("resource_type", request.resourceType.key)
+            .put("language_code", request.languageCode.trim().lowercase())
+            .put("estimated_minutes", request.estimatedMinutes ?: 30)
+            .put("difficulty", request.difficulty ?: "age_appropriate")
+            .put("local_context", request.localContext ?: "")
+            .put("additional_instructions", request.additionalInstructions ?: "")
+        SupabaseAuthRepository.generateLearningResource(context, payload, onResult)
+    }
+
     fun createDraft(
         context: Context,
         draft: LearningResourceDraft,

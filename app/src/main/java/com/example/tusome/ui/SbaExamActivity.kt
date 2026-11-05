@@ -134,7 +134,7 @@ class SbaExamActivity : AppCompatActivity() {
 
         val notice = TextView(this).apply {
             text = if (attempt.isSubmitted) {
-                "Submitted • Your written responses are saved on this device and are pending teacher review."
+                "Submitted • Your written responses are saved on this device. They have not been sent to a teacher."
             } else {
                 "Sample practice paper • Your answers are saved automatically on this device. Submit when you are finished."
             }
@@ -231,7 +231,7 @@ class SbaExamActivity : AppCompatActivity() {
                 setOnClickListener {
                     AlertDialog.Builder(this@SbaExamActivity)
                         .setTitle("Submit practice assessment?")
-                        .setMessage("After submission you will not be able to change your answers on this attempt. Your responses will be marked as pending teacher review.")
+                        .setMessage("After submission you will not be able to change your answers on this attempt. Your responses are saved locally only; they have not been sent to a teacher and are not automatically marked.")
                         .setNegativeButton("Continue answering", null)
                         .setPositiveButton("Submit") { _, _ -> submitAttempt() }
                         .show()
@@ -251,7 +251,7 @@ class SbaExamActivity : AppCompatActivity() {
         renderExamView()
         AlertDialog.Builder(this)
             .setTitle("Assessment submitted")
-            .setMessage("Your answers have been saved on this device. This sample assessment does not automatically award marks; it is pending teacher review.")
+            .setMessage("Your answers have been saved on this device. This sample assessment does not automatically award marks. Your answers remain saved on this device and are not yet available to a teacher.")
             .setPositiveButton(android.R.string.ok, null)
             .show()
     }

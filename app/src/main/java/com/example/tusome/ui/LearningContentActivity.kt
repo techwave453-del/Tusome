@@ -482,7 +482,7 @@ class LearningContentActivity : AppCompatActivity() {
     }
 
     private fun spinner() = Spinner(this).apply {
-        adapter = adapter(emptyList())
+        this.adapter = this@LearningContentActivity.adapter(emptyList())
     }
 
     private fun adapter(items: List<String>) =

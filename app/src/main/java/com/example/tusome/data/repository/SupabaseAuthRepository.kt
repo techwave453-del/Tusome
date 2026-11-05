@@ -146,6 +146,55 @@ object SupabaseAuthRepository {
         }
     }
 
+    /** Calls the server-authorized learning-resource workflow using the signed-in JWT. */
+    fun manageLearningResources(
+        context: Context,
+        payload: JSONObject,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        refreshSessionIfNeeded(context) { refreshed ->
+            val session = refreshed.getOrNull()
+            if (session == null) {
+                onResult(Result.failure(refreshed.exceptionOrNull()
+                    ?: IllegalStateException("Sign in is required to manage learning resources.")))
+                return@refreshSessionIfNeeded
+            }
+            executor.execute {
+                val result = runCatching {
+                    request("/functions/v1/manage-learning-resources", payload, session.accessToken) as JSONObject
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
+    /** Calls the server-side CBC AI generator with the signed-in user's JWT. */
+    fun generateLearningResource(
+        context: Context,
+        payload: JSONObject,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        refreshSessionIfNeeded(context) { refreshed ->
+            val session = refreshed.getOrNull()
+            if (session == null) {
+                onResult(Result.failure(refreshed.exceptionOrNull()
+                    ?: IllegalStateException("Sign in is required to generate learning resources.")))
+                return@refreshSessionIfNeeded
+            }
+            executor.execute {
+                val result = runCatching {
+                    request(
+                        "/functions/v1/generate-learning-resource",
+                        payload,
+                        session.accessToken,
+                        readTimeoutMillis = 105000
+                    ) as JSONObject
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
     fun signOut(context: Context) {
         val appContext = context.applicationContext
         val session = currentSession(appContext)
@@ -229,11 +278,16 @@ object SupabaseAuthRepository {
         )
     }
 
-    private fun request(path: String, payload: JSONObject?, accessToken: String?): Any {
+    private fun request(
+        path: String,
+        payload: JSONObject?,
+        accessToken: String?,
+        readTimeoutMillis: Int = 12000
+    ): Any {
         val connection = (URL(BASE_URL + path).openConnection() as HttpURLConnection).apply {
             requestMethod = if (payload == null) "GET" else "POST"
             connectTimeout = 12000
-            readTimeout = 12000
+            readTimeout = readTimeoutMillis
             setRequestProperty("apikey", PUBLISHABLE_KEY)
             setRequestProperty("Accept", "application/json")
             if (accessToken != null) {

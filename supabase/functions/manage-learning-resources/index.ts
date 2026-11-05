@@ -135,7 +135,7 @@ Deno.serve(async (req: Request) => {
     if (!canReview) return reply(403, { error: "Only curriculum editors can view the review queue." });
     const { data, error } = await admin.from("learning_resources")
       .select("*")
-      .eq("status", "pending_review")
+      .in("status", ["pending_review", "approved"])
       .order("created_at", { ascending: true })
       .limit(100);
     if (error) return reply(500, { error: "Unable to load the learning-resource review queue." });

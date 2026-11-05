@@ -258,7 +258,7 @@ class StrandDetailActivity : AppCompatActivity() {
             strandId = strand.id,
             subStrandId = subStrand.id
         ) { result ->
-            if (isFinishing || isDestroyed || !subCard.isAttachedToWindow) return@fetchPublishedForSubStrand
+            if (isFinishing || isDestroyed || subCard.parent == null) return@fetchPublishedForSubStrand
             container.removeAllViews()
             result.onSuccess { fetched ->
                 val resources = fetched.resources

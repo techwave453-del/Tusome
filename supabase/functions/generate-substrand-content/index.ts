@@ -158,6 +158,8 @@ Deno.serve(async (req: Request) => {
       return reply(409, { error: str(parsedRaw.content_conflict, 1000) });
     }
     const pack = validatePack(parsedRaw);
+    // Preserve the exact published learning outcomes; the model may explain them but never rewrite them.
+    pack.outcomes = outcomes.map((row) => row.outcome_text);
     const { data: saved, error: saveError } = await admin.from("ai_substrand_content").insert({
       grade_id: gradeId, learning_area_id: areaId, strand_id: strandId, sub_strand_id: subId,
       generated_by: auth.user.id, model, content_payload: pack,

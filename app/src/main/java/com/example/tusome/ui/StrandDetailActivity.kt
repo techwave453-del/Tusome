@@ -128,9 +128,6 @@ class StrandDetailActivity : AppCompatActivity() {
                         strand.learningAreaId == requestedAreaId
                     }
                     currentStrandIndex = currentStrands.indexOfFirst { it.id == requestedStrandId }
-                    if (currentStrandIndex < 0 && requestedStrandId == null && currentStrands.isNotEmpty()) {
-                        currentStrandIndex = 0
-                    }
                     if (currentStrandIndex !in currentStrands.indices) {
                         Toast.makeText(
                             this,

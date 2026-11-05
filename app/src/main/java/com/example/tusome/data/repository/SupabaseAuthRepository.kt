@@ -1,6 +1,7 @@
 package com.example.tusome.data.repository
 
 import android.content.Context
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.security.keystore.KeyGenParameterSpec
@@ -45,6 +46,86 @@ object SupabaseAuthRepository {
 
     fun currentSession(context: Context): AuthSession? =
         runCatching { readSession(context.applicationContext) }.getOrNull()
+
+    /** Sends a recovery email without disclosing whether the email belongs to an account. */
+    fun requestPasswordRecovery(
+        context: Context,
+        email: String,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        executor.execute {
+            val result = runCatching {
+                val redirect = Uri.encode("com.example.tusome://auth/reset-password")
+                request(
+                    "/auth/v1/recover?redirect_to=$redirect",
+                    JSONObject().put("email", email.trim()),
+                    null
+                )
+                Unit
+            }
+            mainHandler.post { onResult(result) }
+        }
+    }
+
+    /**
+     * Verifies a Supabase recovery callback and changes the password using the short-lived
+     * recovery access token. Tokens are never logged or persisted before verification.
+     */
+    fun completePasswordRecovery(
+        context: Context,
+        callbackUri: Uri,
+        newPassword: String,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        val appContext = context.applicationContext
+        executor.execute {
+            val result = runCatching {
+                val fragment = callbackUri.fragment
+                val fragmentUri = if (fragment.isNullOrBlank()) null else Uri.parse("https://callback.invalid/?$fragment")
+                val tokenHash = callbackUri.getQueryParameter("token_hash")
+                    ?: fragmentUri?.getQueryParameter("token_hash")
+                val callbackType = callbackUri.getQueryParameter("type")
+                    ?: fragmentUri?.getQueryParameter("type")
+                val auth = if (!tokenHash.isNullOrBlank()) {
+                    if (callbackType != "recovery") {
+                        throw IllegalStateException("This link is not a password recovery link.")
+                    }
+                    request(
+                        "/auth/v1/verify",
+                        JSONObject().put("token_hash", tokenHash).put("type", "recovery"),
+                        null
+                    ) as JSONObject
+                } else {
+                    val accessToken = callbackUri.getQueryParameter("access_token")
+                        ?: fragmentUri?.getQueryParameter("access_token")
+                    val refreshToken = callbackUri.getQueryParameter("refresh_token")
+                        ?: fragmentUri?.getQueryParameter("refresh_token")
+                    if (callbackType != "recovery" || accessToken.isNullOrBlank() || refreshToken.isNullOrBlank()) {
+                        throw IllegalStateException(
+                            "This recovery link is invalid or has expired. Request a new password reset email."
+                        )
+                    }
+                    val user = request("/auth/v1/user", null, accessToken) as JSONObject
+                    JSONObject()
+                        .put("access_token", accessToken)
+                        .put("refresh_token", refreshToken)
+                        .put("expires_in", 3600)
+                        .put("user", user)
+                }
+
+                val session = sessionFromAuth(auth, appContext)
+                request(
+                    "/auth/v1/user",
+                    JSONObject().put("password", newPassword),
+                    session.accessToken,
+                    methodOverride = "PUT"
+                )
+                saveSession(appContext, session)
+                Unit
+            }
+            mainHandler.post { onResult(result) }
+        }
+    }
 
     fun signIn(
         context: Context,
@@ -253,9 +334,9 @@ object SupabaseAuthRepository {
         )
     }
 
-    private fun request(path: String, payload: JSONObject?, accessToken: String?): Any {
+    private fun request(\n        path: String,\n        payload: JSONObject?,\n        accessToken: String?,\n        methodOverride: String? = null\n    ): Any {
         val connection = (URL(BASE_URL + path).openConnection() as HttpURLConnection).apply {
-            requestMethod = if (payload == null) "GET" else "POST"
+            requestMethod = methodOverride ?: if (payload == null) "GET" else "POST"
             connectTimeout = 12000
             readTimeout = 12000
             setRequestProperty("apikey", PUBLISHABLE_KEY)

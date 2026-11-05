@@ -68,9 +68,13 @@ object LearningResourceRepository {
         SupabaseAuthRepository.refreshSessionIfNeeded(appContext) { refreshed ->
             val session = refreshed.getOrNull()
                 ?: SupabaseAuthRepository.currentSession(appContext)
-            val accessToken = session?.accessToken?.takeIf {
-                session.expiresAtMillis > System.currentTimeMillis()
-            } ?: PUBLISHABLE_KEY
+            val accessToken = if (
+                session != null && session.expiresAtMillis > System.currentTimeMillis()
+            ) {
+                session.accessToken
+            } else {
+                PUBLISHABLE_KEY
+            }
 
             executor.execute {
                 val result = runCatching {

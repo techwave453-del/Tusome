@@ -122,6 +122,31 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Reviewed supplementary lessons and practice resources -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Published learning resources"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvLearningResourcesStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Checking for reviewed learning resources…"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/containerLearningResources"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
         <!-- Interactive Reflection Input -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilLearnerReflection"

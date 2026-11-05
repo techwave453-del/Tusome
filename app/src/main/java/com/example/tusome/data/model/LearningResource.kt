@@ -6,16 +6,20 @@ package com.example.tusome.data.model
  * Official curriculum records remain the source of truth. AI-generated resources are
  * separate records and must pass teacher/admin review before they can be published.
  */
-enum class LearningResourceType(val key: String, val displayName: String) {
+enum class LearningResourceType(
+    val key: String,
+    val displayName: String,
+    val teacherOnly: Boolean = false
+) {
     LESSON_NOTES("lesson_notes", "Lesson notes"),
     WORKED_EXAMPLE("worked_example", "Worked examples"),
     LEARNER_ACTIVITY("learner_activity", "Learner activities"),
     WORKSHEET("worksheet", "Worksheets"),
     QUIZ("quiz", "Quizzes"),
     ASSESSMENT("assessment", "Assessments"),
-    MARKING_SCHEME("marking_scheme", "Marking schemes"),
+    MARKING_SCHEME("marking_scheme", "Marking schemes", teacherOnly = true),
     REVISION_NOTES("revision_notes", "Revision notes"),
-    TEACHER_GUIDE("teacher_guide", "Teacher guides"),
+    TEACHER_GUIDE("teacher_guide", "Teacher guides", teacherOnly = true),
     PROJECT("project", "Projects");
 
     companion object {
@@ -96,7 +100,7 @@ data class LearningResource(
     val publishedAt: String? = null
 ) {
     val isAvailableToLearners: Boolean
-        get() = status == LearningResourceStatus.PUBLISHED
+        get() = status == LearningResourceStatus.PUBLISHED && !type.teacherOnly
 
     val hasUsableContent: Boolean
         get() = title.isNotBlank() && sections.any { section ->

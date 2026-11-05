@@ -11,7 +11,10 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
-import java.time.Instant
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.Executors
 
 /**
@@ -264,10 +267,10 @@ object AssessmentRepository {
                                 .put("paper_id", attempt.getString("paper_id"))
                                 .put("paper_version", attempt.getInt("paper_version"))
                                 .put("answers", attempt.getJSONObject("answers"))
-                                .put("started_at", Instant.ofEpochMilli(attempt.getLong("started_at")).toString())
+                                .put("started_at", toIsoUtc(attempt.getLong("started_at")))
                                 .put("submitted_at", attempt.opt("submitted_at").let { value ->
                                     if (value == null || value == JSONObject.NULL) JSONObject.NULL
-                                    else Instant.ofEpochMilli((value as Number).toLong()).toString()
+                                    else toIsoUtc((value as Number).toLong())
                                 })
                                 .put("client_updated_at", attempt.getLong("client_updated_at"))
                         )
@@ -281,6 +284,11 @@ object AssessmentRepository {
             }
         }
     }
+
+    private fun toIsoUtc(epochMillis: Long): String =
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }.format(Date(epochMillis))
 
     private fun readCached(
         store: AssessmentLocalStore,

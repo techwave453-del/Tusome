@@ -95,8 +95,15 @@ object CbcAiTutorService {
                 }
                 val outcomes = strings("outcomes")
                 val questions = strings("inquiry_questions")
-                val activities = strings("learning_activities")
-                val activityText = activities.joinToString("\\n") { it }
+                val activityRows = content.optJSONArray("learning_activities") ?: org.json.JSONArray()
+                val activities = buildList {
+                    for (index in 0 until activityRows.length()) {
+                        val activity = activityRows.optJSONObject(index) ?: continue
+                        val title = activity.optString("title").trim()
+                        val instructions = activity.optString("instructions").trim()
+                        if (title.isNotBlank() && instructions.isNotBlank()) add("$title: $instructions")
+                    }
+                }
                 val digitalTask = content.optString("digital_task")
                 if (outcomes.isEmpty() || questions.isEmpty() || activities.isEmpty()) {
                     throw IllegalStateException("The generated lesson pack is incomplete.")
@@ -108,7 +115,7 @@ object CbcAiTutorService {
                     digitalTaskPrompt = digitalTask.ifBlank {
                         "Complete the practical learning activity for $subStrandTitle and record evidence in your portfolio."
                     },
-                    kicdCitation = "AI-generated draft for $grade.title • $strandTitle → $subStrandTitle. Based on published Tusome curriculum records; pending curriculum review."
+                    kicdCitation = "AI-generated draft for ${grade.title} • $strandTitle → $subStrandTitle. Based on published Tusome curriculum records; pending curriculum review."
                 )
             })
         }

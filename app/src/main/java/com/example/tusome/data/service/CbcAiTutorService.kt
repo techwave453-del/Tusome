@@ -113,11 +113,11 @@ object CbcAiTutorService {
                     keyInquiryQuestions = questions,
                     suggestedExperiences = activities,
                     digitalTaskPrompt = buildString {
-                        append("Suggested learning experiences:\\n")
+                        append("Suggested learning experiences:\n")
                         activities.forEachIndexed { index, activity ->
-                            append(index + 1).append(". ").append(activity).append("\\n")
+                            append(index + 1).append(". ").append(activity).append("\n")
                         }
-                        append("\\nPortfolio task: ").append(
+                        append("\nPortfolio task: ").append(
                             digitalTask.ifBlank {
                                 "Record evidence of your learning about $subStrandTitle in your portfolio."
                             }

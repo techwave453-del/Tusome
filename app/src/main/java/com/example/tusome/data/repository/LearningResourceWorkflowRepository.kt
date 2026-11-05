@@ -27,6 +27,7 @@ object LearningResourceWorkflowRepository {
             .put("resource_type", request.resourceType.key)
             .put("language_code", request.languageCode.trim().lowercase())
             .put("estimated_minutes", request.estimatedMinutes ?: 30)
+            .put("learner_age_range", request.learnerAgeRange ?: "")
             .put("difficulty", request.difficulty ?: "age_appropriate")
             .put("local_context", request.localContext ?: "")
             .put("additional_instructions", request.additionalInstructions ?: "")

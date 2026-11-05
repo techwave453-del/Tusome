@@ -152,6 +152,28 @@ class AssessmentLocalStore(context: Context) :
         )
     }
 
+    fun getLatestAttemptForPaper(userId: String, paperId: String): JSONObject? {
+        return readableDatabase.query(
+            "learner_assessment_attempts_local",
+            arrayOf("attempt_id", "paper_version", "answers_json", "started_at", "submitted_at", "sync_state"),
+            "user_id = ? AND paper_id = ?",
+            arrayOf(userId, paperId),
+            null,
+            null,
+            "updated_at DESC",
+            "1"
+        ).use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
+            JSONObject()
+                .put("attempt_id", cursor.getString(0))
+                .put("paper_version", cursor.getInt(1))
+                .put("answers", JSONObject(cursor.getString(2)))
+                .put("started_at", cursor.getLong(3))
+                .put("submitted_at", if (cursor.isNull(4)) JSONObject.NULL else cursor.getLong(4))
+                .put("sync_state", cursor.getString(5))
+        }
+    }
+
     fun getPendingAttempts(userId: String): List<JSONObject> {
         val result = mutableListOf<JSONObject>()
         readableDatabase.query(

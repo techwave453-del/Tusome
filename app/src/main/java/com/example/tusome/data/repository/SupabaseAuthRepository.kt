@@ -168,6 +168,28 @@ object SupabaseAuthRepository {
         }
     }
 
+    /** Calls the server-side CBC AI generator with the signed-in user's JWT. */
+    fun generateLearningResource(
+        context: Context,
+        payload: JSONObject,
+        onResult: (Result<JSONObject>) -> Unit
+    ) {
+        refreshSessionIfNeeded(context) { refreshed ->
+            val session = refreshed.getOrNull()
+            if (session == null) {
+                onResult(Result.failure(refreshed.exceptionOrNull()
+                    ?: IllegalStateException("Sign in is required to generate learning resources.")))
+                return@refreshSessionIfNeeded
+            }
+            executor.execute {
+                val result = runCatching {
+                    request("/functions/v1/generate-learning-resource", payload, session.accessToken) as JSONObject
+                }
+                mainHandler.post { onResult(result) }
+            }
+        }
+    }
+
     fun signOut(context: Context) {
         val appContext = context.applicationContext
         val session = currentSession(appContext)

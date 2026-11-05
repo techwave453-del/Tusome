@@ -337,7 +337,6 @@ Use 3–8 well-structured sections for substantial resources and fewer for short
       signal: AbortSignal.timeout(90_000),
       body: JSON.stringify({
         model,
-        temperature: 0.4,
         max_completion_tokens: 7000,
         response_format: { type: "json_object" },
         messages: [

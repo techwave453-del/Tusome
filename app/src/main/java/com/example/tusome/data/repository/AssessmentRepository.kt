@@ -52,7 +52,9 @@ object AssessmentRepository {
                     val query = buildString {
                         append("?select=id,paper_code,grade_id,learning_area_id,strand_id,sub_strand_id,")
                         append("assessment_type,title,description,instructions,duration_minutes,total_marks,")
-                        append("question_payload,marking_payload,source_reference,version,content_status,published_at")
+                        append("question_payload,marking_payload,sections_payload,performance_level_grid,learner_detail_fields,")
+                        append("paper_metadata,competency_tags,coverage_map,source_reference,term_number,trial_number,")
+                        append("paper_number,pathway,academic_year,version,content_status,published_at")
                         append("&grade_id=eq.").append(encode(gradeId))
                         append("&learning_area_id=eq.").append(encode(learningAreaId))
                         append("&content_status=eq.published&order=updated_at.desc")

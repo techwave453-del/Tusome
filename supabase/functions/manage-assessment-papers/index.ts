@@ -72,12 +72,22 @@ Deno.serve(async (req: Request) => {
     if (!canReview) return reply(403, { error: "Only curriculum editors and platform administrators can review assessments." });
     const { data, error } = await admin.from("assessment_papers")
       .select("id,paper_code,grade_id,learning_area_id,strand_id,sub_strand_id,title,assessment_type,content_status,total_marks,duration_minutes,version,created_by,created_at,updated_at")
-      .eq("content_status", "in_review").order("updated_at", { ascending: true }).limit(100);
+      .in("content_status", ["in_review", "approved"]).order("updated_at", { ascending: true }).limit(100);
     if (error) return reply(500, { error: "Unable to load the assessment review queue." });
     return reply(200, { papers: data ?? [] });
   }
 
   if (!paperId) return reply(400, { error: "A paper ID is required." });
+  if (action === "get_paper") {
+    const { data: selected, error: selectedError } = await admin.from("assessment_papers")
+      .select("*").eq("id", paperId).maybeSingle();
+    if (selectedError || !selected) return reply(404, { error: "Assessment paper not found." });
+    const isOwner = selected.created_by === actorId;
+    if (!canReview && !(canCreate && isOwner)) {
+      return reply(403, { error: "You are not authorised to view this assessment draft." });
+    }
+    return reply(200, { paper: selected });
+  }
   const { data: paper, error: paperError } = await admin.from("assessment_papers")
     .select("id,created_by,school_id,content_status,version,reviewed_by,reviewed_at")
     .eq("id", paperId).maybeSingle();

@@ -204,7 +204,8 @@ class AssessmentLibraryActivity : AppCompatActivity() {
                             }
                         }
                     })
-                }            }.onFailure { error ->
+                }
+            }.onFailure { error ->
                 status.text = "Assessment generation failed: ${error.message.orEmpty()}"
             }
         }

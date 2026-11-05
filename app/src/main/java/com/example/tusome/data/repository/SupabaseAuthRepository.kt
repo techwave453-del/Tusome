@@ -183,7 +183,12 @@ object SupabaseAuthRepository {
             }
             executor.execute {
                 val result = runCatching {
-                    request("/functions/v1/generate-learning-resource", payload, session.accessToken) as JSONObject
+                    request(
+                        "/functions/v1/generate-learning-resource",
+                        payload,
+                        session.accessToken,
+                        readTimeoutMillis = 105000
+                    ) as JSONObject
                 }
                 mainHandler.post { onResult(result) }
             }

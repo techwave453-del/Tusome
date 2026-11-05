@@ -64,10 +64,16 @@ object LearningResourceRepository {
             return
         }
 
-        val cacheKey = cacheKey(normalizedGrade, subStrandId, normalizedLanguage)
         SupabaseAuthRepository.refreshSessionIfNeeded(appContext) { refreshed ->
             val session = refreshed.getOrNull()
                 ?: SupabaseAuthRepository.currentSession(appContext)
+            val cacheKey = cacheKey(
+                normalizedGrade,
+                subStrandId,
+                normalizedLanguage,
+                session?.userId,
+                session?.schoolId
+            )
             val accessToken = session?.takeIf {
                 it.expiresAtMillis > System.currentTimeMillis()
             }?.accessToken
@@ -243,9 +249,17 @@ object LearningResourceRepository {
         }
     }
 
-    private fun cacheKey(gradeCode: String, subStrandId: String, languageCode: String?): String {
+    private fun cacheKey(
+        gradeCode: String,
+        subStrandId: String,
+        languageCode: String?,
+        userId: String?,
+        schoolId: String?
+    ): String {
         val language = languageCode ?: "all"
-        return "resources_${gradeCode}_${subStrandId}_$language"
+        val userScope = userId ?: "anonymous"
+        val schoolScope = schoolId ?: "global"
+        return "resources_${gradeCode}_${subStrandId}_$language_${userScope}_$schoolScope"
     }
 
     /**

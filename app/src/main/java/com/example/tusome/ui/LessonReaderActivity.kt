@@ -10,6 +10,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tusome.R
 import com.example.tusome.data.model.GradeLevel
+import com.example.tusome.data.model.LessonContent
+import com.example.tusome.data.model.LessonSection
+import com.example.tusome.data.local.OfflineCurriculumCache
+import org.json.JSONObject
+import org.json.JSONArray
 import com.example.tusome.data.repository.LessonNotesRepository
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
@@ -34,7 +39,79 @@ class LessonReaderActivity : AppCompatActivity() {
             it.code.equals(gradeCode, ignoreCase = true)
         } ?: GradeLevel.GRADE_4
 
-        val lesson = LessonNotesRepository.getDetailedLessonNotes(subStrandId, subStrandTitle, grade)
+        val cachedPack = OfflineCurriculumCache(this).getSubstrandKicdContent(subStrandId)
+        val generatedLesson = runCatching {
+            val cacheJson = JSONObject(cachedPack ?: throw IllegalStateException("No generated lesson cached."))
+            val fullContent = JSONObject(cacheJson.optString("full_content", "{}"))
+            val vocabularyRows = fullContent.optJSONArray("key_vocabulary") ?: JSONArray()
+            val vocabulary = linkedMapOf<String, String>()
+            for (index in 0 until vocabularyRows.length()) {
+                val item = vocabularyRows.optJSONObject(index) ?: continue
+                val term = item.optString("term").trim()
+                val meaning = item.optString("meaning").trim()
+                if (term.isNotBlank() && meaning.isNotBlank()) vocabulary[term] = meaning
+            }
+            val sectionRows = fullContent.optJSONArray("sections") ?: JSONArray()
+            val sections = buildList {
+                for (index in 0 until sectionRows.length()) {
+                    val item = sectionRows.optJSONObject(index) ?: continue
+                    val heading = item.optString("heading").trim()
+                    val explanation = item.optString("explanation").trim()
+                    if (heading.isBlank() || explanation.isBlank()) continue
+                    val examples = item.optJSONArray("examples") ?: JSONArray()
+                    add(
+                        LessonSection(
+                            sectionHeading = heading,
+                            explanationText = explanation,
+                            bulletPoints = buildList {
+                                for (exampleIndex in 0 until examples.length()) {
+                                    examples.optString(exampleIndex).takeIf { it.isNotBlank() }?.let(::add)
+                                }
+                            }
+                        )
+                    )
+                }
+            }
+            val activityRows = fullContent.optJSONArray("learning_activities") ?: JSONArray()
+            val activities = buildList {
+                for (index in 0 until activityRows.length()) {
+                    val item = activityRows.optJSONObject(index) ?: continue
+                    val title = item.optString("title").trim()
+                    val instructions = item.optString("instructions").trim()
+                    if (title.isNotBlank() && instructions.isNotBlank()) {
+                        add("$title: $instructions")
+                    }
+                }
+            }
+            fun readStrings(key: String): List<String> {
+                val values = fullContent.optJSONArray(key) ?: JSONArray()
+                return buildList {
+                    for (index in 0 until values.length()) {
+                        values.optString(index).takeIf { it.isNotBlank() }?.let(::add)
+                    }
+                }
+            }
+            val title = fullContent.optString("lesson_title").ifBlank { subStrandTitle }
+            val introduction = fullContent.optString("introduction")
+            val takeaways = readStrings("key_takeaways")
+            if (introduction.isBlank() || sections.isEmpty() || activities.isEmpty() || takeaways.isEmpty()) {
+                throw IllegalStateException("Cached AI lesson is incomplete.")
+            }
+            LessonContent(
+                id = "ai_lesson_$subStrandId",
+                subStrandId = subStrandId,
+                lessonTitle = title,
+                subjectTitle = "AI-generated CBC lesson draft",
+                gradeLevel = grade,
+                introduction = introduction,
+                keyVocabulary = vocabulary,
+                mainSections = sections,
+                stepByStepGuide = activities,
+                summaryTakeaways = takeaways
+            )
+        }.getOrNull()
+        val lesson = generatedLesson
+            ?: LessonNotesRepository.getDetailedLessonNotes(subStrandId, subStrandTitle, grade)
 
         findViewById<TextView>(R.id.tvLessonSubjectGrade).text = "${lesson.subjectTitle.uppercase()} • ${lesson.gradeLevel.title.uppercase()}"
         findViewById<TextView>(R.id.tvLessonTitle).text = lesson.lessonTitle

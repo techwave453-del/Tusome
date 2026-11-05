@@ -60,7 +60,7 @@ create table if not exists public.learning_resources (
   estimated_minutes integer check (estimated_minutes is null or estimated_minutes between 1 and 600),
   learning_outcomes text[] not null default '{}',
   content jsonb not null default '{"sections":[]}'::jsonb
-    check (jsonb_typeof(content) = 'object' and jsonb_typeof(content->'sections') = 'array'),
+    check (jsonb_typeof(content) = 'object' and coalesce(jsonb_typeof(content->'sections') = 'array', false)),
   created_by uuid references auth.users(id) on delete set null,
   reviewed_by uuid references auth.users(id) on delete set null,
   published_by uuid references auth.users(id) on delete set null,
@@ -91,7 +91,7 @@ create table if not exists public.learning_resource_versions (
   resource_id uuid not null references public.learning_resources(id) on delete cascade,
   version integer not null check (version > 0),
   content jsonb not null check (
-    jsonb_typeof(content) = 'object' and jsonb_typeof(content->'sections') = 'array'
+    jsonb_typeof(content) = 'object' and coalesce(jsonb_typeof(content->'sections') = 'array', false)
   ),
   title text not null,
   summary text not null default '',

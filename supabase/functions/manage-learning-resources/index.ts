@@ -366,10 +366,13 @@ Deno.serve(async (req: Request) => {
       return reply(400, { error: "Add specific feedback when rejecting a resource or requesting changes." });
     }
     const { data: resource, error } = await admin.from("learning_resources")
-      .select("id,status,version").eq("id", resourceId).maybeSingle();
+      .select("id,status,version,created_by").eq("id", resourceId).maybeSingle();
     if (error || !resource) return reply(404, { error: "Learning resource not found." });
     if (resource.status !== "pending_review") {
       return reply(409, { error: "Only resources awaiting review can be reviewed." });
+    }
+    if (resource.created_by === actorId) {
+      return reply(403, { error: "A resource creator cannot approve their own resource. Ask another curriculum editor to review it." });
     }
 
     const { error: reviewError } = await admin.from("learning_resource_reviews").insert({

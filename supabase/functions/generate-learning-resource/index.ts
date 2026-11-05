@@ -31,6 +31,7 @@ function boundedText(value: unknown, maxLength: number): string {
 function validGeneratedSections(value: unknown): value is Array<JsonObject> {
   if (!Array.isArray(value) || value.length < 1 || value.length > 30) return false;
   let blockCount = 0;
+  let hasMeaningfulContent = false;
   for (const section of value) {
     if (!section || typeof section !== "object" || Array.isArray(section)) return false;
     const item = section as JsonObject;
@@ -45,12 +46,16 @@ function validGeneratedSections(value: unknown): value is Array<JsonObject> {
       const value = block as JsonObject;
       if (typeof value.type !== "string" || !BLOCK_TYPES.has(value.type)) return false;
       if (typeof value.text !== "string" || value.text.length > 12000) return false;
+      if (value.text.trim().length > 0) hasMeaningfulContent = true;
       if (value.items !== undefined &&
         (!Array.isArray(value.items) || value.items.length > 40 ||
           value.items.some((entry) => typeof entry !== "string" || entry.length > 2000))) return false;
+      if (Array.isArray(value.items) && value.items.some((entry) => typeof entry === "string" && entry.trim().length > 0)) {
+        hasMeaningfulContent = true;
+      }
     }
   }
-  return JSON.stringify(value).length <= 350_000;
+  return hasMeaningfulContent && JSON.stringify(value).length <= 350_000;
 }
 
 function normalizeSections(sections: Array<JsonObject>) {

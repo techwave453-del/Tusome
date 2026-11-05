@@ -94,6 +94,7 @@ object AssessmentRepository {
         subStrandId: String,
         questionCount: Int,
         durationMinutes: Int,
+        pathway: String = "",
         onResult: (Result<JSONObject>) -> Unit
     ) {
         val payload = JSONObject()
@@ -105,6 +106,7 @@ object AssessmentRepository {
             .put("language_code", "en")
             .put("question_count", questionCount)
             .put("duration_minutes", durationMinutes)
+            .put("pathway", pathway)
             .put("difficulty", "age_appropriate")
             .put("local_context", "Use familiar Kenyan home, school and community contexts.")
         callFunction(context, "generate-assessment-paper", payload, onResult)

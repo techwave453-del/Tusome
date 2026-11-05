@@ -34,6 +34,7 @@ function validContent(value: unknown): value is { sections: Array<Record<string,
   const sections = (value as Record<string, unknown>).sections;
   if (!Array.isArray(sections) || sections.length > 80) return false;
   let blockCount = 0;
+  let hasMeaningfulContent = false;
   for (const section of sections) {
     if (!section || typeof section !== "object" || Array.isArray(section)) return false;
     const blocks = (section as Record<string, unknown>).blocks;
@@ -46,16 +47,23 @@ function validContent(value: unknown): value is { sections: Array<Record<string,
       if (typeof item.type !== "string" || !CONTENT_BLOCK_TYPES.has(item.type) ||
         typeof item.text !== "string") return false;
       if (item.text.length > 20000) return false;
+      if (item.text.trim().length > 0) hasMeaningfulContent = true;
       if (item.items !== undefined &&
         (!Array.isArray(item.items) || item.items.length > 100 ||
           item.items.some((entry) => typeof entry !== "string" || entry.length > 4000))) {
         return false;
       }
+      if (Array.isArray(item.items) && item.items.some((entry) => typeof entry === "string" && entry.trim().length > 0)) {
+        hasMeaningfulContent = true;
+      }
       if (item.media_url !== undefined &&
         (typeof item.media_url !== "string" || item.media_url.length > 2000)) return false;
+      if (typeof item.media_url === "string" && item.media_url.trim().length > 0) {
+        hasMeaningfulContent = true;
+      }
     }
   }
-  return JSON.stringify(value).length <= 500_000;
+  return hasMeaningfulContent && JSON.stringify(value).length <= 500_000;
 }
 
 Deno.serve(async (req: Request) => {

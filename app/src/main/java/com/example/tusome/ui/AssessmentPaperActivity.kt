@@ -1,6 +1,5 @@
 package com.example.tusome.ui
 
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -15,14 +14,13 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tusome.data.local.AssessmentLocalStore
+import com.example.tusome.data.local.AssessmentMediaCache
 import com.example.tusome.data.repository.AssessmentRepository
 import com.example.tusome.data.repository.SupabaseAuthRepository
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.UUID
 import java.util.concurrent.Executors
 
@@ -342,17 +340,14 @@ class AssessmentPaperActivity : AppCompatActivity() {
     }
 
     private fun loadQuestionImage(imageUrl: String, imageView: ImageView) {
+        val cached = AssessmentMediaCache.getCachedImage(this, imageUrl)
+        if (cached != null) {
+            imageView.setImageBitmap(cached)
+            return
+        }
         imageExecutor.execute {
             val bitmap = runCatching {
-                val connection = URL(imageUrl).openConnection() as HttpURLConnection
-                connection.connectTimeout = 10000
-                connection.readTimeout = 15000
-                connection.instanceFollowRedirects = true
-                try {
-                    connection.inputStream.use { BitmapFactory.decodeStream(it) }
-                } finally {
-                    connection.disconnect()
-                }
+                AssessmentMediaCache.cacheImage(applicationContext, imageUrl)
             }.getOrNull()
             if (bitmap != null) runOnUiThread {
                 if (!isFinishing && !isDestroyed) imageView.setImageBitmap(bitmap)

@@ -96,7 +96,7 @@ object SbaExamRepository {
                 gradeLevel = grade,
                 termAndYear = "Grade 10 • Sample practice paper",
                 timeAllowedMinutes = 120,
-                totalMarks = 80,
+                totalMarks = 10,
                 sections = listOf(
                     ExamSection(
                         sectionTitle = "SECTION A",
@@ -155,7 +155,7 @@ object SbaExamRepository {
                 gradeLevel = grade,
                 termAndYear = "Grade 10 • Sample practice paper",
                 timeAllowedMinutes = 120,
-                totalMarks = 14,
+                totalMarks = 11,
                 sections = listOf(
                     ExamSection(
                         sectionTitle = "SECTION A",

@@ -76,6 +76,16 @@ class OfflineCurriculumCache(context: Context) {
         return prefs.getString(key, null)
     }
 
+    // Save AI generated KICD sub-strand content locally
+    fun saveSubstrandKicdContent(subStrandId: String, jsonString: String) {
+        prefs.edit().putString("sub_kicd_$subStrandId", jsonString).apply()
+    }
+
+    // Get saved AI generated KICD sub-strand content
+    fun getSubstrandKicdContent(subStrandId: String): String? {
+        return prefs.getString("sub_kicd_$subStrandId", null)
+    }
+
     // Save AI generated study notes locally for permanent offline access
     fun saveGeneratedAiStudyNotes(strandId: String, notesText: String) {
         prefs.edit().putString("ai_notes_$strandId", notesText).apply()

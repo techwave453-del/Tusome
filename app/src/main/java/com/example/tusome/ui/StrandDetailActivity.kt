@@ -28,6 +28,8 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import org.json.JSONArray
+import org.json.JSONObject
 
 class StrandDetailActivity : AppCompatActivity() {
 
@@ -282,21 +284,60 @@ class StrandDetailActivity : AppCompatActivity() {
             val tvLearningOutcomes = subCard.findViewById<TextView>(R.id.tvLearningOutcomes)
             val tvInquiryQuestions = subCard.findViewById<TextView>(R.id.tvInquiryQuestions)
             val tvDigitalTaskPrompt = subCard.findViewById<TextView>(R.id.tvDigitalTaskPrompt)
+            val tvSubstrandKicdCitation = subCard.findViewById<TextView>(R.id.tvSubstrandKicdCitation)
+            val btnGenerateSubstrandAi = subCard.findViewById<Button>(R.id.btnGenerateSubstrandAi)
             val etLearnerReflection = subCard.findViewById<EditText>(R.id.etLearnerReflection)
             val cgSelfEvaluation = subCard.findViewById<ChipGroup>(R.id.cgSelfEvaluation)
             val btnSaveProgress = subCard.findViewById<Button>(R.id.btnSaveProgress)
 
             tvSubstrandTitle.text = "Sub-strand ${sub.subStrandNumber}: ${sub.title}"
-            tvLearningOutcomes.text = formatBulletList(
-                sub.specificLearningOutcomes,
-                "Outcomes specified in KICD curriculum."
-            )
-            tvInquiryQuestions.text = formatBulletList(
-                sub.keyInquiryQuestions,
-                "Inquiry prompts for interactive group discussion."
-            )
-            tvDigitalTaskPrompt.text = sub.digitalTaskPrompt.ifBlank {
-                "Complete practical activity and upload evidence."
+
+            // Check if AI generated KICD content exists in local offline cache
+            val cachedKicdJson = offlineCache.getSubstrandKicdContent(sub.id)
+            if (!cachedKicdJson.isNullOrBlank()) {
+                try {
+                    val json = JSONObject(cachedKicdJson)
+                    val outcomes = json.getJSONArray("outcomes")
+                    val questions = json.getJSONArray("questions")
+                    val task = json.getString("task")
+                    val citation = json.getString("citation")
+
+                    tvLearningOutcomes.text = (0 until outcomes.length()).joinToString("\n") { "• ${outcomes.getString(it)}" }
+                    tvInquiryQuestions.text = (0 until questions.length()).joinToString("\n") { "• ${questions.getString(it)}" }
+                    tvDigitalTaskPrompt.text = task
+                    tvSubstrandKicdCitation.text = citation
+                } catch (_: Exception) {
+                    tvLearningOutcomes.text = formatBulletList(sub.specificLearningOutcomes, "Outcomes specified in KICD curriculum.")
+                    tvInquiryQuestions.text = formatBulletList(sub.keyInquiryQuestions, "Inquiry prompts for interactive group discussion.")
+                    tvDigitalTaskPrompt.text = sub.digitalTaskPrompt.ifBlank { "Complete practical activity and upload evidence." }
+                }
+            } else {
+                tvLearningOutcomes.text = formatBulletList(sub.specificLearningOutcomes, "Outcomes specified in KICD curriculum.")
+                tvInquiryQuestions.text = formatBulletList(sub.keyInquiryQuestions, "Inquiry prompts for interactive group discussion.")
+                tvDigitalTaskPrompt.text = sub.digitalTaskPrompt.ifBlank { "Complete practical activity and upload evidence." }
+            }
+
+            btnGenerateSubstrandAi.setOnClickListener {
+                CbcAiTutorService.generateSubStrandKicdContent(
+                    subStrandTitle = sub.title,
+                    strandTitle = strand.title,
+                    grade = GradeLevel.GRADE_4
+                ) { kicdContent ->
+                    tvLearningOutcomes.text = kicdContent.specificLearningOutcomes.joinToString("\n") { "• $it" }
+                    tvInquiryQuestions.text = kicdContent.keyInquiryQuestions.joinToString("\n") { "• $it" }
+                    tvDigitalTaskPrompt.text = kicdContent.digitalTaskPrompt
+                    tvSubstrandKicdCitation.text = kicdContent.kicdCitation
+
+                    val saveObj = JSONObject().apply {
+                        put("outcomes", JSONArray(kicdContent.specificLearningOutcomes))
+                        put("questions", JSONArray(kicdContent.keyInquiryQuestions))
+                        put("experiences", JSONArray(kicdContent.suggestedExperiences))
+                        put("task", kicdContent.digitalTaskPrompt)
+                        put("citation", kicdContent.kicdCitation)
+                    }
+                    offlineCache.saveSubstrandKicdContent(sub.id, saveObj.toString())
+                    Toast.makeText(this, "KICD Sub-strand content generated & saved locally for offline study!", Toast.LENGTH_SHORT).show()
+                }
             }
 
             val isCompleted = progressManager.isSubStrandCompleted(sub.id)

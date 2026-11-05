@@ -48,6 +48,18 @@
 
         </LinearLayout>
 
+        <!-- KICD AI Content Generator Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGenerateSubstrandAi"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="✨ Generate KICD Curriculum Content (AI)"
+            android:textColor="?attr/colorPrimary"
+            app:cornerRadius="12dp"
+            app:strokeColor="?attr/colorPrimary" />
+
         <!-- Learning Outcomes -->
         <TextView
             android:layout_width="match_parent"
@@ -121,6 +133,17 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- KICD Source Citation Tag -->
+        <TextView
+            android:id="@+id/tvSubstrandKicdCitation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Source: KICD Official Kenya CBC Curriculum Design"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="11sp"
+            android:textStyle="italic" />
 
         <!-- Interactive Reflection Input -->
         <com.google.android.material.textfield.TextInputLayout

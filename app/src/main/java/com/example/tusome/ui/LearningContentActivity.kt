@@ -17,6 +17,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tusome.data.model.GradeLevel
 import com.example.tusome.data.model.LearningContentGenerationRequest
+import com.example.tusome.data.model.LearningContentBlock
+import com.example.tusome.data.model.LearningContentBlockType
+import com.example.tusome.data.model.LearningResourceSection
 import com.example.tusome.data.model.LearningResourceReviewDecision
 import com.example.tusome.data.model.LearningResourceType
 import com.example.tusome.data.model.Strand
@@ -31,6 +34,22 @@ import org.json.JSONObject
 private data class LearningLanguageOption(val label: String, val code: String) {
     override fun toString(): String = label
 }
+
+private data class EditableBlockInput(
+    val id: String,
+    val type: LearningContentBlockType,
+    val textInput: EditText,
+    val itemsInput: EditText?,
+    val mediaUrl: String?,
+    val caption: String?
+)
+
+private data class EditableSectionInput(
+    val id: String,
+    val titleInput: EditText,
+    val descriptionInput: EditText,
+    val blocks: List<EditableBlockInput>
+)
 
 /**
  * Teacher and curriculum-editor workspace for generating, reviewing and publishing
@@ -383,7 +402,134 @@ class LearningContentActivity : AppCompatActivity() {
             }
         }
         card.addView(openButton, margins(top = 8))
+        if (!showReview && (status == "draft" || status == "rejected")) {
+            card.addView(actionButton("Edit draft").apply {
+                setOnClickListener {
+                    currentDraftId = resource.optString("id").takeIf { it.isNotBlank() }
+                    showEditDialog(resource)
+                }
+            }, margins(top = 6))
+        }
         return card
+    }
+
+    private fun showEditDialog(resource: JSONObject) {
+        val resourceId = resource.optString("id")
+        val form = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(8), dp(4), dp(8), dp(4))
+        }
+        val titleInput = field("Resource title").apply { setText(resource.optString("title")) }
+        val summaryInput = field("Resource summary", multiline = true).apply {
+            setText(resource.optString("summary"))
+        }
+        form.addView(messageText("Title"), margins(bottom = 2))
+        form.addView(titleInput, margins(bottom = 8))
+        form.addView(messageText("Summary"), margins(bottom = 2))
+        form.addView(summaryInput, margins(bottom = 10))
+
+        val editableSections = mutableListOf<EditableSectionInput>()
+        val sections = resource.optJSONObject("content")?.optJSONArray("sections") ?: JSONArray()
+        for (sectionIndex in 0 until sections.length()) {
+            val section = sections.optJSONObject(sectionIndex) ?: continue
+            form.addView(titleText("Section ${sectionIndex + 1}", 15f), margins(top = 8, bottom = 4))
+            val sectionTitle = field("Section title").apply { setText(section.optString("title")) }
+            val sectionDescription = field("Section introduction", multiline = true).apply {
+                setText(section.optString("description"))
+            }
+            form.addView(sectionTitle, margins(bottom = 6))
+            form.addView(sectionDescription, margins(bottom = 8))
+
+            val editableBlocks = mutableListOf<EditableBlockInput>()
+            val blocks = section.optJSONArray("blocks") ?: JSONArray()
+            for (blockIndex in 0 until blocks.length()) {
+                val block = blocks.optJSONObject(blockIndex) ?: continue
+                val blockType = LearningContentBlockType.fromKey(block.optString("type"))
+                    ?: LearningContentBlockType.PARAGRAPH
+                form.addView(messageText("Content block: ${blockType.key.replace('_', ' ')}"), margins(top = 4))
+                val blockText = field("Block text", multiline = true).apply {
+                    setText(block.optString("text"))
+                }
+                form.addView(blockText, margins(top = 3))
+                val blockItems = block.optJSONArray("items") ?: JSONArray()
+                val itemsInput = if (blockItems.length() > 0) {
+                    val itemsField = field("List items (one per line)", multiline = true).apply {
+                        setText((0 until blockItems.length()).joinToString("\n") { blockItems.optString(it) })
+                    }
+                    form.addView(itemsField, margins(top = 4))
+                    itemsField
+                } else null
+                editableBlocks.add(
+                    EditableBlockInput(
+                        id = block.optString("id").ifBlank { "block-${sectionIndex + 1}-${blockIndex + 1}" },
+                        type = blockType,
+                        textInput = blockText,
+                        itemsInput = itemsInput,
+                        mediaUrl = block.optString("media_url").takeIf { it.isNotBlank() && it != "null" },
+                        caption = block.optString("caption").takeIf { it.isNotBlank() && it != "null" }
+                    )
+                )
+            }
+            editableSections.add(
+                EditableSectionInput(
+                    id = section.optString("id").ifBlank { "section-${sectionIndex + 1}" },
+                    titleInput = sectionTitle,
+                    descriptionInput = sectionDescription,
+                    blocks = editableBlocks
+                )
+            )
+        }
+
+        val scroll = ScrollView(this).apply {
+            addView(form)
+            isFillViewport = false
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Edit learning resource")
+            .setView(scroll)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Save draft") { _, _ ->
+                val sectionsToSave = editableSections.map { section ->
+                    LearningResourceSection(
+                        id = section.id,
+                        title = section.titleInput.text.toString().trim(),
+                        description = section.descriptionInput.text.toString().trim(),
+                        blocks = section.blocks.map { block ->
+                            LearningContentBlock(
+                                id = block.id,
+                                type = block.type,
+                                text = block.textInput.text.toString().trim(),
+                                items = block.itemsInput?.text?.toString()?.lines()
+                                    ?.map { it.trim() }?.filter { it.isNotBlank() }.orEmpty(),
+                                mediaUrl = block.mediaUrl,
+                                caption = block.caption
+                            )
+                        }
+                    )
+                }
+                LearningResourceWorkflowRepository.updateDraft(
+                    context = this,
+                    resourceId = resourceId,
+                    title = titleInput.text.toString(),
+                    summary = summaryInput.text.toString(),
+                    sections = sectionsToSave,
+                    changeSummary = "Author revised the draft"
+                ) { result ->
+                    result.onSuccess { response ->
+                        val updated = response.optJSONObject("resource")
+                        if (updated != null) {
+                            currentDraftId = resourceId
+                            renderResourcePreview(updated)
+                            submitButton.visibility = View.VISIBLE
+                            statusText.text = "Draft updated. Submit it again when it is ready for review."
+                        }
+                        loadMyResources()
+                    }.onFailure { error ->
+                        Toast.makeText(this, error.message ?: "Draft could not be updated.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .show()
     }
 
     private fun showReviewDialog(resource: JSONObject) {

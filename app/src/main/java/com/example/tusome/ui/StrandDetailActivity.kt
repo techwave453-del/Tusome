@@ -304,6 +304,13 @@ class StrandDetailActivity : AppCompatActivity() {
         if (resource.summary.isNotBlank()) {
             addResourceText(content, resource.summary, 12f)
         }
+        val languageLabel = when (resource.languageCode.lowercase()) {
+            "en" -> "English"
+            "sw" -> "Kiswahili"
+            "kam" -> "Kikamba"
+            else -> resource.languageCode.uppercase()
+        }
+        addResourceText(content, "Language: $languageLabel", 11f)
         resource.estimatedMinutes?.let {
             addResourceText(content, "Estimated learning time: $it minutes", 11f)
         }
